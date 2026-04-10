@@ -10,10 +10,10 @@
   },
   "scripts": {
     "postinstall": "cd web && npm ci",
-    "build:solutions": ".venv/bin/python scripts/build_solutions.py",
-    "predev":"test -x .venv/bin/python || (echo '\\nERROR: .venv not found or not executable. Run ./setup.sh first.\\n' && exit 1)",
+    "build:solutions": "bash -c 'if [ \"$CONDA_DEFAULT_ENV\" = \"pyre\" ]; then python scripts/build_solutions.py; else .venv/bin/python scripts/build_solutions.py; fi'",
+    "predev": "bash -c 'if [ \"$CONDA_DEFAULT_ENV\" = \"pyre\" ]; then python -c \"import sys; sys.exit(0)\"; elif [ -x .venv/bin/python ]; then exit 0; else echo \"\\nERROR: .venv not found or not executable. Run ./setup.sh first.\\n\" && exit 1; fi'",
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"yellow,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": ".venv/bin/python -m uvicorn grading_service.main:app --reload --reload-exclude '.git' --reload-exclude '.venv' --port 8000 --log-level info",
+    "dev:backend": "bash -c 'if [ \"$CONDA_DEFAULT_ENV\" = \"pyre\" ]; then python -m uvicorn grading_service.main:app --reload --reload-exclude .git --reload-exclude .venv --port 8000 --log-level info; else .venv/bin/python -m uvicorn grading_service.main:app --reload --reload-exclude .git --reload-exclude .venv --port 8000 --log-level info; fi'",
     "dev:frontend": "cd web && npm run dev"
   },
   "devDependencies": {
