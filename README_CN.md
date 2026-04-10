@@ -3,7 +3,10 @@
 <p align="center">
   <h1 align="center">🔥 Pyre Code</h1>
   <p align="center">
-    从零复现现代 AI 系统的内核——Transformers、vLLM、TRL，以及更多。
+    从零实现 Transformers、vLLM、TRL 等系统的核心模块。
+  </p>
+  <p align="center">
+    <em>读完论文，写出代码。无需 GPU。</em>
   </p>
   <p align="center">
     <a href="https://star-history.com/#whwangovo/pyre-code&Date">
@@ -16,17 +19,21 @@
 
 ## 🧠 这是什么？
 
-68 道题。你写实现，本地评测服务跑测试，看哪里挂了。就这样。
+68 道实现题，覆盖注意力机制、训练技巧、推理优化、对齐算法等核心模块。你写代码，本地评测跑测试，红了就改，绿了就过。不需要 GPU。
 
-题目覆盖 Transformers、vLLM、TRL 和扩散模型的实际内核——注意力变体、训练技巧、推理算法、对齐算法。无需 GPU。
+### 谁适合用？
 
-### 特性
+- **备战 ML 面试** — 手写核心组件，不只是背概念
+- **偏好动手学习** — 写代码比看视频更容易理解
+- **深入理解原理** — 用过 `nn.MultiheadAttention`，现在自己实现一个
 
-- **浏览器编辑器** — Monaco + Python 语法高亮，无需配置 IDE
-- **即时反馈** — 提交后秒级返回每个测试用例的通过/失败
-- **参考答案** — 自己做完再对比
-- **进度追踪** — 解题数和尝试记录，跨会话持久化
-- **完全本地** — 代码不离开你的机器
+### 功能亮点
+
+- **浏览器直接写** — 内置 Monaco 编辑器，开箱即用，不用折腾本地 IDE
+- **秒级反馈** — 提交即判，逐条显示测试结果
+- **参考实现** — 先自己写，再看答案
+- **进度记录** — 做了多少、试了几次，关掉浏览器也不丢
+- **数据不出本机** — 全部本地运行，没有任何远程调用
 
 ### 技术栈
 
@@ -35,7 +42,7 @@
 | 前端 | Next.js + Monaco Editor + Tailwind CSS |
 | 后端 | FastAPI 评测服务 |
 | 评测引擎 | [torch_judge](https://github.com/duoan/TorchCode) — 执行并验证提交的代码 |
-| 存储 | SQLite（进度追踪） |
+| 存储 | SQLite（进度持久化） |
 
 ---
 
@@ -48,7 +55,7 @@
 
 ### 安装
 
-**方式 A — 一键安装（推荐）**
+**方式 A — 一键启动（推荐）**
 
 ```bash
 git clone https://github.com/whwangovo/pyre-code.git
@@ -57,7 +64,7 @@ cd pyre-code
 npm run dev
 ```
 
-`setup.sh` 自动创建 `.venv` Python 环境（优先 `uv`，回退到 `python3 -m venv`），安装所有依赖，完成后打印启动命令。
+`setup.sh` 会自动创建 `.venv` 虚拟环境（优先用 `uv`，没有就回退到 `python3 -m venv`），装好所有依赖。
 
 **方式 B — conda**
 
@@ -67,24 +74,24 @@ cd pyre-code
 conda create -n pyre python=3.11 -y && conda activate pyre
 pip install -e ".[dev]"
 npm install
-npm run dev   # 需在 conda 环境激活状态下运行
+npm run dev   # 记得先激活 conda 环境
 ```
 
-**方式 C — 手动安装（venv）**
+**方式 C — 手动（venv）**
 
 ```bash
 git clone https://github.com/whwangovo/pyre-code.git
 cd pyre-code
 
-# 创建 Python 环境（二选一）：
+# 二选一：
 uv venv --python 3.11 .venv && source .venv/bin/activate && uv pip install -e ".[dev]"
-# 或：python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
+# 或者：python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
 
 npm install
 npm run dev
 ```
 
-启动后：
+跑起来之后：
 
 - **评测服务** → `http://localhost:8000`
 - **Web 界面** → `http://localhost:3000`
@@ -97,15 +104,15 @@ cd pyre-code
 docker compose up --build
 ```
 
-打开 `http://localhost:3000`。进度保存在 Docker 卷中。运行 `docker compose down -v` 可重置数据。
+打开 `http://localhost:3000` 即可。进度存在 Docker 卷里，`docker compose down -v` 可以重置。
 
 ---
 
-## 📋 题目列表
+## 📋 题目一览
 
-68 道题目，按类别分组：
+68 道题，按方向分组：
 
-| 类别 | 题目 |
+| 方向 | 题目 |
 |---|---|
 | **基础** | ReLU、Softmax、GELU、SwiGLU、Dropout、Embedding、Linear、Kaiming 初始化、线性回归 |
 | **归一化** | LayerNorm、BatchNorm、RMSNorm |
@@ -123,18 +130,34 @@ docker compose up --build
 
 ### 学习路径
 
-按目标选一条：
+不知道从哪下手？挑一条适合自己的：
 
-| 路径 | 题目数 | 内容 |
+| 路径 | 题数 | 覆盖内容 |
 |---|---|---|
 | **Transformer 内部机制** | 12 | 激活函数 → 归一化 → 注意力 → GPT-2 Block |
-| **注意力与位置编码** | 13 | 全部注意力变体 + RoPE、ALiBi、NTK-RoPE |
+| **注意力与位置编码** | 13 | 所有注意力变体 + RoPE、ALiBi、NTK-RoPE |
 | **从零训练 GPT** | 15 | Embedding → 架构 → 损失 → 优化器 → 训练技巧 |
-| **推理与分布式训练** | 9 | KV Cache、量化、采样、张量并行、FSDP |
-| **对齐与智能体推理** | 6 | 奖励模型 → DPO → GRPO → PPO → MCTS |
-| **Vision Transformer 流水线** | 7 | 卷积 → Patch Embedding → ViT Block |
+| **推理与分布式** | 9 | KV Cache、量化、采样、张量并行、FSDP |
+| **对齐与推理搜索** | 6 | 奖励模型 → DPO → GRPO → PPO → MCTS |
+| **ViT 全流程** | 7 | 卷积 → Patch Embedding → ViT Block |
 | **扩散模型与 DiT** | 5 | 噪声调度 → DDIM → 流匹配 → adaLN-Zero |
 | **LLM 前沿架构** | 7 | GQA、差分注意力、MLA、MoE、多 Token 预测 |
+
+```
+路径导航：
+
+基础 ──→ Transformer 内部机制 ──→ 从零训练 GPT
+                 │                        │
+                 ▼                        ▼
+        注意力与位置编码            推理与分布式
+                 │                        │
+                 ▼                        ▼
+        LLM 前沿架构             对齐与推理搜索
+                 │
+          ┌──────┴──────┐
+          ▼              ▼
+     ViT 全流程     扩散模型与 DiT
+```
 
 ---
 
@@ -143,37 +166,35 @@ docker compose up --build
 | 环境变量 | 默认值 | 说明 |
 |---|---|---|
 | `GRADING_SERVICE_URL` | `http://localhost:8000` | 评测服务地址 |
-| `DB_PATH` | `./data/pyre.db` | 进度追踪用 SQLite 数据库路径 |
+| `DB_PATH` | `./data/pyre.db` | SQLite 数据库路径 |
 
-在 `web/.env.local` 中设置以覆盖默认值。
+在 `web/.env.local` 中设置即可覆盖。
 
 ---
 
 ## 📁 项目结构
 
 ```
-pyre/
+pyre-code/
 ├── web/                  # Next.js 前端
-│   ├── src/app/          # 页面和 API 路由
+│   ├── src/app/          # 页面与 API 路由
 │   ├── src/components/   # UI 组件
 │   └── src/lib/          # 工具函数、题目数据
-├── grading_service/      # FastAPI 后端
-├── torch_judge/          # 评测引擎（题目定义 + 测试运行器）
-└── package.json          # 开发脚本（同时启动前后端）
+├── grading_service/      # FastAPI 评测后端
+├── torch_judge/          # 评测引擎（题目定义 + 测试执行）
+└── package.json          # 开发脚本（前后端并行启动）
 ```
 
 ---
 
-## 🤝 贡献
+## 🤝 参与贡献
 
-欢迎贡献！你可以通过以下方式参与：
+- **出新题** — 在 `torch_judge/` 里添加题目定义和测试用例，提 PR
+- **报 Bug** — [开 issue](https://github.com/whwangovo/pyre-code/issues)，附上复现步骤
+- **修 Bug** — fork → 修复 → PR
+- **改文档** — 错别字、表述不清、翻译，都欢迎
 
-- **提交新题目** — 在 `torch_judge/` 中添加题目定义和测试用例，提交 PR
-- **反馈 Bug** — [提交 issue](https://github.com/whwangovo/pyre-code/issues)，附上复现步骤
-- **修复 Bug** — fork 后修复，提交 PR
-- **完善文档** — 修正错别字、补充说明、翻译
-
-较大的改动请先开 issue 讨论方案。
+大改动建议先开 issue 聊聊思路。
 
 ---
 
@@ -187,11 +208,10 @@ pyre/
 
 ## 🙏 致谢
 
-题库和评测引擎基于 [duoan](https://github.com/duoan) 的 [TorchCode](https://github.com/duoan/TorchCode)，遵循 MIT 协议。
+题库和评测引擎基于 [duoan](https://github.com/duoan) 的 [TorchCode](https://github.com/duoan/TorchCode)，MIT 协议。
 
 ---
 
 ## 📄 许可证
 
-本项目基于 MIT 许可证分发。详见 [LICENSE](LICENSE)。
-
+MIT License，详见 [LICENSE](LICENSE)。

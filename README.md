@@ -6,6 +6,9 @@
     Implement the internals of modern AI systems from scratch — Transformers, vLLM, TRL, and beyond.
   </p>
   <p align="center">
+    <em>Read the paper, then write the code. No GPU required.</em>
+  </p>
+  <p align="center">
     <a href="https://star-history.com/#whwangovo/pyre-code&Date">
       <img src="https://img.shields.io/github/stars/whwangovo/pyre-code?style=social" alt="GitHub stars" />
     </a>
@@ -19,6 +22,12 @@
 68 problems. You write the implementation, a local grading service runs the tests, you see what broke. That's it.
 
 The problems cover what's actually inside Transformers, vLLM, TRL, and diffusion models — attention variants, training tricks, inference kernels, alignment algorithms. No GPU needed.
+
+### Who is this for?
+
+- **Preparing for ML interviews** — practice implementing core components under test, not just reading about them
+- **Learning by building** — if you learn best by writing code rather than watching lectures, this is your gym
+- **Deepening your understanding** — you've used `nn.MultiheadAttention`, now write it yourself
 
 ### Features
 
@@ -135,6 +144,22 @@ Pick one based on what you're working toward:
 | **Vision Transformer Pipeline** | 7 | Conv → patch embedding → ViT block |
 | **Diffusion Models & DiT** | 5 | Noise schedule → DDIM → flow matching → adaLN-Zero |
 | **LLM Frontier Architectures** | 7 | GQA, Differential Attention, MLA, MoE, Multi-Token Prediction |
+
+```
+Not sure where to start?
+
+Fundamentals ──→ Transformer Internals ──→ Train a GPT from Scratch
+                       │                          │
+                       ▼                          ▼
+              Attention & Position       Inference & Distributed
+                       │                          │
+                       ▼                          ▼
+              LLM Frontier Archs         Alignment & Reasoning
+                       │
+               ┌───────┴───────┐
+               ▼               ▼
+     Vision Transformer   Diffusion & DiT
+```
 
 ---
 
