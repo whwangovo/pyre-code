@@ -5,6 +5,11 @@
   <p align="center">
     Implement the internals of modern AI systems from scratch — Transformers, vLLM, TRL, and beyond.
   </p>
+  <p align="center">
+    <a href="https://star-history.com/#whwangovo/pyre-code&Date">
+      <img src="https://img.shields.io/github/stars/whwangovo/pyre-code?style=social" alt="GitHub stars" />
+    </a>
+  </p>
 </p>
 
 ---
@@ -46,8 +51,8 @@ The problems cover what's actually inside Transformers, vLLM, TRL, and diffusion
 **Option A — one-liner (recommended)**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 ./setup.sh
 npm run dev
 ```
@@ -57,8 +62,8 @@ npm run dev
 **Option B — conda**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 conda create -n pyre python=3.11 -y && conda activate pyre
 pip install -e ".[dev]"
 npm install
@@ -68,8 +73,8 @@ npm run dev   # run with conda env activated
 **Option C — manual (venv)**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 
 # create a Python env — pick one:
 uv venv --python 3.11 .venv && source .venv/bin/activate && uv pip install -e ".[dev]"
@@ -87,8 +92,8 @@ Either way, once running:
 **Option D — Docker**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 docker compose up --build
 ```
 
@@ -170,4 +175,17 @@ This project adds a web frontend and REST grading service on top of the original
 ## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+---
+
+## Contributing
+
+Contributions are welcome! Here are some ways you can help:
+
+- **Submit a new problem** — open a PR with the problem definition and test cases in `torch_judge/`
+- **Report a bug** — [open an issue](https://github.com/whwangovo/pyre-code/issues) with steps to reproduce
+- **Fix a bug** — fork, fix, and submit a PR
+- **Improve docs** — typos, clarifications, translations
+
+Please open an issue first for larger changes so we can discuss the approach.
 

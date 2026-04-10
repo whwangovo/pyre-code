@@ -5,6 +5,11 @@
   <p align="center">
     从零复现现代 AI 系统的内核——Transformers、vLLM、TRL，以及更多。
   </p>
+  <p align="center">
+    <a href="https://star-history.com/#whwangovo/pyre-code&Date">
+      <img src="https://img.shields.io/github/stars/whwangovo/pyre-code?style=social" alt="GitHub stars" />
+    </a>
+  </p>
 </p>
 
 ---
@@ -46,8 +51,8 @@
 **方式 A — 一键安装（推荐）**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 ./setup.sh
 npm run dev
 ```
@@ -57,8 +62,8 @@ npm run dev
 **方式 B — conda**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 conda create -n pyre python=3.11 -y && conda activate pyre
 pip install -e ".[dev]"
 npm install
@@ -68,8 +73,8 @@ npm run dev   # 需在 conda 环境激活状态下运行
 **方式 C — 手动安装（venv）**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 
 # 创建 Python 环境（二选一）：
 uv venv --python 3.11 .venv && source .venv/bin/activate && uv pip install -e ".[dev]"
@@ -87,8 +92,8 @@ npm run dev
 **方式 D — Docker**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
-cd pyre
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
 docker compose up --build
 ```
 
@@ -170,4 +175,17 @@ pyre/
 ## 许可证
 
 本项目基于 MIT 许可证分发。详见 [LICENSE](LICENSE)。
+
+---
+
+## 贡献
+
+欢迎贡献！你可以通过以下方式参与：
+
+- **提交新题目** — 在 `torch_judge/` 中添加题目定义和测试用例，提交 PR
+- **反馈 Bug** — [提交 issue](https://github.com/whwangovo/pyre-code/issues)，附上复现步骤
+- **修复 Bug** — fork 后修复，提交 PR
+- **完善文档** — 修正错别字、补充说明、翻译
+
+较大的改动请先开 issue 讨论方案。
 
