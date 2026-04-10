@@ -112,6 +112,16 @@ export function TestResultsView({ result, tests, functionName }: TestResultsView
               </pre>
             </div>
           )}
+
+          {/* Print output */}
+          {activeResult.output && (
+            <div>
+              <div className="text-xs text-text-tertiary mb-1">Output</div>
+              <pre className="p-3 rounded-lg bg-surface-secondary text-text-primary text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words">
+                {activeResult.output}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>

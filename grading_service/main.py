@@ -70,6 +70,7 @@ class TestResult(BaseModel):
     passed: bool
     execTimeMs: float
     error: str | None = None
+    output: str | None = None
 
 
 class GradeResponse(BaseModel):
@@ -101,7 +102,7 @@ def _validate_code(code: str) -> str | None:
     return None
 
 
-def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None) -> GradeResponse:
+def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None, capture_output: bool = True) -> GradeResponse:
     import torch, math
     err = _validate_code(code)
     if err:
@@ -145,18 +146,44 @@ def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None)
             fn_name: user_ns[fn_name],
         }
         test_code = test["code"].replace("{fn}", fn_name)
-        start = time.perf_counter()
-        try:
-            exec(test_code, test_ns)
-            exec_time_ms = (time.perf_counter() - start) * 1000
-            results.append(TestResult(name=test["name"], passed=True, execTimeMs=exec_time_ms))
-            passed += 1
-        except AssertionError as e:
-            exec_time_ms = (time.perf_counter() - start) * 1000
-            results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=str(e)))
-        except Exception as e:
-            exec_time_ms = (time.perf_counter() - start) * 1000
-            results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=f"{type(e).__name__}: {e}"))
+
+        # Capture stdout for print output
+        output = None
+        if capture_output:
+            import io
+            import sys
+            old_stdout = sys.stdout
+            sys.stdout = captured = io.StringIO()
+            try:
+                start = time.perf_counter()
+                exec(test_code, test_ns)
+                exec_time_ms = (time.perf_counter() - start) * 1000
+                output = captured.getvalue() or None
+                results.append(TestResult(name=test["name"], passed=True, execTimeMs=exec_time_ms, output=output))
+                passed += 1
+            except AssertionError as e:
+                exec_time_ms = (time.perf_counter() - start) * 1000
+                output = captured.getvalue() or None
+                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=str(e), output=output))
+            except Exception as e:
+                exec_time_ms = (time.perf_counter() - start) * 1000
+                output = captured.getvalue() or None
+                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=f"{type(e).__name__}: {e}", output=output))
+            finally:
+                sys.stdout = old_stdout
+        else:
+            start = time.perf_counter()
+            try:
+                exec(test_code, test_ns)
+                exec_time_ms = (time.perf_counter() - start) * 1000
+                results.append(TestResult(name=test["name"], passed=True, execTimeMs=exec_time_ms))
+                passed += 1
+            except AssertionError as e:
+                exec_time_ms = (time.perf_counter() - start) * 1000
+                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=str(e)))
+            except Exception as e:
+                exec_time_ms = (time.perf_counter() - start) * 1000
+                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=f"{type(e).__name__}: {e}"))
         total_time_ms += exec_time_ms
 
     return GradeResponse(passed=passed, total=len(results), allPassed=passed == len(results), results=results, totalTimeMs=total_time_ms)

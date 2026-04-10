@@ -20,6 +20,7 @@ export interface TestResult {
   passed: boolean;
   execTimeMs: number;
   error?: string;
+  output?: string;
 }
 
 export interface SubmissionResult {
