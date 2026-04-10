@@ -317,27 +317,37 @@ def save_progress(request: SaveProgressRequest) -> dict[str, str]:
             (user_id, request.taskId)
         ).fetchone()
         if existing:
+            existing_status, existing_best_time = existing
             if request.status == "solved":
-                best = min(existing[1], request.execTimeMs) if existing[1] and request.execTimeMs else (existing[1] or request.execTimeMs)
+                if existing_best_time is not None and request.execTimeMs is not None:
+                    best = min(existing_best_time, request.execTimeMs)
+                else:
+                    best = existing_best_time if existing_best_time is not None else request.execTimeMs
                 conn.execute(
-                    "UPDATE progress SET status = ?, best_time_ms = ?, attempts = attempts + 1, solved_at = datetime('now') WHERE user_id = ? AND task_id = ?",
-                    (request.status, best, user_id, request.taskId)
+                    "UPDATE progress SET status = ?, best_time_ms = ?, attempts = attempts + 1, solved_at = COALESCE(solved_at, datetime('now')) WHERE user_id = ? AND task_id = ?",
+                    ("solved", best, user_id, request.taskId)
+                )
+            else:
+                next_status = existing_status if existing_status == "solved" and request.status in ("todo", "attempted") else request.status
+                conn.execute(
+                    "UPDATE progress SET status = ?, attempts = attempts + 1 WHERE user_id = ? AND task_id = ?",
+                    (next_status, user_id, request.taskId)
+                )
+        else:
+            if request.status == "solved":
+                conn.execute(
+                    "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, datetime('now'))",
+                    (user_id, request.taskId, request.status, request.execTimeMs)
                 )
             else:
                 conn.execute(
-                    "UPDATE progress SET status = ?, attempts = attempts + 1 WHERE user_id = ? AND task_id = ?",
-                    (request.status, user_id, request.taskId)
+                    "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, NULL)",
+                    (user_id, request.taskId, request.status, None)
                 )
-        else:
-            conn.execute(
-                "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, datetime('now'))",
-                (user_id, request.taskId, request.status, request.execTimeMs)
-            )
     return {"ok": "true"}
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
-
 
