@@ -37,12 +37,12 @@
 
 ### 技术栈
 
-| 层级 | 技术 |
-|---|---|
-| 前端 | Next.js + Monaco Editor + Tailwind CSS |
-| 后端 | FastAPI 评测服务 |
+| 层级     | 技术                                                                   |
+| -------- | ---------------------------------------------------------------------- |
+| 前端     | Next.js + Monaco Editor + Tailwind CSS                                 |
+| 后端     | FastAPI 评测服务                                                       |
 | 评测引擎 | [torch_judge](https://github.com/duoan/TorchCode) — 执行并验证提交的代码 |
-| 存储 | SQLite（进度持久化） |
+| 存储     | SQLite（进度持久化）                                                   |
 
 ---
 
@@ -112,36 +112,36 @@ docker compose up --build
 
 68 道题，按方向分组：
 
-| 方向 | 题目 |
-|---|---|
-| **基础** | ReLU、Softmax、GELU、SwiGLU、Dropout、Embedding、Linear、Kaiming 初始化、线性回归 |
-| **归一化** | LayerNorm、BatchNorm、RMSNorm |
-| **注意力** | 缩放点积、多头、因果、交叉、GQA、滑动窗口、线性、Flash、差分注意力、MLA |
-| **位置编码** | 正弦编码、RoPE、ALiBi、NTK-aware RoPE |
-| **架构** | SwiGLU MLP、GPT-2 Block、ViT Patch、ViT Block、Conv2D、Max Pool、深度可分离卷积、MoE、MoE 负载均衡 |
-| **训练** | Adam、余弦学习率、梯度裁剪、梯度累积、混合精度、激活检查点 |
-| **分布式** | 张量并行、FSDP、环形注意力 |
-| **推理** | KV Cache、Top-k 采样、束搜索、推测解码、BPE、INT8 量化、分页注意力 |
-| **损失与对齐** | 交叉熵、标签平滑、Focal Loss、对比损失、DPO、GRPO、PPO、奖励模型 |
-| **扩散与 DiT** | 噪声调度、DDIM 步骤、流匹配、adaLN-Zero |
-| **适配** | LoRA、QLoRA |
-| **推理搜索** | MCTS、多 Token 预测 |
-| **SSM** | Mamba SSM |
+| 方向                 | 题目                                                                                               |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| **基础**       | ReLU、Softmax、GELU、SwiGLU、Dropout、Embedding、Linear、Kaiming 初始化、线性回归                  |
+| **归一化**     | LayerNorm、BatchNorm、RMSNorm                                                                      |
+| **注意力**     | 缩放点积、多头、因果、交叉、GQA、滑动窗口、线性、Flash、差分注意力、MLA                            |
+| **位置编码**   | 正弦编码、RoPE、ALiBi、NTK-aware RoPE                                                              |
+| **架构**       | SwiGLU MLP、GPT-2 Block、ViT Patch、ViT Block、Conv2D、Max Pool、深度可分离卷积、MoE、MoE 负载均衡 |
+| **训练**       | Adam、余弦学习率、梯度裁剪、梯度累积、混合精度、激活检查点                                         |
+| **分布式**     | 张量并行、FSDP、环形注意力                                                                         |
+| **推理**       | KV Cache、Top-k 采样、束搜索、推测解码、BPE、INT8 量化、分页注意力                                 |
+| **损失与对齐** | 交叉熵、标签平滑、Focal Loss、对比损失、DPO、GRPO、PPO、奖励模型                                   |
+| **扩散与 DiT** | 噪声调度、DDIM 步骤、流匹配、adaLN-Zero                                                            |
+| **适配**       | LoRA、QLoRA                                                                                        |
+| **推理搜索**   | MCTS、多 Token 预测                                                                                |
+| **SSM**        | Mamba SSM                                                                                          |
 
 ### 学习路径
 
 不知道从哪下手？挑一条适合自己的：
 
-| 路径 | 题数 | 覆盖内容 |
-|---|---|---|
-| **Transformer 内部机制** | 12 | 激活函数 → 归一化 → 注意力 → GPT-2 Block |
-| **注意力与位置编码** | 13 | 所有注意力变体 + RoPE、ALiBi、NTK-RoPE |
-| **从零训练 GPT** | 15 | Embedding → 架构 → 损失 → 优化器 → 训练技巧 |
-| **推理与分布式** | 9 | KV Cache、量化、采样、张量并行、FSDP |
-| **对齐与推理搜索** | 6 | 奖励模型 → DPO → GRPO → PPO → MCTS |
-| **ViT 全流程** | 7 | 卷积 → Patch Embedding → ViT Block |
-| **扩散模型与 DiT** | 5 | 噪声调度 → DDIM → 流匹配 → adaLN-Zero |
-| **LLM 前沿架构** | 7 | GQA、差分注意力、MLA、MoE、多 Token 预测 |
+| 路径                           | 题数 | 覆盖内容                                        |
+| ------------------------------ | ---- | ----------------------------------------------- |
+| **Transformer 内部机制** | 12   | 激活函数 → 归一化 → 注意力 → GPT-2 Block     |
+| **注意力与位置编码**     | 13   | 所有注意力变体 + RoPE、ALiBi、NTK-RoPE          |
+| **从零训练 GPT**         | 15   | Embedding → 架构 → 损失 → 优化器 → 训练技巧 |
+| **推理与分布式**         | 9    | KV Cache、量化、采样、张量并行、FSDP            |
+| **对齐与推理搜索**       | 6    | 奖励模型 → DPO → GRPO → PPO → MCTS          |
+| **ViT 全流程**           | 7    | 卷积 → Patch Embedding → ViT Block            |
+| **扩散模型与 DiT**       | 5    | 噪声调度 → DDIM → 流匹配 → adaLN-Zero        |
+| **LLM 前沿架构**         | 7    | GQA、差分注意力、MLA、MoE、多 Token 预测        |
 
 ```
 路径导航：
@@ -163,10 +163,10 @@ docker compose up --build
 
 ## ⚙️ 配置
 
-| 环境变量 | 默认值 | 说明 |
-|---|---|---|
-| `GRADING_SERVICE_URL` | `http://localhost:8000` | 评测服务地址 |
-| `DB_PATH` | `./data/pyre.db` | SQLite 数据库路径 |
+| 环境变量                | 默认值                    | 说明              |
+| ----------------------- | ------------------------- | ----------------- |
+| `GRADING_SERVICE_URL` | `http://localhost:8000` | 评测服务地址      |
+| `DB_PATH`             | `./data/pyre.db`        | SQLite 数据库路径 |
 
 在 `web/.env.local` 中设置即可覆盖。
 
