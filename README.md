@@ -48,7 +48,7 @@ The problems cover what's actually inside Transformers, vLLM, TRL, and diffusion
 **Option A — one-liner (recommended)**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
+git clone https://github.com/whwangovo/pyre-code.git
 cd pyre
 ./setup.sh
 npm run dev
@@ -59,7 +59,7 @@ npm run dev
 **Option B — manual**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
+git clone https://github.com/whwangovo/pyre-code.git
 cd pyre
 
 # create a Python env — pick one:
@@ -87,7 +87,7 @@ Either way, once running:
 **Option C — Docker**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
+git clone https://github.com/whwangovo/pyre-code.git
 cd pyre
 docker compose up --build
 ```

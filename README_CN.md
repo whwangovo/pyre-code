@@ -48,7 +48,7 @@
 **方式 A — 一键安装（推荐）**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
+git clone https://github.com/whwangovo/pyre-code.git
 cd pyre
 ./setup.sh
 npm run dev
@@ -59,7 +59,7 @@ npm run dev
 **方式 B — 手动安装**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
+git clone https://github.com/whwangovo/pyre-code.git
 cd pyre
 
 # 创建 Python 环境（二选一）：
@@ -87,7 +87,7 @@ npm run dev
 **方式 C — Docker**
 
 ```bash
-git clone https://github.com/whwangovo/pyre.git
+git clone https://github.com/whwangovo/pyre-code.git
 cd pyre
 docker compose up --build
 ```
