@@ -10,6 +10,7 @@
   },
   "scripts": {
     "postinstall": "cd web && npm ci",
+    "build:problems": "PYTHON=$(test -x .venv/bin/python && echo .venv/bin/python || echo python) && $PYTHON scripts/export_problems.py",
     "build:solutions": "PYTHON=$(test -x .venv/bin/python && echo .venv/bin/python || echo python) && $PYTHON scripts/build_solutions.py",
     "predev": "PYTHON=$(test -x .venv/bin/python && echo .venv/bin/python || echo python) && $PYTHON -c 'import torch_judge' || (echo '\\nERROR: Python environment not found. Run ./setup.sh or activate your conda env.\\n' && exit 1)",
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"yellow,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\"",
