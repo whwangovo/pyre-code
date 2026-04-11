@@ -10,6 +10,7 @@
   },
   "scripts": {
     "postinstall": "cd web && npm ci",
+    "build:problems": "node scripts/run-python.js scripts/export_problems.py",
     "build:solutions": "node scripts/run-python.js scripts/build_solutions.py",
     "predev": "node scripts/run-python.js --check-import torch_judge",
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"yellow,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\"",

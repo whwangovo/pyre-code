@@ -213,6 +213,10 @@
         {
           "name": "Numerical stability",
           "code": "\nimport torch\nx = torch.tensor([1000., 1001., 1002.])\nout = {fn}(x, dim=-1)\nassert not torch.isnan(out).any(), 'NaN in output — not numerically stable'\nassert not torch.isinf(out).any(), 'Inf in output — not numerically stable'\nexpected = torch.softmax(x, dim=-1)\nassert torch.allclose(out, expected, atol=1e-5), 'Values differ on large input'\n"
+        },
+        {
+          "name": "dim=0 softmax",
+          "code": "\nimport torch\ntorch.manual_seed(3)\nx = torch.randn(4, 3)\nout = {fn}(x, dim=0)\nexp_x = (x - x.max(dim=0, keepdim=True).values).exp()\nexpected = exp_x / exp_x.sum(dim=0, keepdim=True)\nassert torch.allclose(out, expected, atol=1e-5), f'dim=0 softmax failed'\nassert torch.allclose(out.sum(dim=0), torch.ones(3), atol=1e-5), 'columns should sum to 1'\n"
         }
       ]
     },
@@ -393,8 +397,8 @@
       "title": "Multi-Head Cross-Attention",
       "difficulty": "Medium",
       "functionName": "MultiHeadCrossAttention",
-      "hint": "Q from `x_q`, K/V from `x_kv`\nProject → reshape `(B, H, S, d_k)` → scaled dot-product (no causal mask)\nConcat heads → output projection",
-      "hintZh": "Q 来自 `x_q`，K/V 来自 `x_kv`\n投影 → reshape `(B, H, S, d_k)` → 缩放点积（无因果遮蔽）\n拼接各头 → 输出投影",
+      "hint": "Q from `x_q`, K/V from `x_kv`. Project → reshape to `(B, H, S, d_k)` → scaled dot-product (no causal mask) → concat heads → `W_o`.",
+      "hintZh": "Q 来自 `x_q`，K/V 来自 `x_kv`。投影 → reshape 为 `(B, H, S, d_k)` → 缩放点积（无因果遮蔽）→ 拼接各头 → `W_o`。",
       "descriptionEn": "Implement multi-head cross-attention as an nn.Module.\n\nCross-attention lets a decoder attend to encoder outputs: Q comes from one sequence, K/V from another. No causal mask is applied.\n\n**Signature:** `MultiHeadCrossAttention(d_model, num_heads)` (nn.Module)\n\n**Forward:** `forward(x_q, x_kv) -> Tensor`\n- `x_q` — query input (B, S_q, d_model)\n- `x_kv` — key/value input (B, S_kv, d_model)\n\n**Returns:** attention output (B, S_q, d_model)\n\n**Constraints:**\n- Use separate W_q, W_k, W_v, W_o linear projections\n- Q and KV can have different sequence lengths",
       "descriptionZh": "实现多头交叉注意力（nn.Module）。\n\n交叉注意力让解码器关注编码器输出：Q 来自一个序列，K/V 来自另一个序列，不使用因果掩码。\n\n**签名:** `MultiHeadCrossAttention(d_model, num_heads)`（nn.Module）\n\n**前向传播:** `forward(x_q, x_kv) -> Tensor`\n- `x_q` — 查询输入 (B, S_q, d_model)\n- `x_kv` — 键/值输入 (B, S_kv, d_model)\n\n**返回:** 注意力输出 (B, S_q, d_model)\n\n**约束:**\n- 使用独立的 W_q、W_k、W_v、W_o 线性投影\n- Q 和 KV 可以有不同的序列长度",
       "tests": [
@@ -413,6 +417,10 @@
         {
           "name": "Gradient flow",
           "code": "\nimport torch\nattn = {fn}(d_model=32, num_heads=2)\nx_q = torch.randn(1, 4, 32, requires_grad=True)\nx_kv = torch.randn(1, 6, 32, requires_grad=True)\nattn(x_q, x_kv).sum().backward()\nassert x_q.grad is not None and x_kv.grad is not None, 'Missing gradients'\n"
+        },
+        {
+          "name": "Numerical correctness",
+          "code": "\nimport torch, torch.nn as nn\ntorch.manual_seed(5)\nB, S_q, S_kv, D, num_heads = 2, 4, 6, 32, 4\nattn = {fn}(d_model=D, num_heads=num_heads)\nattn.eval()\nx_q  = torch.randn(B, S_q,  D)\nx_kv = torch.randn(B, S_kv, D)\nwith torch.no_grad():\n    out = attn(x_q, x_kv)\n    d_k = D // num_heads\n    # Project using module weights\n    Q = x_q  @ attn.W_q.weight.T + attn.W_q.bias   # (B, S_q,  D)\n    K = x_kv @ attn.W_k.weight.T + attn.W_k.bias   # (B, S_kv, D)\n    V = x_kv @ attn.W_v.weight.T + attn.W_v.bias   # (B, S_kv, D)\n    # Split heads: (B, H, S, d_k)\n    Q = Q.view(B, S_q,  num_heads, d_k).transpose(1, 2)\n    K = K.view(B, S_kv, num_heads, d_k).transpose(1, 2)\n    V = V.view(B, S_kv, num_heads, d_k).transpose(1, 2)\n    scores  = Q @ K.transpose(-2, -1) / (d_k ** 0.5)\n    weights = torch.softmax(scores, dim=-1)\n    ctx     = (weights @ V).transpose(1, 2).contiguous().view(B, S_q, D)\n    expected = ctx @ attn.W_o.weight.T + attn.W_o.bias\nassert torch.allclose(out, expected, atol=1e-5), f'Numerical mismatch: max diff {(out - expected).abs().max()}'\n"
         }
       ]
     },
@@ -537,8 +545,8 @@
       "title": "SwiGLU MLP",
       "difficulty": "Medium",
       "functionName": "SwiGLUMLP",
-      "hint": "`gate = gate_proj(x)`, `up = up_proj(x)`\nSwiGLU gate: `gate * sigmoid(gate)` (SiLU)\nOutput: `down_proj(gate * up)`",
-      "hintZh": "`gate = gate_proj(x)`，`up = up_proj(x)`\nSwiGLU 门控：`gate * sigmoid(gate)`（SiLU）\n输出：`down_proj(gate * up)`",
+      "hint": "`gate_proj(d→d_ff)`, `up_proj(d→d_ff)`, `down_proj(d_ff→d)`. Forward: `down_proj(silu(gate_proj(x)) * up_proj(x))`. `silu(x) = x * sigmoid(x)`.",
+      "hintZh": "`gate_proj(d→d_ff)`、`up_proj(d→d_ff)`、`down_proj(d_ff→d)`。前向：`down_proj(silu(gate_proj(x)) * up_proj(x))`。`silu(x) = x * sigmoid(x)`。",
       "descriptionEn": "Implement a SwiGLU MLP as an nn.Module.\n\nSwiGLU is a gated MLP variant used in LLaMA and other modern LLMs: it applies SiLU gating to one projection and element-wise multiplies with another.\n\n**Signature:** `SwiGLUMLP(d_model, d_ff)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (*, d_model)\n\n**Returns:** output tensor (*, d_model)\n\n**Constraints:**\n- Three projections: gate_proj(d, d_ff), up_proj(d, d_ff), down_proj(d_ff, d)\n- `forward(x) = down_proj(silu(gate_proj(x)) * up_proj(x))`\n- SiLU(x) = x * sigmoid(x)",
       "descriptionZh": "实现 SwiGLU MLP（nn.Module）。\n\nSwiGLU 是 LLaMA 等现代 LLM 使用的门控 MLP 变体：对一个投影应用 SiLU 门控，与另一个投影逐元素相乘。\n\n**签名:** `SwiGLUMLP(d_model, d_ff)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (*, d_model)\n\n**返回:** 输出张量 (*, d_model)\n\n**约束:**\n- 三个投影：gate_proj(d, d_ff)、up_proj(d, d_ff)、down_proj(d_ff, d)\n- `forward(x) = down_proj(silu(gate_proj(x)) * up_proj(x))`\n- SiLU(x) = x * sigmoid(x)",
       "tests": [
@@ -587,6 +595,10 @@
           "code": "\nimport torch\nx = torch.randn(2, 4, 32)\nweight = torch.ones(32)\nout = {fn}(x, weight)\nassert out.shape == x.shape, f'Shape mismatch on 3-D: {out.shape}'\nrms = torch.sqrt(x.pow(2).mean(dim=-1, keepdim=True) + 1e-6)\nref = x / rms * weight\nassert torch.allclose(out, ref, atol=1e-5), 'Value mismatch on 3-D'\n"
         },
         {
+          "name": "Differs from LayerNorm (no mean subtraction)",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nx = torch.ones(2, 8) * 5.0 + torch.randn(2, 8) * 0.1\nweight = torch.ones(8)\nout = {fn}(x, weight)\nrms = torch.sqrt(x.pow(2).mean(dim=-1, keepdim=True) + 1e-6)\nref = x / rms * weight\nassert torch.allclose(out, ref, atol=1e-5), 'Should match RMS formula (no mean subtraction)'\n# LayerNorm would subtract mean first, giving very different results\nln_out = torch.nn.functional.layer_norm(x, [8], weight, torch.zeros(8))\nassert not torch.allclose(out, ln_out, atol=0.1), 'Output should differ from LayerNorm'\n"
+        },
+        {
           "name": "Gradient flow",
           "code": "\nimport torch\nx = torch.randn(2, 8, requires_grad=True)\nweight = torch.ones(8, requires_grad=True)\nout = {fn}(x, weight)\nout.sum().backward()\nassert x.grad is not None, 'x.grad is None'\nassert weight.grad is not None, 'weight.grad is None'\n"
         }
@@ -617,6 +629,10 @@
         {
           "name": "Returns valid index",
           "code": "\nimport torch\ntorch.manual_seed(0)\nV = 100\nlogits = torch.randn(V)\nfor _ in range(20):\n    t = {fn}(logits.clone(), top_k=10, top_p=0.9)\n    assert 0 <= t < V, f'Token {t} out of range'\n"
+        },
+        {
+          "name": "top_p excludes low-probability tokens",
+          "code": "\nimport torch\n# Token 0 has prob ~1.0 after softmax; top_p=0.5 should only allow token 0\nlogits = torch.zeros(10)\nlogits[0] = 10.0\ntorch.manual_seed(0)\nresults = set()\nfor _ in range(50):\n    results.add({fn}(logits.clone(), top_k=0, top_p=0.5, temperature=1.0))\nexpected = {0}\nassert results == expected, f'With top_p=0.5 and dominant token 0, only token 0 should be sampled, got ' + str(results)\n"
         }
       ]
     },
@@ -625,8 +641,8 @@
       "title": "ViT Patch Embedding",
       "difficulty": "Medium",
       "functionName": "PatchEmbedding",
-      "hint": "`(B,C,H,W)` → reshape `(B, n_h, P, n_w, P, C)` → permute → `(B, num_patches, C*P*P)`\nThen `nn.Linear(C*P*P, d_model)` projection",
-      "hintZh": "`(B,C,H,W)` → reshape `(B, n_h, P, n_w, P, C)` → permute → `(B, num_patches, C*P*P)`\n再用 `nn.Linear(C*P*P, d_model)` 投影",
+      "hint": "`(B,C,H,W)` → reshape to `(B, n_h, P, n_w, P, C)` → permute → `(B, num_patches, C*P*P)` → `nn.Linear(C*P*P, embed_dim)`.",
+      "hintZh": "`(B,C,H,W)` → reshape 为 `(B, n_h, P, n_w, P, C)` → permute → `(B, num_patches, C*P*P)` → `nn.Linear(C*P*P, embed_dim)`。",
       "descriptionEn": "Implement ViT patch embedding as an nn.Module.\n\nPatch embedding splits an image into fixed-size patches and projects each patch into an embedding vector, forming the input sequence for Vision Transformers.\n\n**Signature:** `PatchEmbedding(img_size, patch_size, in_channels, embed_dim)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — image tensor (B, C, H, W)\n\n**Returns:** patch embeddings (B, num_patches, embed_dim)\n\n**Constraints:**\n- `num_patches = (img_size / patch_size)^2`\n- Store `self.num_patches` as an attribute\n- Project with `nn.Linear(C * P * P, embed_dim)`",
       "descriptionZh": "实现 ViT 图像块嵌入（nn.Module）。\n\n图像块嵌入将图像分割为固定大小的块，并将每个块投影为嵌入向量，形成 Vision Transformer 的输入序列。\n\n**签名:** `PatchEmbedding(img_size, patch_size, in_channels, embed_dim)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 图像张量 (B, C, H, W)\n\n**返回:** 图像块嵌入 (B, num_patches, embed_dim)\n\n**约束:**\n- `num_patches = (img_size / patch_size)^2`\n- 将 `self.num_patches` 存储为属性\n- 使用 `nn.Linear(C * P * P, embed_dim)` 投影",
       "tests": [
@@ -645,6 +661,10 @@
         {
           "name": "Gradient flow",
           "code": "\nimport torch\npe = {fn}(img_size=32, patch_size=8, in_channels=3, embed_dim=64)\nx = torch.randn(1, 3, 32, 32, requires_grad=True)\npe(x).sum().backward()\nassert x.grad is not None, 'x.grad is None'\n"
+        },
+        {
+          "name": "Patch values match manual projection",
+          "code": "\nimport torch, torch.nn as nn\ntorch.manual_seed(7)\nimg_size, patch_size, in_channels, embed_dim = 4, 2, 1, 4\npe = {fn}(img_size=img_size, patch_size=patch_size, in_channels=in_channels, embed_dim=embed_dim)\nx = torch.zeros(1, 1, 4, 4)\nx[0, 0, 0:2, 0:2] = 1.0\nx[0, 0, 0:2, 2:4] = 2.0\nx[0, 0, 2:4, 0:2] = 3.0\nx[0, 0, 2:4, 2:4] = 4.0\nout = pe(x)\nassert out.shape == (1, 4, embed_dim), f'Shape: {out.shape}'\n# Manually compute expected for each patch\nproj = pe.proj\npatch0 = x[0, 0, 0:2, 0:2].reshape(1, -1)  # all ones\npatch1 = x[0, 0, 0:2, 2:4].reshape(1, -1)  # all twos\npatch2 = x[0, 0, 2:4, 0:2].reshape(1, -1)  # all threes\npatch3 = x[0, 0, 2:4, 2:4].reshape(1, -1)  # all fours\nexpected = torch.cat([patch0, patch1, patch2, patch3], dim=0) @ proj.weight.T + proj.bias\nassert torch.allclose(out[0], expected, atol=1e-5), f'Patch projection mismatch'\n"
         }
       ]
     },
@@ -653,8 +673,8 @@
       "title": "Softmax Attention",
       "difficulty": "Easy",
       "functionName": "scaled_dot_product_attention",
-      "hint": "`scores = Q @ K.T / sqrt(d_k)`\n→ `softmax(scores, dim=-1) @ V`\nUse `torch.bmm` for batched matmul",
-      "hintZh": "`scores = Q @ K.T / sqrt(d_k)`\n→ `softmax(scores, dim=-1) @ V`\n批量矩阵乘用 `torch.bmm`",
+      "hint": "`scores = torch.bmm(Q, K.transpose(1, 2)) / sqrt(d_k)` → `torch.bmm(softmax(scores, dim=-1), V)`.",
+      "hintZh": "`scores = torch.bmm(Q, K.transpose(1, 2)) / sqrt(d_k)` → `torch.bmm(softmax(scores, dim=-1), V)`。",
       "descriptionEn": "Implement scaled dot-product attention.\n\nThis is the core attention mechanism: compute similarity scores between queries and keys, then use them to weight values.\n\n**Signature:** `scaled_dot_product_attention(Q, K, V) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S_q, D)\n- `K` — key tensor (B, S_k, D)\n- `V` — value tensor (B, S_k, D_v)\n\n**Returns:** weighted values tensor (B, S_q, D_v)\n\n**Constraints:**\n- Scale scores by `1/sqrt(d_k)`\n- Support cross-attention (S_q != S_k)",
       "descriptionZh": "实现缩放点积注意力。\n\n这是核心注意力机制：计算查询和键之间的相似度分数，然后用它们对值进行加权。\n\n**签名:** `scaled_dot_product_attention(Q, K, V) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S_q, D)\n- `K` — 键张量 (B, S_k, D)\n- `V` — 值张量 (B, S_k, D_v)\n\n**返回:** 加权后的值张量 (B, S_q, D_v)\n\n**约束:**\n- 分数需除以 `sqrt(d_k)` 进行缩放\n- 支持交叉注意力（S_q != S_k）",
       "tests": [
@@ -701,6 +721,14 @@
         {
           "name": "More merges -> fewer tokens",
           "code": "\nbpe1 = {fn}()\nbpe1.train(['hello'] * 10, num_merges=2)\nbpe2 = {fn}()\nbpe2.train(['hello'] * 10, num_merges=10)\nassert len(bpe2.encode('hello')) <= len(bpe1.encode('hello')), 'More merges should reduce tokens'\n"
+        },
+        {
+          "name": "Encode compresses known corpus",
+          "code": "\n# Corpus where 'aa' is the dominant pair; after 3 merges 'aab' should encode to fewer tokens than chars\nbpe = {fn}()\nbpe.train(['aaa', 'aaa', 'aaa', 'aab', 'aab'], num_merges=3)\nencoded = bpe.encode('aab')\nassert isinstance(encoded, list), 'encode should return a list'\nassert len(encoded) > 0, 'encode should return non-empty list'\n# 'aa' must be a learned merge (most frequent pair), so 'aab' -> ['aa', 'b', '</w>'] or similar\nassert len(encoded) < len('aab') + 1, f'BPE should compress: \"aab\" encoded to {encoded} ({len(encoded)} tokens) but expected fewer than {len(\"aab\") + 1}'\n"
+        },
+        {
+          "name": "Encode output reconstructs original word",
+          "code": "\nbpe = {fn}()\nbpe.train(['lowest', 'newer', 'wider'] * 5, num_merges=6)\nfor word in ['low', 'new', 'wide']:\n    tokens = bpe.encode(word)\n    reconstructed = ''.join(t.replace('</w>', '') for t in tokens)\n    assert reconstructed == word, f'Reconstruction failed: {word!r} -> {tokens} -> {reconstructed!r}'\n"
         }
       ]
     },
@@ -709,8 +737,8 @@
       "title": "Causal Self-Attention",
       "difficulty": "Medium",
       "functionName": "causal_attention",
-      "hint": "Standard attention + causal mask\n`torch.triu(ones, diagonal=1)` → upper triangle → fill `-inf` before softmax",
-      "hintZh": "标准注意力 + 因果遮蔽\n`torch.triu(ones, diagonal=1)` 得到上三角 → softmax 前填 `-inf`",
+      "hint": "Standard attention + causal mask. `torch.triu(ones, diagonal=1)` → upper triangle → fill with `-inf` before softmax.",
+      "hintZh": "标准注意力 + 因果遮蔽。`torch.triu(ones, diagonal=1)` 得到上三角 → softmax 前填 `-inf`。",
       "descriptionEn": "Implement causal (masked) self-attention.\n\nLike standard attention but prevents each position from attending to future positions, essential for autoregressive models like GPT.\n\n**Signature:** `causal_attention(Q, K, V) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S, D)\n- `K` — key tensor (B, S, D)\n- `V` — value tensor (B, S, D)\n\n**Returns:** causally masked attention output (B, S, D)\n\n**Constraints:**\n- Mask future positions with `-inf` before softmax\n- Position 0 should only see itself",
       "descriptionZh": "实现因果（掩码）自注意力。\n\n与标准注意力类似，但阻止每个位置关注未来位置，这对 GPT 等自回归模型至关重要。\n\n**签名:** `causal_attention(Q, K, V) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S, D)\n- `K` — 键张量 (B, S, D)\n- `V` — 值张量 (B, S, D)\n\n**返回:** 因果掩码注意力输出 (B, S, D)\n\n**约束:**\n- 在 softmax 之前用 `-inf` 掩盖未来位置\n- 位置 0 只能看到自身",
       "tests": [
@@ -729,6 +757,10 @@
         {
           "name": "Gradient flow",
           "code": "\nimport torch\nQ = torch.randn(2, 4, 8, requires_grad=True)\nK = torch.randn(2, 4, 8, requires_grad=True)\nV = torch.randn(2, 4, 8, requires_grad=True)\nout = {fn}(Q, K, V)\nout.sum().backward()\nassert Q.grad is not None and K.grad is not None and V.grad is not None, 'Missing gradients'\n"
+        },
+        {
+          "name": "Numerical correctness",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nB, S, D = 2, 6, 8\nQ = torch.randn(B, S, D)\nK = torch.randn(B, S, D)\nV = torch.randn(B, S, D)\nout = {fn}(Q, K, V)\n# Reference computation\nd_k = Q.shape[-1]\nscale = d_k ** -0.5\nscores = Q @ K.transpose(-2, -1) * scale\nmask = torch.triu(torch.ones(S, S, dtype=torch.bool), diagonal=1)\nscores = scores.masked_fill(mask, float('-inf'))\nattn = torch.softmax(scores, dim=-1)\nexpected = attn @ V\nassert torch.allclose(out, expected, atol=1e-5), f'Numerical mismatch: max diff {(out - expected).abs().max()}'\n"
         }
       ]
     },
@@ -797,8 +829,8 @@
       "title": "GPT-2 Transformer Block",
       "difficulty": "Hard",
       "functionName": "GPT2Block",
-      "hint": "Pre-norm residual:\n1. `x = x + attn(ln1(x))`\n2. `x = x + mlp(ln2(x))`\nMLP: `Linear(d,4d) → GELU → Linear(4d,d)`\nGELU: `x * 0.5 * (1 + erf(x / sqrt(2)))`",
-      "hintZh": "Pre-norm 残差：\n1. `x = x + attn(ln1(x))`\n2. `x = x + mlp(ln2(x))`\nMLP：`Linear(d,4d) → GELU → Linear(4d,d)`\nGELU：`x * 0.5 * (1 + erf(x / sqrt(2)))`",
+      "hint": "Pre-norm residual: `x = x + attn(ln1(x))`, `x = x + mlp(ln2(x))`. MLP: `Linear(d,4d) → GELU → Linear(4d,d)`. Attention must be causal (mask future with `-inf`).",
+      "hintZh": "Pre-norm 残差：`x = x + attn(ln1(x))`，`x = x + mlp(ln2(x))`。MLP：`Linear(d,4d) → GELU → Linear(4d,d)`。注意力必须是因果的（用 `-inf` 遮蔽未来）。",
       "descriptionEn": "Implement a GPT-2 transformer block as an nn.Module.\n\nA GPT-2 block uses pre-norm architecture: LayerNorm before causal self-attention and MLP, with residual connections around both.\n\n**Signature:** `GPT2Block(d_model, num_heads)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (B, S, d_model)\n\n**Returns:** output tensor (B, S, d_model)\n\n**Constraints:**\n- Pre-norm: `x = x + attn(ln1(x))`, `x = x + mlp(ln2(x))`\n- MLP: Linear(d, 4d) -> GELU -> Linear(4d, d)\n- Attention must be causal (future tokens cannot affect past)",
       "descriptionZh": "实现 GPT-2 Transformer 块（nn.Module）。\n\nGPT-2 块使用 pre-norm 架构：在因果自注意力和 MLP 之前进行 LayerNorm，两者都有残差连接。\n\n**签名:** `GPT2Block(d_model, num_heads)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (B, S, d_model)\n\n**返回:** 输出张量 (B, S, d_model)\n\n**约束:**\n- Pre-norm：`x = x + attn(ln1(x))`，`x = x + mlp(ln2(x))`\n- MLP：Linear(d, 4d) -> GELU -> Linear(4d, d)\n- 注意力必须是因果的（未来 token 不能影响过去）",
       "tests": [
@@ -834,6 +866,10 @@
       "descriptionEn": "Implement Grouped Query Attention (GQA).\n\nGQA uses fewer KV heads than query heads, sharing each KV head across a group of query heads. This reduces KV cache size while preserving quality.\n\n**Signature:** `GroupQueryAttention(d_model, num_heads, num_kv_heads)`\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (B, S, d_model)\n\n**Returns:** attention output (B, S, d_model)\n\n**Constraints:**\n- W_k/W_v project to `num_kv_heads * d_k` dimensions\n- Expand KV heads with `repeat_interleave` to match query heads\n- Degenerates to standard MHA when `num_kv_heads == num_heads`",
       "descriptionZh": "实现分组查询注意力（GQA）。\n\nGQA 使用比查询头更少的 KV 头，每个 KV 头在一组查询头之间共享，在保持质量的同时减少 KV 缓存大小。\n\n**签名:** `GroupQueryAttention(d_model, num_heads, num_kv_heads)`\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (B, S, d_model)\n\n**返回:** 注意力输出 (B, S, d_model)\n\n**约束:**\n- W_k/W_v 投影到 `num_kv_heads * d_k` 维\n- 使用 `repeat_interleave` 扩展 KV 头以匹配查询头数\n- 当 `num_kv_heads == num_heads` 时退化为标准 MHA",
       "tests": [
+        {
+          "name": "Is nn.Module",
+          "code": "\nimport torch, torch.nn as nn\ngqa = {fn}(d_model=16, num_heads=4, num_kv_heads=2)\nassert isinstance(gqa, nn.Module), 'GroupQueryAttention should inherit from nn.Module'\n"
+        },
         {
           "name": "Output shape",
           "code": "\nimport torch\ntorch.manual_seed(0)\ngqa = {fn}(d_model=32, num_heads=8, num_kv_heads=2)\nout = gqa.forward(torch.randn(2, 6, 32))\nassert out.shape == (2, 6, 32), f'Shape mismatch: {out.shape}'\n"
@@ -907,8 +943,8 @@
           "code": "\nimport torch\ntorch.manual_seed(0)\nw = torch.randn(16, 8)\nq = {fn}(w)\nw_recon = q.weight_int8.float() * q.scale\nassert (w - w_recon).abs().max() < 0.1, 'Quantization error too large'\n"
         },
         {
-          "name": "Forward output shape",
-          "code": "\nimport torch\nq = {fn}(torch.randn(8, 4), torch.randn(8))\nout = q(torch.randn(2, 4))\nassert out.shape == (2, 8), f'Shape: {out.shape}'\n"
+          "name": "Forward with bias correctness",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nw = torch.randn(8, 4)\nb = torch.randn(8)\nq_bias = {fn}(w, b)\nq_no_bias = {fn}(w)\nx = torch.randn(2, 4)\nout_bias = q_bias(x)\nout_no = q_no_bias(x)\nassert out_bias.shape == (2, 8), f'Shape: {out_bias.shape}'\nassert torch.allclose(out_bias - out_no, b.unsqueeze(0).expand(2, -1), atol=1e-5), 'Bias not correctly added'\n"
         },
         {
           "name": "Weight is buffer not parameter",
@@ -953,10 +989,10 @@
       "title": "Linear Self-Attention",
       "difficulty": "Hard",
       "functionName": "linear_attention",
-      "hint": "`phi(x) = elu(x) + 1`\nOutput = `(phi(Q) @ (phi(K).T @ V)) / (phi(Q) @ phi(K).sum(dim=-2).T)`",
-      "hintZh": "`phi(x) = elu(x) + 1`\n输出 = `(phi(Q) @ (phi(K).T @ V)) / (phi(Q) @ phi(K).sum(dim=-2).T)`",
-      "descriptionEn": "Implement linear self-attention with kernel feature maps.\n\nLinear attention replaces softmax with a feature map phi, enabling O(S*D^2) complexity instead of O(S^2*D) by reordering the computation.\n\n**Signature:** `linear_attention(Q, K, V) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S, D_k)\n- `K` — key tensor (B, S, D_k)\n- `V` — value tensor (B, S, D_v)\n\n**Returns:** attention output (B, S, D_v)\n\n**Constraints:**\n- Feature map: `phi(x) = elu(x) + 1`\n- Compute `phi(Q) @ (phi(K)^T @ V)` not `softmax(Q @ K^T) @ V`\n- Normalize by `phi(Q) @ sum(phi(K))`",
-      "descriptionZh": "实现基于核特征映射的线性自注意力。\n\n线性注意力用特征映射 phi 替代 softmax，通过重排计算顺序将复杂度从 O(S^2*D) 降至 O(S*D^2)。\n\n**签名:** `linear_attention(Q, K, V) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S, D_k)\n- `K` — 键张量 (B, S, D_k)\n- `V` — 值张量 (B, S, D_v)\n\n**返回:** 注意力输出 (B, S, D_v)\n\n**约束:**\n- 特征映射：`phi(x) = elu(x) + 1`\n- 计算 `phi(Q) @ (phi(K)^T @ V)` 而非 `softmax(Q @ K^T) @ V`\n- 通过 `phi(Q) @ sum(phi(K))` 归一化",
+      "hint": "`phi(x) = elu(x) + 1`. Let `KV = phi(K).transpose(-2, -1) @ V` and `Z = phi(K).sum(dim=-2, keepdim=True)`. Output = `(phi(Q) @ KV) / (phi(Q) @ Z.transpose(-2, -1) + 1e-6)`.",
+      "hintZh": "`phi(x) = elu(x) + 1`。令 `KV = phi(K).transpose(-2, -1) @ V`，`Z = phi(K).sum(dim=-2, keepdim=True)`。输出 = `(phi(Q) @ KV) / (phi(Q) @ Z.transpose(-2, -1) + 1e-6)`。",
+      "descriptionEn": "Implement linear self-attention with kernel feature maps.\n\nLinear attention replaces softmax with a feature map phi, enabling O(S*D^2) complexity instead of O(S^2*D) by reordering the computation.\n\n**Signature:** `linear_attention(Q, K, V) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S, D_k)\n- `K` — key tensor (B, S, D_k)\n- `V` — value tensor (B, S, D_v)\n\n**Returns:** attention output (B, S, D_v)\n\n**Constraints:**\n- Feature map: `phi(x) = elu(x) + 1`\n- Compute `phi(Q) @ (phi(K)^T @ V)` not `softmax(Q @ K^T) @ V`\n- Normalize by `phi(Q) @ sum(phi(K))` (add `eps=1e-6` for numerical stability)",
+      "descriptionZh": "实现基于核特征映射的线性自注意力。\n\n线性注意力用特征映射 phi 替代 softmax，通过重排计算顺序将复杂度从 O(S^2*D) 降至 O(S*D^2)。\n\n**签名:** `linear_attention(Q, K, V) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S, D_k)\n- `K` — 键张量 (B, S, D_k)\n- `V` — 值张量 (B, S, D_v)\n\n**返回:** 注意力输出 (B, S, D_v)\n\n**约束:**\n- 特征映射：`phi(x) = elu(x) + 1`\n- 计算 `phi(Q) @ (phi(K)^T @ V)` 而非 `softmax(Q @ K^T) @ V`\n- 通过 `phi(Q) @ sum(phi(K))` 归一化（加 `eps=1e-6` 保证数值稳定）",
       "tests": [
         {
           "name": "Output shape",
@@ -973,6 +1009,10 @@
         {
           "name": "Runs fast on long sequences (linear complexity)",
           "code": "\nimport torch, time\ntorch.manual_seed(0)\nQ = torch.randn(1, 2048, 64)\nK = torch.randn(1, 2048, 64)\nV = torch.randn(1, 2048, 64)\nt0 = time.perf_counter()\nfor _ in range(10):\n    {fn}(Q, K, V)\nelapsed = time.perf_counter() - t0\nassert elapsed < 5.0, f'Too slow: {elapsed:.2f}s — should be O(S*D^2) not O(S^2*D)'\n"
+        },
+        {
+          "name": "Numerical correctness",
+          "code": "\nimport torch\ntorch.manual_seed(7)\nB, S, D = 1, 4, 8\nQ = torch.randn(B, S, D)\nK = torch.randn(B, S, D)\nV = torch.randn(B, S, D)\nout = {fn}(Q, K, V)\n# Reference: phi(x) = elu(x) + 1, elu(x) = x if x>0 else exp(x)-1\ndef elu_plus_1(x):\n    return torch.where(x > 0, x + 1, x.exp())\nphi_Q = elu_plus_1(Q)\nphi_K = elu_plus_1(K)\nKV = phi_K.transpose(-2, -1) @ V          # (B, D, D_v)\nZ = phi_K.sum(dim=1, keepdim=True)        # (B, 1, D)\nnum = phi_Q @ KV                           # (B, S, D_v)\nden = phi_Q @ Z.transpose(-2, -1)         # (B, S, 1)\nexpected = num / (den + 1e-6)\nassert torch.allclose(out, expected, atol=1e-5), f'Numerical mismatch: max diff {(out - expected).abs().max()}'\n"
         }
       ]
     },
@@ -986,6 +1026,10 @@
       "descriptionEn": "Implement Multi-Head Attention from scratch.\n\nMHA projects inputs into multiple heads, computes scaled dot-product attention per head, then concatenates and projects the results.\n\n**Signature:** `MultiHeadAttention(d_model, num_heads)`\n\n**Method:** `forward(Q, K, V) -> Tensor`\n- `Q` — query tensor (B, S_q, d_model)\n- `K` — key tensor (B, S_k, d_model)\n- `V` — value tensor (B, S_k, d_model)\n\n**Returns:** attention output (B, S_q, d_model)\n\n**Constraints:**\n- Use W_q, W_k, W_v, W_o as `nn.Linear(d_model, d_model)`\n- `d_k = d_model // num_heads`\n- Support cross-attention (S_q != S_k)",
       "descriptionZh": "从零实现多头注意力。\n\nMHA 将输入投影到多个头，每个头计算缩放点积注意力，然后拼接并投影结果。\n\n**签名:** `MultiHeadAttention(d_model, num_heads)`\n\n**方法:** `forward(Q, K, V) -> Tensor`\n- `Q` — 查询张量 (B, S_q, d_model)\n- `K` — 键张量 (B, S_k, d_model)\n- `V` — 值张量 (B, S_k, d_model)\n\n**返回:** 注意力输出 (B, S_q, d_model)\n\n**约束:**\n- 使用 W_q、W_k、W_v、W_o 作为 `nn.Linear(d_model, d_model)`\n- `d_k = d_model // num_heads`\n- 支持交叉注意力（S_q != S_k）",
       "tests": [
+        {
+          "name": "Is nn.Module",
+          "code": "\nimport torch, torch.nn as nn\nmha = {fn}(d_model=16, num_heads=2)\nassert isinstance(mha, nn.Module), 'MultiHeadAttention should inherit from nn.Module'\n"
+        },
         {
           "name": "Output shape",
           "code": "\nimport torch\ntorch.manual_seed(0)\nB, S, D, H = 2, 6, 32, 4\nmha = {fn}(d_model=D, num_heads=H)\nx = torch.randn(B, S, D)\nout = mha.forward(x, x, x)\nassert out.shape == (B, S, D), f'Shape mismatch: {out.shape} vs {(B, S, D)}'\n"
@@ -1017,8 +1061,8 @@
       "title": "Mixture of Experts (MoE)",
       "difficulty": "Hard",
       "functionName": "MixtureOfExperts",
-      "hint": "1. Router: `Linear(d, num_experts)` → `topk` → softmax weights\n2. Each expert: `Linear → ReLU → Linear`\n3. Weighted sum of top-k expert outputs",
-      "hintZh": "1. 路由：`Linear(d, num_experts)` → `topk` → softmax 权重\n2. 每个专家：`Linear → ReLU → Linear`\n3. top-k 专家输出的加权求和",
+      "hint": "`router`: `Linear(d, num_experts)` → `topk` → `softmax` weights. Each expert: `Linear → ReLU → Linear`. Weighted sum of top-k expert outputs per token.",
+      "hintZh": "`router`：`Linear(d, num_experts)` → `topk` → `softmax` 权重。每个专家：`Linear → ReLU → Linear`。对每个 token 的 top-k 专家输出加权求和。",
       "descriptionEn": "Implement a Mixture of Experts (MoE) layer as an nn.Module.\n\nMoE routes each token to the top-k experts via a learned router, combining their outputs with softmax-normalized weights for conditional computation.\n\n**Signature:** `MixtureOfExperts(d_model, d_ff, num_experts, top_k=2)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (B, S, d_model)\n\n**Returns:** output tensor (B, S, d_model)\n\n**Constraints:**\n- Router: `nn.Linear(d_model, num_experts)` -> topk -> softmax\n- Each expert: Linear -> ReLU -> Linear\n- Store experts in `self.experts` (nn.ModuleList)",
       "descriptionZh": "实现混合专家（MoE）层（nn.Module）。\n\nMoE 通过学习的路由器将每个 token 路由到 top-k 个专家，用 softmax 归一化的权重组合它们的输出，实现条件计算。\n\n**签名:** `MixtureOfExperts(d_model, d_ff, num_experts, top_k=2)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (B, S, d_model)\n\n**返回:** 输出张量 (B, S, d_model)\n\n**约束:**\n- 路由器：`nn.Linear(d_model, num_experts)` -> topk -> softmax\n- 每个专家：Linear -> ReLU -> Linear\n- 专家存储在 `self.experts`（nn.ModuleList）中",
       "tests": [
@@ -1037,6 +1081,10 @@
         {
           "name": "Gradient flow",
           "code": "\nimport torch\nmoe = {fn}(d_model=16, d_ff=32, num_experts=4, top_k=2)\nx = torch.randn(1, 4, 16, requires_grad=True)\nmoe(x).sum().backward()\nassert x.grad is not None, 'x.grad is None'\n"
+        },
+        {
+          "name": "Routing to single expert matches manual computation",
+          "code": "\nimport torch, torch.nn as nn\ntorch.manual_seed(0)\nd_model, d_ff, num_experts, top_k = 8, 16, 4, 1\nmoe = {fn}(d_model=d_model, d_ff=d_ff, num_experts=num_experts, top_k=top_k)\n# Force router to always select expert 0 via large bias\nwith torch.no_grad():\n    moe.router.weight.zero_()\n    if moe.router.bias is not None:\n        moe.router.bias.zero_()\n        moe.router.bias[0] = 1e6  # expert 0 always wins\n    else:\n        # No bias: set weight row 0 to a large constant vector\n        moe.router.weight[0] = 1e6\ntorch.manual_seed(1)\nx = torch.randn(2, 3, d_model)\nout = moe(x)\n# With top_k=1 and expert 0 always winning, softmax of single value = 1.0\n# Expected: expert 0 applied to every token with weight 1.0\nx_flat = x.reshape(-1, d_model)\nexpert0 = moe.experts[0]\nexpected = expert0(x_flat).reshape(2, 3, d_model)\nassert torch.allclose(out, expected, atol=1e-5), f'Max diff: {(out - expected).abs().max().item()}'\n"
         }
       ]
     },
@@ -1084,11 +1132,15 @@
         },
         {
           "name": "Relative position property",
-          "code": "\nimport torch\ntorch.manual_seed(0)\nq = torch.randn(1, 8, 16)\nk = torch.randn(1, 8, 16)\nq_rot, k_rot = {fn}(q, k)\nq2 = torch.cat([torch.zeros(1, 3, 16), q], dim=1)\nk2 = torch.cat([torch.zeros(1, 3, 16), k], dim=1)\nq2_rot, k2_rot = {fn}(q2, k2)\ndot1 = (q_rot[:, 0] * k_rot[:, 0]).sum(dim=-1)\ndot2 = (q2_rot[:, 3] * k2_rot[:, 3]).sum(dim=-1)\nassert torch.allclose(dot1, dot2, atol=1e-4), 'Dot product should depend on relative position only'\n"
+          "code": "\nimport torch\ntorch.manual_seed(0)\nq = torch.randn(1, 8, 16)\nk = torch.randn(1, 8, 16)\nq_rot, k_rot = {fn}(q, k)\nq2 = torch.cat([torch.zeros(1, 3, 16), q], dim=1)\nk2 = torch.cat([torch.zeros(1, 3, 16), k], dim=1)\nq2_rot, k2_rot = {fn}(q2, k2)\n# Same relative distance of 2: pos 0 vs pos 2, and pos 3 vs pos 5\ndot1 = (q_rot[:, 0] * k_rot[:, 2]).sum(dim=-1)\ndot2 = (q2_rot[:, 3] * k2_rot[:, 5]).sum(dim=-1)\nassert torch.allclose(dot1, dot2, atol=1e-4), 'Dot product should depend on relative position only'\n"
         },
         {
           "name": "Gradient flow",
           "code": "\nimport torch\nq = torch.randn(1, 4, 8, requires_grad=True)\nk = torch.randn(1, 4, 8, requires_grad=True)\nqr, kr = {fn}(q, k)\n(qr.sum() + kr.sum()).backward()\nassert q.grad is not None and k.grad is not None, 'Missing gradients'\n"
+        },
+        {
+          "name": "Numerical correctness",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nB, S, D = 1, 2, 4\nq = torch.randn(B, S, D)\nk = torch.randn(B, S, D)\nq_rot, k_rot = {fn}(q, k)\n# Reference: for each position p and pair i, angle = p / 10000^(2i/D)\npos = torch.arange(S).float()\nfreqs = 1.0 / (10000.0 ** (torch.arange(0, D, 2).float() / D))\nangles = pos.unsqueeze(1) * freqs.unsqueeze(0)  # (S, D//2)\ncos_a = torch.cos(angles)\nsin_a = torch.sin(angles)\ndef rotate_ref(x):\n    x_e = x[..., 0::2]\n    x_o = x[..., 1::2]\n    r_e = x_e * cos_a - x_o * sin_a\n    r_o = x_e * sin_a + x_o * cos_a\n    return torch.stack([r_e, r_o], dim=-1).flatten(-2)\nexpected_q = rotate_ref(q)\nexpected_k = rotate_ref(k)\nassert torch.allclose(q_rot, expected_q, atol=1e-5), f'Q rotation mismatch: max diff {(q_rot - expected_q).abs().max()}'\nassert torch.allclose(k_rot, expected_k, atol=1e-5), f'K rotation mismatch: max diff {(k_rot - expected_k).abs().max()}'\n"
         }
       ]
     },
@@ -1097,8 +1149,8 @@
       "title": "Sliding Window Attention",
       "difficulty": "Medium",
       "functionName": "sliding_window_attention",
-      "hint": "Standard attention + window mask\n`|i-j|` distance matrix → mask positions where `|i-j| > window_size` with `-inf`",
-      "hintZh": "标准注意力 + 窗口遮蔽\n`|i-j|` 距离矩阵 → 将 `|i-j| > window_size` 的位置填 `-inf`",
+      "hint": "Standard attention + window mask. Build `|i-j|` matrix → mask positions where `|i-j| > window_size` with `-inf` → softmax → `@ V`.",
+      "hintZh": "标准注意力 + 窗口遮蔽。构造 `|i-j|` 矩阵 → 将 `|i-j| > window_size` 的位置填 `-inf` → softmax → `@ V`。",
       "descriptionEn": "Implement sliding window attention.\n\nSliding window attention restricts each position to attend only within a fixed window, reducing complexity for long sequences while maintaining local context.\n\n**Signature:** `sliding_window_attention(Q, K, V, window_size) -> Tensor`\n\n**Parameters:**\n- `Q`, `K`, `V` — input tensors (B, S, D)\n- `window_size` — each position attends to positions within |i-j| <= window_size\n\n**Returns:** attention output (B, S, D)\n\n**Constraints:**\n- Mask positions where `|i - j| > window_size` with `-inf`\n- `window_size=0` means each position only sees itself\n- Large window equals full attention",
       "descriptionZh": "实现滑动窗口注意力。\n\n滑动窗口注意力限制每个位置只关注固定窗口内的位置，在保持局部上下文的同时降低长序列的复杂度。\n\n**签名:** `sliding_window_attention(Q, K, V, window_size) -> Tensor`\n\n**参数:**\n- `Q`, `K`, `V` — 输入张量 (B, S, D)\n- `window_size` — 每个位置关注 |i-j| <= window_size 范围内的位置\n\n**返回:** 注意力输出 (B, S, D)\n\n**约束:**\n- 用 `-inf` 掩盖 `|i - j| > window_size` 的位置\n- `window_size=0` 表示每个位置只能看到自身\n- 大窗口等同于全注意力",
       "tests": [
@@ -1145,6 +1197,10 @@
         {
           "name": "All tokens valid",
           "code": "\nimport torch\nV = 8\nfor seed in range(20):\n    torch.manual_seed(seed)\n    target = torch.softmax(torch.randn(3, V), dim=-1)\n    draft = torch.softmax(torch.randn(3, V), dim=-1)\n    tokens = torch.randint(0, V, (3,))\n    for t in {fn}(target, draft, tokens):\n        assert 0 <= t < V, f'Token {t} out of range'\n"
+        },
+        {
+          "name": "Rejection occurs when draft prob >> target prob",
+          "code": "\nimport torch\n# Token 0: draft prob 0.9, target prob 0.1 -> acceptance ~11%\n# Run 100 times; rejection must occur at least once\ntarget_probs = torch.tensor([[0.1, 0.8, 0.1], [0.33, 0.33, 0.34]])\ndraft_probs  = torch.tensor([[0.9, 0.05, 0.05], [0.33, 0.33, 0.34]])\ndraft_tokens = torch.tensor([0, 1])\ntorch.manual_seed(99)\nrejections = 0\nfor _ in range(100):\n    accepted = {fn}(target_probs, draft_probs, draft_tokens)\n    if len(accepted) < 3:\n        rejections += 1\nassert rejections > 0, f'Token 0 should be rejected at least sometimes (acceptance prob ~11%), got 0 rejections in 100 trials'\n"
         }
       ]
     },
@@ -1201,6 +1257,10 @@
         {
           "name": "Gradient flows",
           "code": "\nimport torch\nlogits = torch.randn(4, 6, requires_grad=True)\ntargets = torch.tensor([0, 1, 2, 3])\nloss = {fn}(logits, targets, smoothing=0.1)\nloss.backward()\nassert logits.grad is not None, 'Gradient not computed'\n"
+        },
+        {
+          "name": "Exact smoothed loss value",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nB, C = 4, 5\nlogits = torch.randn(B, C)\ntargets = torch.randint(0, C, (B,))\nsmoothing = 0.1\n# Reference using solution formula: non-target = smoothing/(C-1), target = 1-smoothing\nlogits_max = logits.max(dim=-1, keepdim=True).values\nshifted = logits - logits_max\nlog_probs = shifted - torch.log(torch.exp(shifted).sum(dim=-1, keepdim=True))\nsmooth_labels = torch.full((B, C), smoothing / (C - 1))\nsmooth_labels.scatter_(1, targets.unsqueeze(1), 1.0 - smoothing)\nexpected = -(smooth_labels * log_probs).sum(dim=-1).mean()\nout = {fn}(logits, targets, smoothing)\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected.item():.6f}, got {out.item():.6f}'\n"
         }
       ]
     },
@@ -1211,7 +1271,7 @@
       "functionName": "swiglu",
       "hint": "1. `gate = (x @ Wgate) * sigmoid(x @ Wgate)`  ← swish\n2. `hidden = (x @ W1) * gate`\n3. `return hidden @ W2`",
       "hintZh": "1. `gate = (x @ Wgate) * sigmoid(x @ Wgate)`  ← swish\n2. `hidden = (x @ W1) * gate`\n3. `return hidden @ W2`",
-      "descriptionEn": "Implement the SwiGLU gated activation function.\n\nSwiGLU is used in LLaMA, PaLM, and other modern LLMs as the MLP activation. It gates one linear projection with a Swish-activated version of another.\n\n**Signature:** `swiglu(x, W1, W2, Wgate) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor `(B, d_model)`\n- `W1` — weight matrix `(d_model, d_ff)`\n- `W2` — output projection `(d_ff, d_model)`\n- `Wgate` — gate weight `(d_model, d_ff)`\n\n**Returns:** output tensor `(B, d_model)`\n\n**Formula:** `SwiGLU(x) = (x @ W2)` where the hidden state is `(x @ W1) * swish(x @ Wgate)`\n\n**Swish:** `swish(z) = z * sigmoid(z)`",
+      "descriptionEn": "Implement the SwiGLU gated activation function.\n\nSwiGLU is used in LLaMA, PaLM, and other modern LLMs as the MLP activation. It gates one linear projection with a Swish-activated version of another.\n\n**Signature:** `swiglu(x, W1, W2, Wgate) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor `(B, d_model)`\n- `W1` — weight matrix `(d_model, d_ff)`\n- `W2` — output projection `(d_ff, d_model)`\n- `Wgate` — gate weight `(d_model, d_ff)`\n\n**Returns:** output tensor `(B, d_model)`\n\n**Formula:** `hidden = (x @ W1) * swish(x @ Wgate)`, output = `hidden @ W2`\n\n**Swish:** `swish(z) = z * sigmoid(z)`",
       "descriptionZh": "实现 SwiGLU 门控激活函数。\n\nSwiGLU 被 LLaMA、PaLM 等现代大语言模型用作 MLP 激活函数，用一个线性投影的 Swish 激活版本对另一个进行门控。\n\n**签名:** `swiglu(x, W1, W2, Wgate) -> Tensor`\n\n**参数:**\n- `x` — 输入张量 `(B, d_model)`\n- `W1` — 权重矩阵 `(d_model, d_ff)`\n- `W2` — 输出投影 `(d_ff, d_model)`\n- `Wgate` — 门控权重 `(d_model, d_ff)`\n\n**返回:** 输出张量 `(B, d_model)`\n\n**公式:** 隐藏状态 = `(x @ W1) * swish(x @ Wgate)`，输出 = `隐藏状态 @ W2`\n\n**Swish:** `swish(z) = z * sigmoid(z)`",
       "tests": [
         {
@@ -1249,6 +1309,10 @@
         {
           "name": "Gradient flows",
           "code": "\nimport torch\nB, S, D, H = 1, 4, 8, 2\nQ = torch.randn(B, S, D, requires_grad=True)\nK = torch.randn(B, S, D, requires_grad=True)\nV = torch.randn(B, S, D, requires_grad=True)\nout = {fn}(Q, K, V, H)\nout.sum().backward()\nassert Q.grad is not None and K.grad is not None and V.grad is not None\n"
+        },
+        {
+          "name": "ALiBi slopes and bias numerical correctness",
+          "code": "\nimport torch\ntorch.manual_seed(11)\nB, S, D, H = 1, 5, 8, 4\nQ = torch.randn(B, S, D)\nK = torch.randn(B, S, D)\nV = torch.randn(B, S, D)\nout = {fn}(Q, K, V, H)\n# Reference: slopes m_h = 1/2^(8h/H) for h=1..H\nd_h = D // H\nh_idx = torch.arange(1, H + 1, dtype=torch.float32)\nslopes = 1.0 / (2.0 ** (8.0 * h_idx / H))          # (H,)\npos = torch.arange(S).float()\ndist = (pos.unsqueeze(0) - pos.unsqueeze(1)).abs()   # (S, S)\nbias = -slopes.view(H, 1, 1) * dist.unsqueeze(0)    # (1, H, S, S)\nQh = Q.view(B, S, H, d_h).transpose(1, 2)\nKh = K.view(B, S, H, d_h).transpose(1, 2)\nVh = V.view(B, S, H, d_h).transpose(1, 2)\nscores = (Qh @ Kh.transpose(-2, -1)) / (d_h ** 0.5) + bias\nattn = torch.softmax(scores, dim=-1)\nexpected = (attn @ Vh).transpose(1, 2).reshape(B, S, D)\nassert torch.allclose(out, expected, atol=1e-5), f'ALiBi numerical mismatch: max diff {(out - expected).abs().max()}'\n"
         }
       ]
     },
@@ -1257,8 +1321,8 @@
       "title": "NTK-aware RoPE Scaling",
       "difficulty": "Easy",
       "functionName": "ntk_rope",
-      "hint": "`new_base = 10000 * scale**(D/(D-2))`\nApply standard RoPE with `new_base` instead of `10000`",
-      "hintZh": "`new_base = 10000 * scale**(D/(D-2))`\n用 `new_base` 替换 `10000`，其余与标准 RoPE 相同",
+      "hint": "`new_base = 10000 * scale**(D/(D-2))` → apply standard RoPE with `new_base` instead of `10000`.",
+      "hintZh": "`new_base = 10000 * scale**(D/(D-2))` → 用 `new_base` 替换 `10000` 应用标准 RoPE。",
       "descriptionEn": "Implement NTK-aware RoPE scaling for long-context extrapolation.\n\nStandard RoPE degrades on sequences longer than the training context. NTK-aware scaling adjusts the base frequency so that high-frequency dimensions are preserved while low-frequency ones are stretched, enabling extrapolation without fine-tuning.\n\n**Signature:** `ntk_rope(q, k, scale) -> (Tensor, Tensor)`\n\n**Parameters:**\n- `q, k` — tensors of shape `(B, S, D)`\n- `scale` — context length ratio (new_len / train_len), e.g. 4.0 for 4× context\n\n**Returns:** rotated `(q, k)` with same shapes\n\n**NTK base:** `base_new = 10000 * scale^(D/(D-2))`\n\nThen apply standard RoPE with the new base.",
       "descriptionZh": "实现 NTK-aware RoPE 缩放，用于长上下文外推。\n\n标准 RoPE 在超过训练上下文长度的序列上性能下降。NTK-aware 缩放调整基础频率，保留高频维度同时拉伸低频维度，无需微调即可外推。\n\n**签名:** `ntk_rope(q, k, scale) -> (Tensor, Tensor)`\n\n**参数:**\n- `q, k` — 形状 `(B, S, D)` 的张量\n- `scale` — 上下文长度比例（新长度/训练长度），如 4× 上下文传 4.0\n\n**返回:** 旋转后的 `(q, k)`，形状不变\n\n**NTK 基底:** `base_new = 10000 * scale^(D/(D-2))`\n\n然后用新基底应用标准 RoPE。",
       "tests": [
@@ -1277,6 +1341,10 @@
         {
           "name": "scale>1 changes frequencies",
           "code": "\nimport torch\ntorch.manual_seed(3)\nq = torch.randn(1, 8, 16)\nk = torch.randn(1, 8, 16)\nq1, _ = {fn}(q, k, scale=1.0)\nq4, _ = {fn}(q, k, scale=4.0)\nassert not torch.allclose(q1, q4, atol=1e-3), 'Different scales should produce different rotations'\n"
+        },
+        {
+          "name": "NTK base formula correctness",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nB, S, D = 1, 4, 8\nscale = 4.0\nq = torch.randn(B, S, D)\nk = torch.randn(B, S, D)\nq_rot, k_rot = {fn}(q, k, scale)\n# Reference with exact NTK base\nnew_base = 10000.0 * (scale ** (D / (D - 2)))\npos = torch.arange(S).float().unsqueeze(1)\ndim = torch.arange(0, D, 2).float()\nfreqs = 1.0 / (new_base ** (dim / D))\nangles = pos * freqs\ncos_a, sin_a = torch.cos(angles), torch.sin(angles)\ndef rotate(x):\n    x1, x2 = x[..., 0::2], x[..., 1::2]\n    return torch.stack([x1*cos_a - x2*sin_a, x1*sin_a + x2*cos_a], dim=-1).flatten(-2)\nassert torch.allclose(q_rot, rotate(q), atol=1e-5), 'NTK base formula mismatch'\n"
         }
       ]
     },
@@ -1301,6 +1369,10 @@
         {
           "name": "Model restored to fp32 after step",
           "code": "\nimport torch\nimport torch.nn as nn\ntorch.manual_seed(2)\nmodel = nn.Linear(8, 4)\nopt = torch.optim.SGD(model.parameters(), lr=0.01)\nx = torch.randn(4, 8)\ny = torch.randn(4, 4)\n{fn}(model, opt, nn.functional.mse_loss, x, y)\nfor p in model.parameters():\n    assert p.dtype == torch.float32, f'Parameter should be fp32 after step, got {p.dtype}'\n"
+        },
+        {
+          "name": "fp16 used in forward pass",
+          "code": "\nimport torch\nimport torch.nn as nn\n\nclass DtypeCapture(nn.Module):\n    def __init__(self, linear):\n        super().__init__()\n        self.linear = linear\n        self.captured_dtype = None\n    def forward(self, x):\n        self.captured_dtype = x.dtype\n        return self.linear(x)\n\ntorch.manual_seed(0)\nmodel = nn.Sequential(DtypeCapture(nn.Linear(8, 8)), nn.Linear(8, 4))\noptimizer = torch.optim.SGD(model.parameters(), lr=0.01)\nx = torch.randn(2, 8)\ny = torch.randn(2, 4)\nloss_fn = nn.MSELoss()\n{fn}(model, optimizer, loss_fn, x, y)\nassert model[0].captured_dtype == torch.float16, f'Expected fp16 in forward, got {model[0].captured_dtype}'\n"
         },
         {
           "name": "Loss scale affects gradients",
@@ -1425,8 +1497,8 @@
       "title": "Max Pooling 2D",
       "difficulty": "Easy",
       "functionName": "max_pool2d",
-      "hint": "`x.unfold(2, k, stride).unfold(3, k, stride)` → `(B, C, H_out, W_out, k, k)`\n→ `.flatten(-2).max(dim=-1).values`",
-      "hintZh": "`x.unfold(2, k, stride).unfold(3, k, stride)` → `(B, C, H_out, W_out, k, k)`\n→ `.flatten(-2).max(dim=-1).values`",
+      "hint": "`x.unfold(2, k, stride).unfold(3, k, stride)` → `(B, C, H_out, W_out, k, k)` → `.flatten(-2).max(dim=-1).values`.",
+      "hintZh": "`x.unfold(2, k, stride).unfold(3, k, stride)` → `(B, C, H_out, W_out, k, k)` → `.flatten(-2).max(dim=-1).values`。",
       "descriptionEn": "Implement 2D max pooling from scratch.\n\nMax pooling slides a window over the spatial dimensions of a feature map and takes the maximum value in each window.\n\n**Signature:** `max_pool2d(x, kernel_size, stride=None) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor of shape (B, C, H, W)\n- `kernel_size` — size of the pooling window (square)\n- `stride` — step size between windows; defaults to `kernel_size` if `None`\n\n**Returns:** tensor of shape (B, C, H_out, W_out) where\n- `H_out = (H - kernel_size) // stride + 1`\n- `W_out = (W - kernel_size) // stride + 1`\n\n**Constraints:**\n- Must match `torch.nn.functional.max_pool2d` numerically\n- Do not call any `F.*` or `nn.functional.*` functions",
       "descriptionZh": "从零实现二维最大池化。\n\n最大池化在特征图的空间维度上滑动窗口，取每个窗口内的最大值。\n\n**签名:** `max_pool2d(x, kernel_size, stride=None) -> Tensor`\n\n**参数:**\n- `x` — 输入张量，形状为 (B, C, H, W)\n- `kernel_size` — 池化窗口大小（正方形）\n- `stride` — 窗口步长；若为 `None` 则默认等于 `kernel_size`\n\n**返回:** 形状为 (B, C, H_out, W_out) 的张量，其中\n- `H_out = (H - kernel_size) // stride + 1`\n- `W_out = (W - kernel_size) // stride + 1`\n\n**约束:**\n- 结果必须与 `torch.nn.functional.max_pool2d` 在数值上一致\n- 不得调用任何 `F.*` 或 `nn.functional.*` 函数",
       "tests": [
@@ -1505,6 +1577,10 @@
         {
           "name": "Gradient flow",
           "code": "\nimport torch\nN, D = 4, 16\nq = torch.randn(N, D, requires_grad=True)\nk = torch.randn(N, D, requires_grad=True)\nloss = {fn}(q, k)\nloss.backward()\nassert q.grad is not None, 'No gradient for q'\nassert k.grad is not None, 'No gradient for k'\n"
+        },
+        {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, D = 4, 8\nq = torch.randn(N, D)\nk = torch.randn(N, D)\ntemperature = 0.07\n# Pre-normalize as the function expects\nq = q / q.norm(dim=-1, keepdim=True)\nk = k / k.norm(dim=-1, keepdim=True)\nsim = q @ k.T / temperature\nlog_probs = sim - torch.log(torch.exp(sim).sum(dim=-1, keepdim=True))\nexpected = -log_probs[torch.arange(N), torch.arange(N)].mean()\nout = {fn}(q, k, temperature)\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected.item():.6f}, got {out.item():.6f}'\n"
         }
       ]
     },
@@ -1657,6 +1733,10 @@
         {
           "name": "Works with different num_heads",
           "code": "\nimport torch\ntorch.manual_seed(3)\nfor num_heads in [1, 2, 8]:\n    block = {fn}(d_model=64, num_heads=num_heads)\n    x = torch.randn(2, 9, 64)\n    out = block(x)\n    assert out.shape == (2, 9, 64), f'Shape mismatch with num_heads={num_heads}: {out.shape}'\n"
+        },
+        {
+          "name": "Numerical correctness via manual forward pass",
+          "code": "\nimport torch, torch.nn as nn, math\ntorch.manual_seed(0)\nB, S, d_model, num_heads = 1, 4, 16, 2\nblock = {fn}(d_model=d_model, num_heads=num_heads)\nblock.eval()\nx = torch.randn(B, S, d_model)\n\n# --- manual MHA ---\nd_h = d_model // num_heads\nnormed1 = block.norm1(x)\nqkv = block.qkv(normed1).reshape(B, S, 3, num_heads, d_h).permute(2, 0, 3, 1, 4)\nq, k, v = qkv[0], qkv[1], qkv[2]\nscale = d_h ** -0.5\nattn_w = torch.softmax(q @ k.transpose(-2, -1) * scale, dim=-1)\nattn_out = (attn_w @ v).transpose(1, 2).reshape(B, S, d_model)\nmha_out = block.proj(attn_out)\nx_after_attn = x + mha_out\n\n# --- manual MLP with hand-implemented GELU ---\nnormed2 = block.norm2(x_after_attn)\nh = block.fc1(normed2)\ngelu_h = h * 0.5 * (1.0 + torch.erf(h / math.sqrt(2.0)))\nmlp_out = block.fc2(gelu_h)\nexpected = x_after_attn + mlp_out\n\nout = block(x)\nassert torch.allclose(out, expected, atol=1e-4), f'Max diff: {(out - expected).abs().max().item()}'\n"
         }
       ]
     },
@@ -1704,7 +1784,7 @@
         },
         {
           "name": "KV latent has correct compressed shape",
-          "code": "\nimport torch\ntorch.manual_seed(1)\nB, S, D, kv_rank, num_heads, D_h = 1, 8, 32, 6, 2, 4\nW_dkv = torch.randn(D, kv_rank)\nX = torch.randn(B, S, D)\nc_kv = X @ W_dkv\nassert c_kv.shape == (B, S, kv_rank), f'Latent shape should be ({B}, {S}, {kv_rank}), got {c_kv.shape}'\nassert kv_rank < D, 'kv_rank should be smaller than D for compression'\n"
+          "code": "\nimport torch\ntorch.manual_seed(1)\nB, S, D, kv_rank, num_heads, D_h = 1, 8, 32, 6, 2, 4\nW_dkv = torch.randn(D, kv_rank)\nW_uk  = torch.randn(kv_rank, num_heads * D_h)\nW_uv  = torch.randn(kv_rank, num_heads * D_h)\nW_q   = torch.randn(D, num_heads * D_h)\nX = torch.randn(B, S, D)\nout = {fn}(X, W_dkv, W_uk, W_uv, W_q, num_heads)\n# Conceptual check: verify the compression dimensions are correct.\n# This independently computes c_kv to validate the shape of the latent\n# representation. The student's actual code path is authoritatively\n# validated by the 'Numerical correctness' test (test 5).\nc_kv = X @ W_dkv\nassert c_kv.shape == (B, S, kv_rank), f'Latent shape should be ({B}, {S}, {kv_rank}), got {c_kv.shape}'\nassert kv_rank < D, 'kv_rank should be smaller than D for compression'\nassert out.shape == (B, S, num_heads * D_h), f'Output shape mismatch: {out.shape}'\n"
         },
         {
           "name": "Gradient flows through X and weights",
@@ -1712,7 +1792,11 @@
         },
         {
           "name": "kv_rank compression reduces memory",
-          "code": "\nimport torch\ntorch.manual_seed(3)\nB, S, D, kv_rank, num_heads, D_h = 2, 10, 128, 8, 4, 16\nW_dkv = torch.randn(D, kv_rank)\nW_uk  = torch.randn(kv_rank, num_heads * D_h)\nW_uv  = torch.randn(kv_rank, num_heads * D_h)\nW_q   = torch.randn(D, num_heads * D_h)\nX = torch.randn(B, S, D)\n# c_kv should be much smaller than full KV\nc_kv = X @ W_dkv\nfull_kv_size = B * S * num_heads * D_h * 2  # K and V\ncompressed_size = B * S * kv_rank\nassert c_kv.shape == (B, S, kv_rank), f'Wrong latent shape: {c_kv.shape}'\nassert compressed_size < full_kv_size, 'Compressed KV should be smaller than full KV'\n"
+          "code": "\nimport torch\ntorch.manual_seed(3)\nB, S, D, kv_rank, num_heads, D_h = 2, 10, 128, 8, 4, 16\nW_dkv = torch.randn(D, kv_rank)\nW_uk  = torch.randn(kv_rank, num_heads * D_h)\nW_uv  = torch.randn(kv_rank, num_heads * D_h)\nW_q   = torch.randn(D, num_heads * D_h)\nX = torch.randn(B, S, D)\nout = {fn}(X, W_dkv, W_uk, W_uv, W_q, num_heads)\n# c_kv should be much smaller than full KV\nc_kv = X @ W_dkv\nfull_kv_size = B * S * num_heads * D_h * 2  # K and V\ncompressed_size = B * S * kv_rank\nassert c_kv.shape == (B, S, kv_rank), f'Wrong latent shape: {c_kv.shape}'\nassert compressed_size < full_kv_size, 'Compressed KV should be smaller than full KV'\nassert out.shape == (B, S, num_heads * D_h), f'Output shape mismatch: {out.shape}'\n"
+        },
+        {
+          "name": "Numerical correctness",
+          "code": "\nimport torch\ntorch.manual_seed(9)\nB, S, D, kv_rank, num_heads, D_h = 2, 5, 32, 8, 4, 8\nW_dkv = torch.randn(D, kv_rank)\nW_uk  = torch.randn(kv_rank, num_heads * D_h)\nW_uv  = torch.randn(kv_rank, num_heads * D_h)\nW_q   = torch.randn(D, num_heads * D_h)\nX = torch.randn(B, S, D)\nout = {fn}(X, W_dkv, W_uk, W_uv, W_q, num_heads)\n# Reference computation\nc_kv = X @ W_dkv                          # (B, S, kv_rank)\nK = c_kv @ W_uk                            # (B, S, num_heads*D_h)\nV = c_kv @ W_uv                            # (B, S, num_heads*D_h)\nQ = X @ W_q                                # (B, S, num_heads*D_h)\ndef split_heads(t):\n    return t.view(B, S, num_heads, D_h).transpose(1, 2)\nQh, Kh, Vh = split_heads(Q), split_heads(K), split_heads(V)\nscale = D_h ** -0.5\nattn = torch.softmax(Qh @ Kh.transpose(-2, -1) * scale, dim=-1)\nexpected = (attn @ Vh).transpose(1, 2).reshape(B, S, num_heads * D_h)\nassert torch.allclose(out, expected, atol=1e-5), f'MLA numerical mismatch: max diff {(out - expected).abs().max()}'\n"
         }
       ]
     },
@@ -1760,7 +1844,7 @@
         },
         {
           "name": "Uniform routing gives loss = 1.0",
-          "code": "\nimport torch\n# Uniform logits -> uniform softmax -> uniform argmax -> f_i = 1/N, P_i = 1/N\n# L_aux = N * N * (1/N)^2 = 1.0\nnum_experts = 4\nN_tokens = 100\n# Identical logits -> uniform distribution\nlogits = torch.zeros(N_tokens, num_experts)\nloss = {fn}(logits, num_experts)\nassert abs(loss.item() - 1.0) < 1e-4, f'Uniform routing should give loss=1.0, got {loss.item():.4f}'\n"
+          "code": "\nimport torch\n# Explicitly construct uniform routing: each expert gets N/E tokens\nnum_experts = 4\nN_tokens = 100\nlogits = torch.zeros(N_tokens, num_experts)\nfor e in range(num_experts):\n    logits[e * 25:(e + 1) * 25, e] = 10.0\n# f_i = 1/4 for all i, P_i ≈ softmax-dominated by the assigned expert\n# With large logit gap, P_i ≈ 1/4 on average, so L_aux ≈ 4 * 4 * (1/4)^2 = 1.0\nloss = {fn}(logits, num_experts)\nassert abs(loss.item() - 1.0) < 0.05, f'Uniform routing should give loss≈1.0, got {loss.item():.4f}'\n"
         },
         {
           "name": "Collapsed routing gives loss > 1",
@@ -1923,6 +2007,10 @@
           "code": "\nimport torch\nB, D = 4, 16\nmodel_output = torch.randn(B, D, requires_grad=True)\nx0 = torch.randn(B, D)\nx1 = torch.randn(B, D)\nt = torch.rand(B)\nloss = {fn}(model_output, x0, x1, t)\nloss.backward()\nassert model_output.grad is not None, 'No gradient for model_output'\n"
         },
         {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nB, D = 4, 8\nx0 = torch.randn(B, D)\nx1 = torch.randn(B, D)\nt = torch.rand(B)\nmodel_output = torch.randn(B, D)\ntarget = x1 - x0\nexpected = ((model_output - target) ** 2).mean()\nout = {fn}(model_output, x0, x1, t)\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected.item():.6f}, got {out.item():.6f}'\n"
+        },
+        {
           "name": "Loss scales with prediction error",
           "code": "\nimport torch\ntorch.manual_seed(3)\nB, D = 4, 8\nx0 = torch.randn(B, D)\nx1 = torch.randn(B, D)\nt = torch.rand(B)\ntarget = x1 - x0\nsmall_err = target + 0.01 * torch.randn(B, D)\nlarge_err = target + 1.0 * torch.randn(B, D)\nloss_small = {fn}(small_err, x0, x1, t)\nloss_large = {fn}(large_err, x0, x1, t)\nassert loss_small.item() < loss_large.item(), 'Larger prediction error should give larger loss'\n"
         }
@@ -1961,6 +2049,10 @@
         {
           "name": "All three schedule types work without error",
           "code": "\nimport torch\nfor stype in ['linear', 'cosine', 'sigmoid']:\n    out = {fn}(50, stype)\n    assert isinstance(out, torch.Tensor), f'{stype}: must return a torch.Tensor'\n    assert out.dtype == torch.float32, f'{stype}: expected float32, got {out.dtype}'\ntry:\n    {fn}(10, 'unknown')\n    assert False, 'Should raise ValueError for unknown schedule_type'\nexcept (ValueError, Exception):\n    pass\n"
+        },
+        {
+          "name": "Linear schedule exact values",
+          "code": "\nimport torch\nT = 5\nout = {fn}(T, schedule_type='linear')\nbeta_start, beta_end = 1e-4, 0.02\nt = torch.arange(T, dtype=torch.float32)\nbetas = beta_start + (beta_end - beta_start) * t / (T - 1)\nalpha_bars = torch.cumprod(1.0 - betas, dim=0)\nassert torch.allclose(out, alpha_bars, atol=1e-5), f'Linear schedule mismatch.\\nExpected: {alpha_bars}\\nGot: {out}'\n"
         }
       ]
     }

@@ -6,8 +6,8 @@ TASK = {
     "description_en": "Implement linear self-attention with kernel feature maps.\n\nLinear attention replaces softmax with a feature map phi, enabling O(S*D^2) complexity instead of O(S^2*D) by reordering the computation.\n\n**Signature:** `linear_attention(Q, K, V) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S, D_k)\n- `K` — key tensor (B, S, D_k)\n- `V` — value tensor (B, S, D_v)\n\n**Returns:** attention output (B, S, D_v)\n\n**Constraints:**\n- Feature map: `phi(x) = elu(x) + 1`\n- Compute `phi(Q) @ (phi(K)^T @ V)` not `softmax(Q @ K^T) @ V`\n- Normalize by `phi(Q) @ sum(phi(K))` (add `eps=1e-6` for numerical stability)",
     "description_zh": "实现基于核特征映射的线性自注意力。\n\n线性注意力用特征映射 phi 替代 softmax，通过重排计算顺序将复杂度从 O(S^2*D) 降至 O(S*D^2)。\n\n**签名:** `linear_attention(Q, K, V) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S, D_k)\n- `K` — 键张量 (B, S, D_k)\n- `V` — 值张量 (B, S, D_v)\n\n**返回:** 注意力输出 (B, S, D_v)\n\n**约束:**\n- 特征映射：`phi(x) = elu(x) + 1`\n- 计算 `phi(Q) @ (phi(K)^T @ V)` 而非 `softmax(Q @ K^T) @ V`\n- 通过 `phi(Q) @ sum(phi(K))` 归一化（加 `eps=1e-6` 保证数值稳定）",
     "function_name": "linear_attention",
-    "hint": "`phi(x) = elu(x) + 1`. Output = `(phi(Q) @ (phi(K).T @ V)) / (phi(Q) @ phi(K).sum(dim=-2, keepdim=True).T)`",
-    "hint_zh": "`phi(x) = elu(x) + 1`。输出 = `(phi(Q) @ (phi(K).T @ V)) / (phi(Q) @ phi(K).sum(dim=-2, keepdim=True).T)`",
+    "hint": "`phi(x) = elu(x) + 1`. Let `KV = phi(K).transpose(-2, -1) @ V` and `Z = phi(K).sum(dim=-2, keepdim=True)`. Output = `(phi(Q) @ KV) / (phi(Q) @ Z.transpose(-2, -1) + 1e-6)`.",
+    "hint_zh": "`phi(x) = elu(x) + 1`。令 `KV = phi(K).transpose(-2, -1) @ V`，`Z = phi(K).sum(dim=-2, keepdim=True)`。输出 = `(phi(Q) @ KV) / (phi(Q) @ Z.transpose(-2, -1) + 1e-6)`。",
     "tests": [
         {
             "name": "Output shape",
