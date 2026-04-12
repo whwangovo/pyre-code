@@ -7,7 +7,10 @@ from pathlib import Path
 # Add project root to sys.path for torch_judge imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import io
+import math
 import os
+import threading
 import time
 from typing import Any
 
@@ -17,6 +20,9 @@ from pydantic import BaseModel
 from torch_judge.tasks import get_task
 
 app = FastAPI(title="Grading Service")
+
+# Lock to serialize sys.stdout redirects across concurrent request threads
+_stdout_lock = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # SQLite DB (user sessions + progress)
@@ -128,7 +134,7 @@ def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None,
         return GradeResponse(passed=0, total=0, allPassed=False, results=[], totalTimeMs=0.0, error=f"Function '{fn_name}' not found in submitted code")
 
     all_tests = task.get("tests", [])
-    tests = [all_tests[i] for i in test_indices if i < len(all_tests)] if test_indices is not None else all_tests
+    tests = [all_tests[i] for i in test_indices if 0 <= i < len(all_tests)] if test_indices is not None else all_tests
 
     results: list[TestResult] = []
     passed = 0
@@ -150,27 +156,26 @@ def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None,
         # Capture stdout for print output
         output = None
         if capture_output:
-            import io
-            import sys
-            old_stdout = sys.stdout
-            sys.stdout = captured = io.StringIO()
-            try:
-                start = time.perf_counter()
-                exec(test_code, test_ns)
-                exec_time_ms = (time.perf_counter() - start) * 1000
-                output = captured.getvalue() or None
-                results.append(TestResult(name=test["name"], passed=True, execTimeMs=exec_time_ms, output=output))
-                passed += 1
-            except AssertionError as e:
-                exec_time_ms = (time.perf_counter() - start) * 1000
-                output = captured.getvalue() or None
-                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=str(e), output=output))
-            except Exception as e:
-                exec_time_ms = (time.perf_counter() - start) * 1000
-                output = captured.getvalue() or None
-                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=f"{type(e).__name__}: {e}", output=output))
-            finally:
-                sys.stdout = old_stdout
+            with _stdout_lock:
+                old_stdout = sys.stdout
+                sys.stdout = captured = io.StringIO()
+                try:
+                    start = time.perf_counter()
+                    exec(test_code, test_ns)
+                    exec_time_ms = (time.perf_counter() - start) * 1000
+                    output = captured.getvalue() or None
+                    results.append(TestResult(name=test["name"], passed=True, execTimeMs=exec_time_ms, output=output))
+                    passed += 1
+                except AssertionError as e:
+                    exec_time_ms = (time.perf_counter() - start) * 1000
+                    output = captured.getvalue() or None
+                    results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=str(e), output=output))
+                except Exception as e:
+                    exec_time_ms = (time.perf_counter() - start) * 1000
+                    output = captured.getvalue() or None
+                    results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=f"{type(e).__name__}: {e}", output=output))
+                finally:
+                    sys.stdout = old_stdout
         else:
             start = time.perf_counter()
             try:
