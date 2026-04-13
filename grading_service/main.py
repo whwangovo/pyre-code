@@ -8,7 +8,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import io
-import math
 import os
 import threading
 import time
@@ -135,6 +134,12 @@ def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None,
 
     all_tests = task.get("tests", [])
     tests = [all_tests[i] for i in test_indices if 0 <= i < len(all_tests)] if test_indices is not None else all_tests
+
+    if test_indices is not None and len(test_indices) > 0 and len(tests) == 0:
+        return GradeResponse(
+            passed=0, total=0, allPassed=False, results=[], totalTimeMs=0.0,
+            error=f"All provided test indices are out of range (valid range: 0..{len(all_tests) - 1})",
+        )
 
     results: list[TestResult] = []
     passed = 0
