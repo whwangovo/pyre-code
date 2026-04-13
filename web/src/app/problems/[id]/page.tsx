@@ -16,7 +16,7 @@ import { TestPanel } from '@/components/workspace/TestPanel';
 import { ActionBar } from '@/components/workspace/ActionBar';
 import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
-import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary } from '@/lib/types';
+import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory } from '@/lib/types';
 
 export default function WorkspacePage() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +31,7 @@ export default function WorkspacePage() {
     drawerOpen, setDrawerOpen,
     isRunning, setIsRunning,
     setRunResult, setBottomTab, resetTestPanel, resetAiHelp,
+    submissionHistory, setSubmissionHistory,
   } = useProblemStore();
 
   const [problem, setProblem] = useState<(Problem & { starterCode?: string }) | null>(null);
@@ -54,6 +55,10 @@ export default function WorkspacePage() {
     fetch('/api/progress')
       .then((r) => r.json())
       .then((d) => setProgress(d.progress || {}));
+    fetch(`/api/submissions/${id}`)
+      .then((r) => r.json())
+      .then((d: SubmissionHistory[]) => setSubmissionHistory(d))
+      .catch(() => {});
     if (pathId) {
       fetch(`/api/paths/${pathId}`)
         .then((r) => r.json())
@@ -61,7 +66,7 @@ export default function WorkspacePage() {
     } else {
       setPathData(null);
     }
-  }, [id, pathId, setCurrentCode, setSubmissionResult, resetTestPanel, resetAiHelp]);
+  }, [id, pathId, setCurrentCode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
 
   const handleRun = async () => {
     if (!problem || isRunning) return;
@@ -100,6 +105,15 @@ export default function WorkspacePage() {
       setSubmissionResult(result);
       setRunResult(result);
       setBottomTab('testresults');
+      // Prepend to submission history
+      const newEntry: SubmissionHistory = {
+        id: Date.now(),
+        passed: result.allPassed,
+        execTimeMs: result.totalTimeMs,
+        submittedAt: new Date().toISOString(),
+        code: currentCode,
+      };
+      setSubmissionHistory([newEntry, ...submissionHistory]);
       // Refresh progress
       const progRes = await fetch('/api/progress');
       const progData = await progRes.json();

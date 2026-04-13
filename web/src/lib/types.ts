@@ -68,6 +68,14 @@ export interface LearningPathProblemSummary {
   status: 'todo' | 'attempted' | 'solved';
 }
 
+export interface SubmissionHistory {
+  id: number;
+  passed: boolean;
+  execTimeMs: number | null;
+  submittedAt: string;
+  code: string;
+}
+
 export interface AiHelpConfig {
   baseUrl: string;
   apiKey: string;

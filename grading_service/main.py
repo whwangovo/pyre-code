@@ -50,6 +50,18 @@ def _get_db() -> sqlite3.Connection:
             UNIQUE(user_id, task_id)
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS submissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            task_id TEXT NOT NULL,
+            code TEXT NOT NULL,
+            passed INTEGER NOT NULL,
+            exec_time_ms REAL,
+            submitted_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
     conn.commit()
     return conn
 
@@ -280,6 +292,8 @@ class SaveProgressRequest(BaseModel):
     taskId: str
     status: str
     execTimeMs: float | None = None
+    code: str | None = None
+    allPassed: bool | None = None
 
 
 @app.post("/users")
@@ -344,7 +358,26 @@ def save_progress(request: SaveProgressRequest) -> dict[str, str]:
                     "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, NULL)",
                     (user_id, request.taskId, request.status, None)
                 )
+        if request.code is not None:
+            conn.execute(
+                "INSERT INTO submissions (user_id, task_id, code, passed, exec_time_ms) VALUES (?, ?, ?, ?, ?)",
+                (user_id, request.taskId, request.code, 1 if request.allPassed else 0, request.execTimeMs)
+            )
     return {"ok": "true"}
+
+
+@app.get("/submissions/{user_id}/{task_id}")
+def get_submissions(user_id: int, task_id: str) -> list[dict]:
+    with _get_db() as conn:
+        rows = conn.execute(
+            "SELECT id, passed, exec_time_ms, submitted_at, code FROM submissions "
+            "WHERE user_id = ? AND task_id = ? ORDER BY submitted_at DESC LIMIT 50",
+            (user_id, task_id)
+        ).fetchall()
+    return [
+        {"id": r[0], "passed": bool(r[1]), "execTimeMs": r[2], "submittedAt": r[3], "code": r[4]}
+        for r in rows
+    ]
 
 
 @app.get("/health")

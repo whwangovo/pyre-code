@@ -41,6 +41,7 @@ const en = {
   // test panel
   testCasesTab: 'Test Cases',
   testResultsTab: 'Test Results',
+  submissionsTab: 'Submissions',
   case: 'Case',
   passed: 'Passed',
   failed: 'Failed',
@@ -130,6 +131,7 @@ const zh: Translations = {
   // test panel
   testCasesTab: '测试用例',
   testResultsTab: '测试结果',
+  submissionsTab: '提交历史',
   case: '用例',
   passed: '通过',
   failed: '未通过',

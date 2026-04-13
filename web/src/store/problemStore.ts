@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SubmissionResult, CustomTest, AiHelpConfig } from '@/lib/types';
+import type { SubmissionResult, CustomTest, AiHelpConfig, SubmissionHistory } from '@/lib/types';
 
 interface ProblemStore {
   currentCode: string;
@@ -11,8 +11,8 @@ interface ProblemStore {
   drawerOpen: boolean;
   setDrawerOpen: (v: boolean) => void;
   // test panel
-  bottomTab: 'testcases' | 'testresults';
-  setBottomTab: (tab: 'testcases' | 'testresults') => void;
+  bottomTab: 'testcases' | 'testresults' | 'submissions';
+  setBottomTab: (tab: 'testcases' | 'testresults' | 'submissions') => void;
   selectedCaseIndex: number;
   setSelectedCaseIndex: (i: number) => void;
   customTests: CustomTest[];
@@ -23,6 +23,8 @@ interface ProblemStore {
   setIsRunning: (v: boolean) => void;
   runResult: SubmissionResult | null;
   setRunResult: (r: SubmissionResult | null) => void;
+  submissionHistory: SubmissionHistory[];
+  setSubmissionHistory: (h: SubmissionHistory[]) => void;
   aiHelpConfig: AiHelpConfig;
   setAiHelpConfig: (patch: Partial<AiHelpConfig>) => void;
   aiHelpConfigOpen: boolean;
@@ -65,6 +67,8 @@ export const useProblemStore = create<ProblemStore>((set) => ({
   setIsRunning: (v) => set({ isRunning: v }),
   runResult: null,
   setRunResult: (r) => set({ runResult: r }),
+  submissionHistory: [],
+  setSubmissionHistory: (h) => set({ submissionHistory: h }),
   aiHelpConfig: {
     baseUrl: '',
     apiKey: '',
@@ -83,5 +87,5 @@ export const useProblemStore = create<ProblemStore>((set) => ({
   aiHelpLoading: false,
   setAiHelpLoading: (value) => set({ aiHelpLoading: value }),
   resetAiHelp: () => set({ aiHelpResponse: null, aiHelpError: null, aiHelpLoading: false }),
-  resetTestPanel: () => set({ bottomTab: 'testcases', selectedCaseIndex: 0, customTests: [], runResult: null }),
+  resetTestPanel: () => set({ bottomTab: 'testcases', selectedCaseIndex: 0, customTests: [], runResult: null, submissionHistory: [] }),
 }));

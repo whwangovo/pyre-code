@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   await fetch(`${GRADING_SERVICE_URL}/progress`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionToken, taskId, status, execTimeMs: result.totalTimeMs }),
+    body: JSON.stringify({ sessionToken, taskId, status, execTimeMs: result.totalTimeMs, code, allPassed: result.allPassed }),
   });
 
   const response = NextResponse.json(result);
