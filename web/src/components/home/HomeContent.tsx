@@ -107,8 +107,8 @@ def causal_attention(q, k, v):
       </section>
 
       {/* Difficulty stats */}
-      <section className="pb-10" style={{ borderTop: '1px solid var(--line)' }}>
-        <div className="grid grid-cols-3 gap-6 py-10">
+      <section style={{ borderTop: '1px solid var(--line)' }}>
+        <div className="grid grid-cols-3 gap-6 py-6">
           {[
             { label: t('Easy'), count: stats.easy, color: 'var(--easy)' },
             { label: t('Medium'), count: stats.medium, color: 'var(--medium)' },
@@ -124,7 +124,7 @@ def causal_attention(q, k, v):
 
       {/* Features */}
       <section style={{ borderTop: '1px solid var(--line)' }}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
           {[
             { num: '01', title: t('feat1Title'), desc: t('feat1Desc') },
             { num: '02', title: t('feat2Title'), desc: t('feat2Desc') },
