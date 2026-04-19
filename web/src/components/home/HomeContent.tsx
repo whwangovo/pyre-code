@@ -108,7 +108,7 @@ def causal_attention(q, k, v):
 
       {/* Ticker */}
       <div
-        className="flex overflow-hidden mono text-xs text-text-2"
+        className="overflow-hidden mono text-xs text-text-2"
         style={{
           padding: '14px 0',
           borderTop: '1px solid var(--line)',
@@ -118,13 +118,9 @@ def causal_attention(q, k, v):
         }}
         aria-hidden="true"
       >
-        {[0, 1].map((copy) => (
-          <div
-            key={copy}
-            className="flex gap-10 shrink-0 animate-ticker"
-            style={{ paddingRight: 40 }}
-          >
-            {[
+        <div className="flex gap-10 shrink-0 w-max animate-ticker">
+          {[0, 1].map((copy) =>
+            [
               'MultiHeadAttention',
               'Flash Attention (tiled)',
               'Rotary Position Embedding',
@@ -141,13 +137,13 @@ def causal_attention(q, k, v):
               'adaLN-Zero',
               'Multi-Token Prediction',
             ].map((name) => (
-              <span key={name} className="inline-flex items-center gap-2 whitespace-nowrap">
+              <span key={`${copy}-${name}`} className="inline-flex items-center gap-2 whitespace-nowrap">
                 <span className="w-1 h-1 rounded-full" style={{ background: 'var(--text-3)' }} />
                 {name}
               </span>
-            ))}
-          </div>
-        ))}
+            ))
+          )}
+        </div>
       </div>
 
       {/* Difficulty stats */}
