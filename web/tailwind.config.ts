@@ -44,6 +44,15 @@ const config: Config = {
       borderRadius: {
         pill: '9999px',
       },
+      animation: {
+        ticker: 'ticker 60s linear infinite',
+      },
+      keyframes: {
+        ticker: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-100%)' },
+        },
+      },
     },
   },
   plugins: [],

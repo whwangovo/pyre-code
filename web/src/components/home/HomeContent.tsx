@@ -106,6 +106,50 @@ def causal_attention(q, k, v):
         </div>
       </section>
 
+      {/* Ticker */}
+      <div
+        className="flex overflow-hidden mono text-xs text-text-2"
+        style={{
+          padding: '14px 0',
+          borderTop: '1px solid var(--line)',
+          borderBottom: '1px solid var(--line)',
+          maskImage: 'linear-gradient(90deg, transparent, black 10%, black 90%, transparent)',
+          WebkitMaskImage: 'linear-gradient(90deg, transparent, black 10%, black 90%, transparent)',
+        }}
+        aria-hidden="true"
+      >
+        {[0, 1].map((copy) => (
+          <div
+            key={copy}
+            className="flex gap-10 shrink-0 animate-ticker"
+            style={{ paddingRight: 40 }}
+          >
+            {[
+              'MultiHeadAttention',
+              'Flash Attention (tiled)',
+              'Rotary Position Embedding',
+              'DPO Loss',
+              'GRPO Loss',
+              'Speculative Decoding',
+              'Paged Attention',
+              'LoRA / QLoRA',
+              'Mamba SSM',
+              'Mixture of Experts',
+              'FSDP Training Step',
+              'Ring Attention',
+              'Flow Matching',
+              'adaLN-Zero',
+              'Multi-Token Prediction',
+            ].map((name) => (
+              <span key={name} className="inline-flex items-center gap-2 whitespace-nowrap">
+                <span className="w-1 h-1 rounded-full" style={{ background: 'var(--text-3)' }} />
+                {name}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+
       {/* Difficulty stats */}
       <section style={{ borderTop: '1px solid var(--line)' }}>
         <div className="grid grid-cols-3 gap-6 py-6">
