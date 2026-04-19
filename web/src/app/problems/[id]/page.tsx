@@ -115,11 +115,14 @@ export default function WorkspacePage() {
       });
       const data: SubmissionResult = await res.json();
       setSubmissionResult(data);
+      setRunResult(data);
       setBottomTab('testresults');
       fetch('/api/progress').then((r) => r.json()).then((d) => setProgress(d.progress || {}));
       fetch(`/api/submissions/${id}`).then((r) => r.json()).then((d: SubmissionHistory[]) => setSubmissionHistory(d)).catch(() => {});
     } catch {
-      setSubmissionResult({ passed: 0, total: 0, allPassed: false, results: [], totalTimeMs: 0, error: t('networkError') });
+      const err = { passed: 0, total: 0, allPassed: false, results: [], totalTimeMs: 0, error: t('networkError') };
+      setSubmissionResult(err);
+      setRunResult(err);
     } finally {
       setIsSubmitting(false);
     }
