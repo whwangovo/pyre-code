@@ -15,7 +15,7 @@ export function HomeContent({ stats }: HomeContentProps) {
   return (
     <main className="max-w-[1280px] mx-auto px-7">
       {/* Hero */}
-      <section className="pt-20 pb-24">
+      <section className="pt-20 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <span
@@ -53,12 +53,12 @@ export function HomeContent({ stats }: HomeContentProps) {
               </Link>
             </div>
 
-            <div className="flex gap-6 mt-10 pt-5" style={{ borderTop: '1px dashed var(--line)' }}>
+            <div className="flex gap-6 mt-8 pt-5" style={{ borderTop: '1px dashed var(--line)' }}>
               {[
-                { k: 'Total', v: `${stats.total} problems` },
-                { k: 'Coverage', v: '13 categories' },
-                { k: 'Runtime', v: 'CPU · local' },
-                { k: 'Judge', v: 'torch_judge' },
+                { k: t('metaTotal'), v: t('metaTotalVal', { n: stats.total }) },
+                { k: t('metaCoverage'), v: t('metaCoverageVal', { n: 13 }) },
+                { k: t('metaRuntime'), v: t('metaRuntimeVal') },
+                { k: t('metaJudge'), v: 'torch_judge' },
               ].map((m) => (
                 <div key={m.k}>
                   <div className="eyebrow">{m.k}</div>
