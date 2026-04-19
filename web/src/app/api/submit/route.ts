@@ -29,13 +29,42 @@ export async function POST(request: Request) {
 
   const result: SubmissionResult = await gradingResponse.json();
 
+  // Ensure the anonymous user exists before saving progress/submissions.
+  const userResponse = await fetch(`${GRADING_SERVICE_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionToken }),
+  });
+
+  if (!userResponse.ok) {
+    const errText = await userResponse.text();
+    return NextResponse.json(
+      {
+        ...result,
+        error: `Failed to initialize user session: ${errText}`,
+      },
+      { status: 502 }
+    );
+  }
+
   // Save progress
   const status = result.allPassed ? 'solved' : 'attempted';
-  await fetch(`${GRADING_SERVICE_URL}/progress`, {
+  const progressResponse = await fetch(`${GRADING_SERVICE_URL}/progress`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sessionToken, taskId, status, execTimeMs: result.totalTimeMs, code, allPassed: result.allPassed }),
   });
+
+  if (!progressResponse.ok) {
+    const errText = await progressResponse.text();
+    return NextResponse.json(
+      {
+        ...result,
+        error: `Failed to save submission history: ${errText}`,
+      },
+      { status: 502 }
+    );
+  }
 
   const response = NextResponse.json(result);
   response.cookies.set('session_token', sessionToken, {
