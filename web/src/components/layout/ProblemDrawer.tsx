@@ -28,15 +28,16 @@ export function ProblemDrawer({ open, onClose, problems, progress, currentId }: 
       />
       <div
         className={cn(
-          'fixed left-0 top-0 bottom-0 w-80 bg-surface z-50 shadow-soft-lg',
+          'fixed left-0 top-0 bottom-0 w-80 z-50 shadow-lg',
           'transform transition-transform duration-250 ease-out',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
+        style={{ background: 'var(--bg-elev)' }}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--line)' }}>
           <span className="font-semibold text-sm tracking-tight">{t('problems')}</span>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-            <X className="w-4 h-4 text-text-secondary" />
+          <button onClick={onClose} className="p-1 rounded-lg text-text-2 hover:text-text transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
         <div className="overflow-y-auto h-[calc(100%-57px)]">
@@ -50,19 +51,19 @@ export function ProblemDrawer({ open, onClose, problems, progress, currentId }: 
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   currentId === p.id
-                    ? 'bg-accent/5 text-accent'
-                    : 'text-text-primary hover:bg-gray-50'
+                    ? 'text-accent'
+                    : 'text-text hover:bg-[color-mix(in_oklab,var(--text)_3%,transparent)]'
                 )}
+                style={currentId === p.id ? { background: 'var(--accent-wash)' } : undefined}
               >
                 <span className={cn(
                   'w-2 h-2 rounded-full flex-shrink-0',
-                  status === 'solved' && 'bg-solved',
-                  status === 'attempted' && 'bg-medium',
-                  status === 'todo' && 'bg-gray-300',
-                )} />
+                )} style={{
+                  background: status === 'solved' ? 'var(--easy)' : status === 'attempted' ? 'var(--medium)' : 'var(--line-strong)',
+                }} />
                 <span className="truncate flex-1">{tProblem(p.id)}</span>
                 <Badge variant={p.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'}>
-                  {t(p.difficulty as 'Easy' | 'Medium' | 'Hard')}
+                  {p.difficulty.toUpperCase()}
                 </Badge>
               </Link>
             );

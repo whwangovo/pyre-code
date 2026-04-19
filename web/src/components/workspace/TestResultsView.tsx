@@ -27,21 +27,20 @@ export function TestResultsView({ result, tests, functionName }: TestResultsView
 
   if (!result) {
     return (
-      <div className="flex items-center justify-center h-full text-sm text-text-tertiary">
+      <div className="flex items-center justify-center h-full text-sm text-text-3">
         {t('runToSeeResults')}
       </div>
     );
   }
 
-  // Global error (syntax error, function not found, etc.)
   if (result.error && result.results.length === 0) {
     return (
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-3 px-4 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--line)' }}>
           <span className="text-sm font-medium text-hard">{t('failed')}</span>
         </div>
         <div className="flex-1 overflow-auto px-4 py-3">
-          <pre className="p-3 rounded-lg bg-hard/5 text-hard text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words">
+          <pre className="p-3 rounded-lg text-hard text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words" style={{ background: 'color-mix(in oklab, var(--hard) 5%, var(--bg-elev))' }}>
             {result.error}
           </pre>
         </div>
@@ -55,25 +54,22 @@ export function TestResultsView({ result, tests, functionName }: TestResultsView
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Status header */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-border flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--line)' }}>
         <span className={`text-sm font-medium ${result.allPassed ? 'text-easy' : 'text-hard'}`}>
           {result.allPassed ? t('allPassed') : t('passedCount', { passed: result.passed, total: result.total })}
         </span>
-        <span className="text-text-tertiary text-xs ml-auto">{result.totalTimeMs.toFixed(0)}ms</span>
+        <span className="text-text-3 text-xs ml-auto">{result.totalTimeMs.toFixed(0)}ms</span>
       </div>
 
-      {/* Case tabs */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-border flex-shrink-0 overflow-x-auto">
+      <div className="flex items-center gap-1 px-4 py-2 flex-shrink-0 overflow-x-auto" style={{ borderBottom: '1px solid var(--line)' }}>
         {result.results.map((r, i) => (
           <button
             key={i}
             onClick={() => setSelectedCaseIndex(i)}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
-              i === activeIndex
-                ? 'bg-accent/10 text-accent'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary'
+              i === activeIndex ? 'text-accent' : 'text-text-2 hover:text-text'
             }`}
+            style={i === activeIndex ? { background: 'var(--accent-wash)' } : undefined}
           >
             {r.passed
               ? <CheckCircle className="w-3 h-3 text-easy" />
@@ -83,41 +79,37 @@ export function TestResultsView({ result, tests, functionName }: TestResultsView
         ))}
       </div>
 
-      {/* Case detail */}
       {activeResult && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className={`font-medium ${activeResult.passed ? 'text-easy' : 'text-hard'}`}>
               {activeResult.passed ? t('passed') : t('failed')}
             </span>
-            <span className="text-text-tertiary">{activeResult.execTimeMs.toFixed(1)}ms</span>
+            <span className="text-text-3">{activeResult.execTimeMs.toFixed(1)}ms</span>
           </div>
 
-          {/* Show test code for failed cases */}
           {activeTest && !activeResult.passed && (
             <div>
-              <div className="text-xs text-text-tertiary mb-1">{t('testCasesTab')}</div>
-              <pre className="p-3 rounded-lg bg-surface-secondary text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
+              <div className="text-xs text-text-3 mb-1">{t('testCasesTab')}</div>
+              <pre className="p-3 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed" style={{ background: 'var(--bg-sunken)' }}>
                 <PythonCode code={formatTestCode(activeTest.code, functionName)} />
               </pre>
             </div>
           )}
 
-          {/* Error details */}
           {activeResult.error && (
             <div>
-              <div className="text-xs text-text-tertiary mb-1">Error</div>
-              <pre className="p-3 rounded-lg bg-hard/5 text-hard text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words">
+              <div className="text-xs text-text-3 mb-1">Error</div>
+              <pre className="p-3 rounded-lg text-hard text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words" style={{ background: 'color-mix(in oklab, var(--hard) 5%, var(--bg-elev))' }}>
                 {activeResult.error}
               </pre>
             </div>
           )}
 
-          {/* Print output */}
           {activeResult.output && (
             <div>
-              <div className="text-xs text-text-tertiary mb-1">Output</div>
-              <pre className="p-3 rounded-lg bg-surface-secondary text-text-primary text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words">
+              <div className="text-xs text-text-3 mb-1">Output</div>
+              <pre className="p-3 rounded-lg text-text text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words" style={{ background: 'var(--bg-sunken)' }}>
                 {activeResult.output}
               </pre>
             </div>

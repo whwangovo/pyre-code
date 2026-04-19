@@ -9,7 +9,7 @@ export function BackToProblemLink({ id }: { id: string }) {
   return (
     <Link
       href={`/problems/${id}`}
-      className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-accent transition-colors mb-6"
+      className="inline-flex items-center gap-1.5 text-sm text-text-2 hover:text-accent transition-colors mb-6"
     >
       <ArrowLeft className="w-4 h-4" />
       {t('backToProblem')}

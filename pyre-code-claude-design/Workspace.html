@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%230a0a0a'/><path d='M12 3.5c1.1 3.3.3 4.9-1.35 6.5C9 11.6 7.7 13.35 7.7 15.7a4.3 4.3 0 0 0 8.6 0c0-1.75-.55-3.15-1.75-4.55.55 1.95-.3 3.15-1.45 3.15-.9 0-1.45-.7-1.45-1.6 0-1.35 1.5-2.65 1.5-4.7 0-1.8-.65-3.2-1.15-4.5z' fill='%23ff5a1f'/></svg>">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Causal Self-Attention — Pyre Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/pyre.css">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+
+  /* Workspace nav is a bit denser */
+  .ws-topbar {
+    flex: 0 0 auto;
+    display: flex; align-items: center;
+    padding: 0 20px; height: 52px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    gap: 16px;
+  }
+  .ws-topbar .brand { font-size: 14px; }
+  .ws-topbar .crumbs {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+    padding: 0 0 0 8px; border-left: 1px solid var(--line); margin-left: 8px; height: 20px;
+  }
+  .ws-topbar .crumbs a { color: var(--text-2); }
+  .ws-topbar .crumbs a:hover { color: var(--text); }
+  .ws-topbar .crumbs strong { color: var(--text); font-weight: 500; }
+  .ws-topbar .spacer { flex: 1; }
+  .path-prog {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 10px; border: 1px solid var(--line); background: var(--bg-elev);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+  }
+  .path-prog .nodes { display: flex; gap: 3px; }
+  .path-prog .n { width: 6px; height: 6px; border-radius: 999px; background: var(--line-strong); }
+  .path-prog .n.s { background: var(--easy); }
+  .path-prog .n.a { background: var(--medium); }
+  .path-prog .n.c { background: var(--accent); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 25%, transparent); }
+  .nav-arrow {
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line); background: var(--bg-elev);
+    border-radius: 7px; color: var(--text-2); cursor: pointer;
+  }
+  .nav-arrow:hover { color: var(--text); border-color: var(--line-strong); }
+  .nav-arrow:disabled { opacity: .3; cursor: not-allowed; }
+
+  /* Layout */
+  .ws-body {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(340px, 1fr) minmax(0, 1.4fr);
+    background: var(--bg-sunken);
+  }
+  .pane {
+    background: var(--bg);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .pane-l { border-right: 1px solid var(--line); }
+  .pane-head {
+    flex: 0 0 auto;
+    display: flex; align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding: 0 14px; height: 40px;
+    gap: 4px;
+    background: var(--bg);
+  }
+  .tabs { display: flex; gap: 2px; }
+  .tab {
+    padding: 0 12px; height: 26px;
+    border-radius: 6px;
+    font-size: 13px; color: var(--text-2); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    border: none; background: transparent;
+  }
+  .tab:hover { color: var(--text); background: color-mix(in oklab, var(--text) 4%, transparent); }
+  .tab.on { color: var(--text); background: color-mix(in oklab, var(--text) 6%, transparent); font-weight: 500; }
+  .tab .dot { width: 5px; height: 5px; border-radius: 999px; background: var(--accent); }
+
+  /* Description */
+  .desc-wrap { overflow: auto; padding: 24px 28px; flex: 1; min-height: 0; }
+  .desc-wrap .title-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .desc-wrap h1 { font-size: 22px; letter-spacing: -0.02em; font-weight: 600; margin: 0 0 14px; }
+  .desc-wrap h1 .id { font-family: var(--font-mono); color: var(--text-3); font-weight: 400; font-size: 14px; margin-right: 6px; }
+  .desc-wrap p { font-size: 14px; line-height: 1.65; color: var(--text-2); margin: 0 0 14px; }
+  .desc-wrap p strong { color: var(--text); font-weight: 500; }
+  .desc-wrap h3 { font-size: 13px; font-family: var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); font-weight: 500; margin: 22px 0 10px; }
+  .desc-wrap code { font-family: var(--font-mono); font-size: 12.5px; padding: 1px 5px; background: var(--bg-sunken); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
+  .desc-wrap pre {
+    font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7;
+    padding: 14px 16px; background: var(--bg-sunken);
+    border: 1px solid var(--line); border-radius: 9px;
+    overflow: auto; margin: 0 0 14px;
+  }
+  .math-box {
+    padding: 14px 16px; background: var(--bg-sunken);
+    border: 1px solid var(--line); border-radius: 9px;
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.9;
+    color: var(--text);
+  }
+  .math-box .mu { color: var(--accent); }
+  .ex {
+    display: grid; grid-template-columns: 72px 1fr; gap: 14px;
+    padding: 12px 14px; margin-bottom: 8px;
+    background: var(--bg-sunken); border: 1px solid var(--line);
+    border-radius: 9px; font-family: var(--font-mono); font-size: 12.5px;
+  }
+  .ex .k { color: var(--text-3); }
+  .ex .v { color: var(--text); }
+  .hint-note {
+    padding: 12px 14px;
+    background: color-mix(in oklab, var(--accent) 4%, var(--bg));
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 9px;
+    font-size: 13.5px; line-height: 1.6;
+    color: var(--text);
+  }
+  .hint-note .tag {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600;
+    display: block; margin-bottom: 4px;
+  }
+
+  /* Editor */
+  .editor-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; height: 36px;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in oklab, var(--text) 2%, var(--bg));
+    flex: 0 0 auto;
+  }
+  .editor-head .filetabs { display: flex; gap: 2px; font-size: 12.5px; font-family: var(--font-mono); }
+  .editor-head .ft {
+    padding: 5px 10px; border-radius: 6px; color: var(--text-3);
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  }
+  .editor-head .ft.on { color: var(--text); background: var(--bg); border: 1px solid var(--line); border-bottom-color: var(--bg); transform: translateY(1px); }
+  .editor-head .ft .close { color: var(--text-3); }
+  .editor-head .right { margin-left: auto; display: flex; gap: 6px; align-items: center; font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
+  .lang-pill { padding: 1px 6px; background: var(--bg-sunken); border: 1px solid var(--line); border-radius: 4px; }
+
+  .code-body {
+    flex: 1; min-height: 0;
+    display: grid; grid-template-columns: 44px 1fr;
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.75;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .gutter {
+    background: var(--bg-sunken); color: var(--text-3);
+    padding: 12px 8px 12px 0; text-align: right; user-select: none;
+    font-size: 12px; border-right: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .code-area {
+    padding: 12px 18px; overflow: auto;
+    white-space: pre;
+  }
+  .code-area .cur-line {
+    background: color-mix(in oklab, var(--accent) 4%, transparent);
+    margin: 0 -18px; padding: 0 18px;
+  }
+  .tok-k { color: color-mix(in oklab, var(--accent) 80%, var(--text)); }
+  .tok-f { color: var(--text); }
+  .tok-s { color: color-mix(in oklab, var(--easy) 60%, var(--text)); }
+  .tok-n { color: color-mix(in oklab, var(--hard) 60%, var(--text)); }
+  .tok-c { color: var(--text-3); font-style: italic; }
+  .tok-p { color: var(--text-2); }
+  .cursor { display: inline-block; width: 1.5px; height: 14px; background: var(--accent); margin-bottom: -2px; animation: blink 1.05s steps(1, end) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Results panel */
+  .results {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    max-height: 46%;
+    min-height: 220px;
+    display: flex; flex-direction: column;
+  }
+  .results-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 14px; height: 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  .results-head .verdict {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 3px 10px; border-radius: 999px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+    color: var(--medium);
+    background: color-mix(in oklab, var(--medium) 8%, var(--bg-elev));
+    border: 1px solid color-mix(in oklab, var(--medium) 28%, var(--line));
+  }
+  .results-head .verdict.pass {
+    color: var(--easy);
+    background: color-mix(in oklab, var(--easy) 8%, var(--bg-elev));
+    border-color: color-mix(in oklab, var(--easy) 28%, var(--line));
+  }
+  .results-head .runtime {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+  }
+  .results-head .spacer { flex: 1; }
+
+  .results-body {
+    display: grid; grid-template-columns: 260px 1fr;
+    flex: 1; min-height: 0;
+  }
+  .tests-list {
+    border-right: 1px solid var(--line);
+    overflow: auto;
+    padding: 8px 0;
+    background: var(--bg-sunken);
+  }
+  .tc {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; cursor: pointer;
+    font-size: 13px;
+    transition: background .12s;
+    border-left: 2px solid transparent;
+  }
+  .tc:hover { background: color-mix(in oklab, var(--text) 4%, transparent); }
+  .tc.on { background: var(--bg); border-left-color: var(--accent); font-weight: 500; }
+  .tc .mark {
+    width: 16px; height: 16px; border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #fff;
+    flex-shrink: 0;
+  }
+  .tc.pass .mark { background: var(--easy); }
+  .tc.fail .mark { background: var(--hard); }
+  .tc .n { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+  .tc .name { font-family: var(--font-mono); font-size: 12.5px; color: var(--text); }
+  .tc .t { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+
+  .tc-detail {
+    padding: 16px 20px; overflow: auto;
+  }
+  .tc-detail h4 {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+    letter-spacing: .12em; text-transform: uppercase; margin: 0 0 8px; font-weight: 500;
+  }
+  .tc-detail h4 + h4 { margin-top: 18px; }
+  .tc-detail pre {
+    font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7;
+    padding: 12px 14px; background: var(--bg-sunken);
+    border: 1px solid var(--line); border-radius: 8px;
+    margin: 0; white-space: pre-wrap;
+  }
+  .diff-row {
+    display: grid; grid-template-columns: 68px 1fr;
+    font-family: var(--font-mono); font-size: 12.5px;
+    padding: 4px 12px;
+  }
+  .diff-row.exp { background: color-mix(in oklab, var(--easy) 6%, var(--bg-elev)); color: color-mix(in oklab, var(--easy) 55%, var(--text)); }
+  .diff-row.got { background: color-mix(in oklab, var(--hard) 6%, var(--bg-elev)); color: color-mix(in oklab, var(--hard) 55%, var(--text)); }
+  .diff-row .lbl { color: var(--text-3); font-size: 11px; letter-spacing: .1em; padding-top: 2px; }
+  .diff-wrap { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .diff-wrap .diff-row + .diff-row { border-top: 1px solid var(--line); }
+
+  /* Action bar */
+  .action-bar {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .action-bar .btn { height: 32px; padding: 0 12px; font-size: 13px; }
+  .action-bar .meta { margin-left: auto; font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
+
+</style>
+</head>
+<body data-theme="light">
+
+<div class="ws-topbar">
+  <a href="Home.html" class="brand">
+    <span class="glyph" aria-hidden="true">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.25c.6 1.8.15 2.7-.75 3.6C4 6.2 3.25 7.2 3.25 8.5a2.75 2.75 0 1 0 5.5 0c0-1-.3-1.8-1-2.6.3 1.1-.15 1.8-.8 1.8-.5 0-.85-.4-.85-1C6.1 5.6 6.7 3.9 6 1.25Z" fill="currentColor"/></svg>
+    </span>
+    Pyre Code
+  </a>
+  <div class="crumbs">
+    <a href="Paths.html">Paths</a>
+    <span>/</span>
+    <a href="Path.html">Attention & Position</a>
+    <span>/</span>
+    <span>09 / 13</span>
+    <span>/</span>
+    <strong>Causal Self-Attention</strong>
+  </div>
+  <div class="spacer"></div>
+  <div class="path-prog" title="Path progress">
+    <span>PATH_02</span>
+    <span class="nodes">
+      <span class="n s"></span><span class="n s"></span><span class="n s"></span>
+      <span class="n a"></span><span class="n s"></span><span class="n s"></span>
+      <span class="n a"></span><span class="n s"></span><span class="n c"></span>
+      <span class="n"></span><span class="n"></span><span class="n"></span><span class="n"></span>
+    </span>
+    <span>9/13</span>
+  </div>
+  <button class="nav-arrow" title="Previous">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="nav-arrow" title="Next">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  <button class="icon-btn" id="themeBtn" title="Toggle theme">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+</div>
+
+<div class="ws-body">
+  <!-- LEFT PANE -->
+  <div class="pane pane-l">
+    <div class="pane-head">
+      <div class="tabs">
+        <button class="tab on">Description</button>
+        <button class="tab">Solution</button>
+        <button class="tab">AI Help<span class="dot"></span></button>
+        <button class="tab">Submissions <span style="color:var(--text-3);font-family:var(--font-mono);font-size:11px;">12</span></button>
+      </div>
+    </div>
+    <div class="desc-wrap">
+      <div class="title-row">
+        <span class="badge medium">MEDIUM</span>
+        <span class="badge">ATTENTION</span>
+        <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-3);">38% acceptance · 3 test cases</span>
+      </div>
+      <h1><span class="id mono">#09</span> Causal Self-Attention</h1>
+      <p>Implement the <strong>causal self-attention</strong> operation — the masked version of scaled dot-product attention used in every decoder-only language model. Queries may only attend to keys at their own position and earlier.</p>
+      <p>Given <code>q, k, v</code> of shape <code>(B, H, T, D)</code>, compute the attention output of the same shape. You must:</p>
+      <ol style="margin:0 0 14px 18px;padding:0;color:var(--text-2);line-height:1.75;font-size:14px;">
+        <li>Compute scaled dot-product scores.</li>
+        <li>Mask future positions with <code>-inf</code> before softmax.</li>
+        <li>Return softmax(scores) @ v.</li>
+      </ol>
+
+      <h3>Formula</h3>
+      <div class="math-box">
+        Attention(Q,K,V) = <span class="mu">softmax</span>( Q·Kᵀ / √d + M ) · V<br>
+        M[i,j] = 0 if j ≤ i else −∞
+      </div>
+
+      <h3>Examples</h3>
+      <div class="ex"><span class="k">q.shape</span><span class="v">(1, 4, 8, 16)</span></div>
+      <div class="ex"><span class="k">k.shape</span><span class="v">(1, 4, 8, 16)</span></div>
+      <div class="ex"><span class="k">v.shape</span><span class="v">(1, 4, 8, 16)</span></div>
+      <div class="ex"><span class="k">out</span><span class="v">(1, 4, 8, 16) — row i sees only keys 0..i</span></div>
+
+      <h3>Hint</h3>
+      <div class="hint-note">
+        <span class="tag">⚑ Hint</span>
+        Use <code>torch.triu(torch.ones(T, T), diagonal=1).bool()</code> to build the causal mask once, then broadcast it across batch and head dims. Do not create a new mask every forward pass in production — but for this test, do.
+      </div>
+
+      <h3>Function signature</h3>
+      <pre>def causal_attention(
+    q: Tensor,   # (B, H, T, D)
+    k: Tensor,   # (B, H, T, D)
+    v: Tensor,   # (B, H, T, D)
+) -> Tensor:     # (B, H, T, D)</pre>
+    </div>
+  </div>
+
+  <!-- RIGHT PANE -->
+  <div class="pane">
+    <div class="editor-head">
+      <div class="filetabs">
+        <span class="ft on">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          causal_attention.py
+          <span class="close">●</span>
+        </span>
+      </div>
+      <div class="right">
+        <span class="lang-pill">python 3.11</span>
+        <span>· torch 2.4</span>
+        <span>· ln 7, col 42</span>
+      </div>
+    </div>
+
+    <div class="code-body" id="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="code-area" id="codeArea"></div>
+    </div>
+
+    <!-- Results panel -->
+    <div class="results">
+      <div class="results-head">
+        <div class="verdict">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+          2 / 3 passed
+        </div>
+        <span class="runtime">total 12.4ms · mem 38MB</span>
+        <div class="spacer"></div>
+        <div class="tabs">
+          <button class="tab on">Tests</button>
+          <button class="tab">Console</button>
+          <button class="tab">Diff</button>
+        </div>
+      </div>
+      <div class="results-body">
+        <div class="tests-list" id="testsList"></div>
+        <div class="tc-detail" id="tcDetail">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--text-3);text-transform:uppercase;">CASE 03 · grad_flow</div>
+              <div style="font-size:15px;margin-top:3px;font-weight:500;">Gradients flow through masked positions without NaN</div>
+            </div>
+            <span class="badge hard" style="font-weight:600;">FAILED · 4.3ms</span>
+          </div>
+
+          <h4>Input</h4>
+          <pre>q, k, v = torch.randn(2, 4, 6, 16, requires_grad=True)
+out = causal_attention(q, k, v)
+out.sum().backward()</pre>
+
+          <h4>Assertion</h4>
+          <pre>assert not torch.isnan(q.grad).any()</pre>
+
+          <h4>Expected vs. Got</h4>
+          <div class="diff-wrap">
+            <div class="diff-row exp">
+              <span class="lbl">EXPECTED</span>
+              <span>q.grad contains finite values · shape (2,4,6,16)</span>
+            </div>
+            <div class="diff-row got">
+              <span class="lbl">GOT</span>
+              <span>q.grad contains nan at [:, :, 0, :] — 64 entries · shape (2,4,6,16)</span>
+            </div>
+          </div>
+
+          <h4>Stdout</h4>
+          <pre style="color:var(--text-3);">(empty)</pre>
+        </div>
+      </div>
+      <div class="action-bar">
+        <button class="btn btn-secondary">Run <span class="kbd">⌘↵</span></button>
+        <button class="btn btn-primary">Submit</button>
+        <span class="meta">last submitted 2m ago · attempt #12</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/shared.js"></script>
+<script>
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const cur = document.body.getAttribute('data-theme') || 'light';
+    setPyreTheme(cur === 'light' ? 'dark' : 'light');
+  });
+
+  // Render code with gutter + syntax-ish coloring
+  const CODE = [
+    ['<span class="tok-k">import</span> <span class="tok-f">torch</span>', false],
+    ['<span class="tok-k">import</span> <span class="tok-f">torch.nn.functional</span> <span class="tok-k">as</span> <span class="tok-f">F</span>', false],
+    ['', false],
+    ['<span class="tok-k">def</span> <span class="tok-f">causal_attention</span><span class="tok-p">(q, k, v):</span>', false],
+    ['    <span class="tok-c"># (B, H, T, D) → (B, H, T, D)</span>', false],
+    ['    d <span class="tok-p">=</span> q<span class="tok-p">.</span>size<span class="tok-p">(-</span><span class="tok-n">1</span><span class="tok-p">)</span>', false],
+    ['    T <span class="tok-p">=</span> q<span class="tok-p">.</span>size<span class="tok-p">(-</span><span class="tok-n">2</span><span class="tok-p">)</span>', true],
+    ['    scores <span class="tok-p">=</span> q <span class="tok-p">@</span> k<span class="tok-p">.</span>transpose<span class="tok-p">(-</span><span class="tok-n">2</span><span class="tok-p">,-</span><span class="tok-n">1</span><span class="tok-p">)</span> <span class="tok-p">/</span> d<span class="tok-p">**</span><span class="tok-n">0.5</span>', false],
+    ['    mask <span class="tok-p">=</span> torch<span class="tok-p">.</span>triu<span class="tok-p">(</span>torch<span class="tok-p">.</span>ones<span class="tok-p">(</span>T<span class="tok-p">,</span> T<span class="tok-p">),</span> <span class="tok-n">1</span><span class="tok-p">).</span>bool<span class="tok-p">()</span>', false],
+    ['    scores <span class="tok-p">=</span> scores<span class="tok-p">.</span>masked_fill<span class="tok-p">(</span>mask<span class="tok-p">,</span> <span class="tok-k">float</span><span class="tok-p">(</span><span class="tok-s">\'-inf\'</span><span class="tok-p">))</span>', false],
+    ['    attn <span class="tok-p">=</span> F<span class="tok-p">.</span>softmax<span class="tok-p">(</span>scores<span class="tok-p">,</span> <span class="tok-p">-</span><span class="tok-n">1</span><span class="tok-p">)</span>', false],
+    ['    <span class="tok-k">return</span> attn <span class="tok-p">@</span> v', false],
+  ];
+  document.getElementById('gutter').innerHTML = CODE.map((_,i)=>`${i+1}`).join('<br>');
+  document.getElementById('codeArea').innerHTML = CODE.map(([line, cur], i) => {
+    const content = line || '&nbsp;';
+    const cursor = i === 6 ? '<span class="cursor"></span>' : '';
+    return `<div class="${cur?'cur-line':''}">${content}${cursor}</div>`;
+  }).join('');
+
+  // Test list
+  const TESTS = [
+    { n:"01", name:"shape_check",        status:"pass", t:"3.2ms" },
+    { n:"02", name:"masked_entries",     status:"pass", t:"4.9ms" },
+    { n:"03", name:"grad_flow",          status:"fail", t:"4.3ms", on:true },
+  ];
+  document.getElementById('testsList').innerHTML = TESTS.map(t => `
+    <div class="tc ${t.status} ${t.on?'on':''}">
+      <span class="mark">${t.status==='pass'?'✓':'✕'}</span>
+      <span class="n">${t.n}</span>
+      <span class="name">${t.name}</span>
+      <span class="t">${t.t}</span>
+    </div>
+  `).join('');
+</script>
+</body>
+</html>

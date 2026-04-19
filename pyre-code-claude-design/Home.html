@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%230a0a0a'/><path d='M12 3.5c1.1 3.3.3 4.9-1.35 6.5C9 11.6 7.7 13.35 7.7 15.7a4.3 4.3 0 0 0 8.6 0c0-1.75-.55-3.15-1.75-4.55.55 1.95-.3 3.15-1.45 3.15-.9 0-1.45-.7-1.45-1.6 0-1.35 1.5-2.65 1.5-4.7 0-1.8-.65-3.2-1.15-4.5z' fill='%23ff5a1f'/></svg>">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pyre Code — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    /* Light — warm neutrals */
+    --bg:        oklch(0.992 0.003 85);
+    --bg-elev:   oklch(1.000 0 0);
+    --bg-sunken: oklch(0.975 0.004 85);
+    --bg-code:   oklch(0.985 0.004 85);
+    --line:      oklch(0.915 0.005 85);
+    --line-strong: oklch(0.86 0.006 85);
+    --text:      oklch(0.20 0.008 80);
+    --text-2:    oklch(0.45 0.010 80);
+    --text-3:    oklch(0.62 0.010 80);
+    --accent:    #007aff;
+    --accent-ink: #005bd1;
+    --accent-wash: color-mix(in oklab, #007aff 8%, var(--bg));
+    --accent-line: color-mix(in oklab, #007aff 22%, var(--line));
+    --easy:      oklch(0.66 0.14 150);
+    --medium:    oklch(0.72 0.14  70);
+    --hard:      oklch(0.62 0.18  25);
+  }
+  [data-theme="dark"] {
+    --bg:        oklch(0.145 0.006 85);
+    --bg-elev:   oklch(0.175 0.006 85);
+    --bg-sunken: oklch(0.125 0.006 85);
+    --bg-code:   oklch(0.185 0.006 85);
+    --line:      oklch(0.265 0.008 85);
+    --line-strong: oklch(0.34 0.010 85);
+    --text:      oklch(0.96 0.004 85);
+    --text-2:    oklch(0.72 0.008 85);
+    --text-3:    oklch(0.55 0.010 85);
+    --accent:    #4ea1ff;
+    --accent-ink: #8cc0ff;
+    --accent-wash: color-mix(in oklab, #4ea1ff 14%, var(--bg));
+    --accent-line: color-mix(in oklab, #4ea1ff 28%, var(--line));
+    --easy:      oklch(0.74 0.14 150);
+    --medium:    oklch(0.80 0.13  70);
+    --hard:      oklch(0.72 0.16  25);
+  }
+
+  *,*::before,*::after { box-sizing: border-box; }
+  html,body { margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+    font-synthesis-weight: none;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+
+  .mono { font-family: var(--font-mono); font-feature-settings: "zero"; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+
+  /* ---------- Nav ---------- */
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 28px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-weight: 600; letter-spacing: -0.01em; font-size: 15px;
+  }
+  .brand .glyph {
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--accent-line);
+    background: var(--accent-wash);
+    border-radius: 6px;
+    color: var(--accent);
+  }
+  .nav-links { display: flex; align-items: center; gap: 2px; }
+  .nav-links a {
+    padding: 6px 10px; border-radius: 8px;
+    color: var(--text-2); font-size: 13.5px;
+    transition: background .15s, color .15s;
+  }
+  .nav-links a:hover { color: var(--text); background: color-mix(in oklab, var(--text) 5%, transparent); }
+  .nav-links a.active { color: var(--text); background: color-mix(in oklab, var(--text) 6%, transparent); }
+  .nav-right { display: flex; align-items: center; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 10px; border: 1px solid var(--line);
+    border-radius: 999px; background: var(--bg-elev);
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+  }
+  .chip .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--easy); box-shadow: 0 0 0 3px color-mix(in oklab, var(--easy) 25%, transparent); }
+  .icon-btn {
+    width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line); background: var(--bg-elev);
+    border-radius: 8px; color: var(--text-2); cursor: pointer;
+    transition: color .15s, background .15s, border-color .15s;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--line-strong); }
+  .pill-btn {
+    height: 30px; padding: 0 12px;
+    border: 1px solid var(--line); background: var(--bg-elev);
+    border-radius: 8px; color: var(--text-2); font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: color .15s, background .15s, border-color .15s;
+  }
+  .pill-btn:hover { color: var(--text); border-color: var(--line-strong); }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
+  section { padding: 80px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  [data-density="compact"] section { padding: 56px 0; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding-top: 80px; padding-bottom: 96px; }
+  .hero-grid {
+    display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 64px; align-items: center;
+  }
+  @media (max-width: 960px) { .hero-grid { grid-template-columns: 1fr; gap: 44px; } }
+
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 10px 5px 8px;
+    border: 1px solid var(--line);
+    background: var(--bg-elev);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+    margin-bottom: 28px;
+  }
+  .hero-pill .count {
+    color: var(--accent);
+    background: var(--accent-wash);
+    border: 1px solid var(--accent-line);
+    padding: 1px 6px; border-radius: 6px;
+    font-weight: 500;
+  }
+  h1.headline {
+    font-size: clamp(40px, 6.2vw, 72px);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    margin: 0 0 22px;
+    color: var(--text);
+    text-wrap: balance;
+  }
+  h1.headline em {
+    font-style: normal;
+    color: var(--text-3);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+  h1.headline .mark {
+    background: linear-gradient(180deg, transparent 60%, var(--accent-wash) 60%);
+    padding: 0 2px;
+  }
+  .sub {
+    font-size: 17px; line-height: 1.55;
+    color: var(--text-2);
+    max-width: 52ch;
+    margin: 0 0 32px;
+    text-wrap: pretty;
+  }
+  .cta-row { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 16px;
+    font-size: 14px; font-weight: 500;
+    border-radius: 10px; cursor: pointer;
+    transition: transform .08s, background .15s, border-color .15s, color .15s, box-shadow .15s;
+    border: 1px solid transparent;
+  }
+  .btn:active { transform: translateY(0.5px); }
+  .btn-primary {
+    background: var(--text); color: var(--bg);
+    border-color: var(--text);
+  }
+  .btn-primary:hover { background: color-mix(in oklab, var(--text) 88%, var(--accent)); }
+  .btn-secondary {
+    background: var(--bg-elev); color: var(--text);
+    border-color: var(--line);
+  }
+  .btn-secondary:hover { border-color: var(--line-strong); background: color-mix(in oklab, var(--text) 4%, var(--bg-elev)); }
+  .btn .kbd {
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 1px 5px; border-radius: 4px;
+    background: color-mix(in oklab, var(--bg) 35%, transparent);
+    border: 1px solid color-mix(in oklab, var(--bg) 50%, transparent);
+    color: inherit; opacity: 0.75;
+  }
+  .btn-secondary .kbd { background: var(--bg-sunken); border-color: var(--line); color: var(--text-3); }
+
+  .hero-meta {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    padding-top: 24px;
+    border-top: 1px dashed var(--line);
+  }
+  .meta-item .k { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: .08em; text-transform: uppercase; }
+  .meta-item .v { font-size: 14px; color: var(--text); margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Editor preview ---------- */
+  .editor {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--text) 4%, transparent),
+      0 24px 60px -30px color-mix(in oklab, var(--text) 18%, transparent);
+    position: relative;
+  }
+  .editor::before {
+    /* subtle grid backdrop */
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(var(--line) 1px, transparent 1px);
+    background-size: 18px 18px;
+    opacity: .35;
+    mask-image: radial-gradient(ellipse at 30% 30%, black 40%, transparent 75%);
+  }
+  .editor-head {
+    position: relative;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in oklab, var(--text) 2%, var(--bg-elev));
+  }
+  .editor-head .path {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+  }
+  .editor-head .path .seg { color: var(--text-3); }
+  .editor-head .badge {
+    margin-left: auto;
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 3px 8px; border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--bg-sunken);
+    color: var(--text-2);
+  }
+  .editor-body { position: relative; display: grid; grid-template-columns: minmax(0,1fr); }
+  .editor-split { display: grid; grid-template-columns: 1fr 280px; }
+  @media (max-width: 720px) { .editor-split { grid-template-columns: 1fr; } }
+  .code {
+    padding: 16px 18px 20px;
+    font-family: var(--font-mono);
+    font-size: 12.5px; line-height: 1.75;
+    color: var(--text);
+    position: relative;
+    overflow: hidden;
+  }
+  .code .ln { display: grid; grid-template-columns: 28px 1fr; gap: 14px; }
+  .code .ln .n { color: var(--text-3); text-align: right; user-select: none; }
+  .code .ln .c { white-space: pre; }
+  .tok-k { color: color-mix(in oklab, var(--accent) 80%, var(--text)); }
+  .tok-f { color: var(--text); font-weight: 500; }
+  .tok-s { color: color-mix(in oklab, var(--easy) 70%, var(--text)); }
+  .tok-n { color: color-mix(in oklab, var(--hard) 65%, var(--text)); }
+  .tok-c { color: var(--text-3); font-style: italic; }
+  .tok-p { color: var(--text-2); }
+
+  .tests {
+    border-left: 1px solid var(--line);
+    background: var(--bg-sunken);
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .tests .th {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: 2px 0 6px;
+  }
+  .test {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: var(--font-mono); font-size: 12px;
+  }
+  .test .mark {
+    width: 16px; height: 16px; flex-shrink: 0;
+    border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 10px;
+  }
+  .test.pass .mark { background: var(--easy); }
+  .test.run .mark {
+    background: transparent; color: var(--text-3);
+    border: 1px solid var(--line);
+  }
+  .test .name { color: var(--text); }
+  .test .t { margin-left: auto; color: var(--text-3); }
+  .test.run .t::after {
+    content: ""; width: 6px; height: 6px; border-radius: 999px;
+    background: var(--accent); display: inline-block; margin-left: 6px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+  /* ---------- Category nav ---------- */
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 32px; gap: 24px;
+  }
+  .section-head h2 {
+    font-size: clamp(24px, 2.6vw, 32px);
+    letter-spacing: -0.025em;
+    margin: 8px 0 0;
+    font-weight: 600;
+  }
+  .section-head .eyebrow { margin-bottom: 0; }
+  .section-head .see-all {
+    font-size: 13px; color: var(--text-2);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .section-head .see-all:hover { color: var(--text); }
+
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  @media (max-width: 960px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .cat-grid { grid-template-columns: 1fr; } }
+
+  .cat {
+    background: var(--bg-elev);
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 168px;
+    position: relative;
+    transition: background .18s;
+    cursor: pointer;
+  }
+  .cat:hover { background: color-mix(in oklab, var(--accent) 3%, var(--bg-elev)); }
+  .cat .idx {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+    letter-spacing: .12em;
+  }
+  .cat h3 {
+    margin: 0; font-size: 17px; font-weight: 600;
+    letter-spacing: -0.012em;
+    color: var(--text);
+  }
+  .cat p {
+    margin: 0; font-size: 12.5px; color: var(--text-2);
+    line-height: 1.5;
+    font-family: var(--font-mono);
+    font-weight: 400;
+  }
+  .cat .meta {
+    margin-top: auto;
+    display: flex; align-items: center; gap: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+  }
+  .cat .meta .n {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .cat .meta .arrow {
+    margin-left: auto; color: var(--text-3);
+    transition: color .18s, transform .18s;
+  }
+  .cat:hover .meta .arrow { color: var(--accent); transform: translateX(2px); }
+
+  .bars { display: inline-flex; gap: 2px; align-items: flex-end; height: 10px; }
+  .bars span { width: 3px; background: var(--line-strong); border-radius: 1px; }
+  .bars span.e { background: var(--easy); }
+  .bars span.m { background: var(--medium); }
+  .bars span.h { background: var(--hard); }
+
+  /* ---------- Paths ---------- */
+  .paths-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  }
+  @media (max-width: 900px) { .paths-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .paths-grid { grid-template-columns: 1fr; } }
+  .path-card {
+    padding: 20px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex; flex-direction: column; gap: 14px;
+    min-height: 172px;
+    position: relative;
+    transition: border-color .15s, background .15s;
+    cursor: pointer;
+  }
+  .path-card:hover { border-color: var(--accent-line); }
+  .path-card .head { display: flex; align-items: center; gap: 10px; }
+  .path-card .tag {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--text-3); letter-spacing: .12em;
+  }
+  .path-card h3 { margin: 0; font-size: 15.5px; font-weight: 600; letter-spacing: -0.012em; }
+  .path-card p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .progress {
+    margin-top: auto;
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono); font-size: 11.5px; color: var(--text-2);
+  }
+  .bar {
+    position: relative; flex: 1; height: 3px;
+    background: var(--line); border-radius: 999px; overflow: hidden;
+  }
+  .bar::after {
+    content: ""; position: absolute; inset: 0;
+    width: var(--p, 30%); background: var(--accent);
+    border-radius: 999px;
+  }
+
+  /* ---------- Features row ---------- */
+  .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  @media (max-width: 800px) { .feat-grid { grid-template-columns: 1fr; } }
+  .feat {
+    padding: 22px 0;
+    border-top: 1px solid var(--line);
+    position: relative;
+  }
+  .feat h4 {
+    margin: 16px 0 6px; font-size: 15.5px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .feat p { margin: 0; font-size: 13.5px; color: var(--text-2); line-height: 1.55; max-width: 40ch; }
+  .feat .num {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+    letter-spacing: .12em;
+  }
+  .feat .icon {
+    width: 36px; height: 36px;
+    border: 1px solid var(--line); border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text); background: var(--bg-elev);
+    margin-top: 10px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 36px 0 56px;
+    font-size: 12.5px; color: var(--text-3);
+    font-family: var(--font-mono);
+  }
+  footer .foot-inner {
+    max-width: 1200px; margin: 0 auto; padding: 0 28px;
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  footer a:hover { color: var(--text); }
+
+  /* ---------- Tweaks panel ---------- */
+  .tweaks {
+    position: fixed; right: 20px; bottom: 20px; z-index: 100;
+    width: 280px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,0.25);
+    padding: 14px;
+    font-size: 13px;
+    display: none;
+  }
+  .tweaks.open { display: block; }
+  .tweaks h5 {
+    margin: 0 0 12px; font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--text-3); font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .tweak-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px dashed var(--line);
+    font-size: 13px; color: var(--text-2);
+  }
+  .tweak-row:last-child { border-bottom: none; }
+  .seg {
+    display: inline-flex; background: var(--bg-sunken); border: 1px solid var(--line);
+    border-radius: 8px; padding: 2px;
+  }
+  .seg button {
+    padding: 4px 10px; font-size: 12px; border: none; background: transparent;
+    color: var(--text-2); border-radius: 6px; cursor: pointer;
+    font-family: var(--font-mono);
+  }
+  .seg button.on { background: var(--bg-elev); color: var(--text); box-shadow: 0 0 0 1px var(--line); }
+
+  /* ---------- Ticker ---------- */
+  .ticker {
+    display: flex; gap: 24px; overflow: hidden;
+    padding: 14px 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+    mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  }
+  .ticker .track {
+    display: flex; gap: 40px; flex-shrink: 0;
+    animation: slide 60s linear infinite;
+  }
+  @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .ticker .it { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .ticker .it .d { width: 4px; height: 4px; background: var(--text-3); border-radius: 999px; }
+
+</style>
+</head>
+<body data-theme="light" data-density="comfy">
+
+<nav class="top">
+  <div class="nav-inner">
+    <div style="display:flex; align-items:center; gap:32px;">
+      <a href="Home.html" class="brand">
+        <span class="glyph" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.25c.6 1.8.15 2.7-.75 3.6C4 6.2 3.25 7.2 3.25 8.5a2.75 2.75 0 1 0 5.5 0c0-1-.3-1.8-1-2.6.3 1.1-.15 1.8-.8 1.8-.5 0-.85-.4-.85-1C6.1 5.6 6.7 3.9 6 1.25Z" fill="currentColor"/></svg>
+        </span>
+        Pyre Code
+      </a>
+      <div class="nav-links">
+        <a href="Home.html" class="active">Home</a>
+        <a href="Problems.html">Problems</a>
+        <a href="Paths.html">Paths</a>
+        <a href="#">Docs</a>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="chip">
+        <span class="dot"></span>
+        <span>12 / 68 solved</span>
+      </div>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <button class="pill-btn" id="tweakBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h11M4 12h7M4 18h13"/><circle cx="19" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+        Tweaks
+      </button>
+      <button class="pill-btn">EN</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <span class="hero-pill">
+          <span class="count">68</span>
+          <span>AI systems challenges</span>
+          <span style="color: var(--text-3)">·</span>
+          <span style="color: var(--text-3)">no GPU required</span>
+        </span>
+
+        <h1 class="headline">
+          Build modern AI<br/>
+          <em>from scratch.</em>
+        </h1>
+
+        <p class="sub">
+          Implement the internals of Transformers, vLLM, TRL, and diffusion models &mdash; attention variants, training tricks, inference kernels. Real PyTorch tests, instant feedback.
+        </p>
+
+        <div class="cta-row">
+          <button class="btn btn-primary" onclick="location='Problems.html'">
+            Start practicing
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <button class="btn btn-secondary" onclick="location='Paths.html'">
+            Browse learning paths
+            <span class="kbd">⌘K</span>
+          </button>
+        </div>
+
+        <div class="hero-meta">
+          <div class="meta-item">
+            <div class="k">Total</div>
+            <div class="v mono">68 problems</div>
+          </div>
+          <div class="meta-item">
+            <div class="k">Coverage</div>
+            <div class="v mono">13 categories</div>
+          </div>
+          <div class="meta-item">
+            <div class="k">Runtime</div>
+            <div class="v mono">CPU · local</div>
+          </div>
+          <div class="meta-item">
+            <div class="k">Judge</div>
+            <div class="v mono">torch_judge</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor preview -->
+      <div class="editor" role="img" aria-label="Code editor preview">
+        <div class="editor-head">
+          <span style="display:inline-flex;gap:6px;">
+            <span style="width:9px;height:9px;border-radius:999px;background:color-mix(in oklab, var(--hard) 60%, transparent);"></span>
+            <span style="width:9px;height:9px;border-radius:999px;background:color-mix(in oklab, var(--medium) 60%, transparent);"></span>
+            <span style="width:9px;height:9px;border-radius:999px;background:color-mix(in oklab, var(--easy) 60%, transparent);"></span>
+          </span>
+          <span class="path"><span class="seg">attention /</span> causal_self_attention.py</span>
+          <span class="badge">MEDIUM · 38%</span>
+        </div>
+        <div class="editor-split">
+          <div class="code" aria-hidden="true">
+<div class="ln"><span class="n">1</span><span class="c"><span class="tok-c"># Implement causal self-attention.</span></span></div>
+<div class="ln"><span class="n">2</span><span class="c"><span class="tok-k">import</span> <span class="tok-f">torch</span></span></div>
+<div class="ln"><span class="n">3</span><span class="c"><span class="tok-k">import</span> <span class="tok-f">torch.nn.functional</span> <span class="tok-k">as</span> <span class="tok-f">F</span></span></div>
+<div class="ln"><span class="n">4</span><span class="c"></span></div>
+<div class="ln"><span class="n">5</span><span class="c"><span class="tok-k">def</span> <span class="tok-f">causal_attention</span><span class="tok-p">(</span>q<span class="tok-p">,</span> k<span class="tok-p">,</span> v<span class="tok-p">):</span></span></div>
+<div class="ln"><span class="n">6</span><span class="c">    d <span class="tok-p">=</span> q<span class="tok-p">.</span>size<span class="tok-p">(-</span><span class="tok-n">1</span><span class="tok-p">)</span></span></div>
+<div class="ln"><span class="n">7</span><span class="c">    scores <span class="tok-p">=</span> q <span class="tok-p">@</span> k<span class="tok-p">.</span>transpose<span class="tok-p">(-</span><span class="tok-n">2</span><span class="tok-p">,-</span><span class="tok-n">1</span><span class="tok-p">)</span> <span class="tok-p">/</span> d<span class="tok-p">**</span><span class="tok-n">0.5</span></span></div>
+<div class="ln"><span class="n">8</span><span class="c">    T <span class="tok-p">=</span> q<span class="tok-p">.</span>size<span class="tok-p">(-</span><span class="tok-n">2</span><span class="tok-p">)</span></span></div>
+<div class="ln"><span class="n">9</span><span class="c">    mask <span class="tok-p">=</span> torch<span class="tok-p">.</span>triu<span class="tok-p">(</span>torch<span class="tok-p">.</span>ones<span class="tok-p">(</span>T<span class="tok-p">,</span>T<span class="tok-p">),</span> <span class="tok-n">1</span><span class="tok-p">).</span>bool<span class="tok-p">()</span></span></div>
+<div class="ln"><span class="n">10</span><span class="c">    scores <span class="tok-p">=</span> scores<span class="tok-p">.</span>masked_fill<span class="tok-p">(</span>mask<span class="tok-p">,</span> <span class="tok-k">float</span><span class="tok-p">(</span><span class="tok-s">'-inf'</span><span class="tok-p">))</span></span></div>
+<div class="ln"><span class="n">11</span><span class="c">    <span class="tok-k">return</span> F<span class="tok-p">.</span>softmax<span class="tok-p">(</span>scores<span class="tok-p">,</span> <span class="tok-p">-</span><span class="tok-n">1</span><span class="tok-p">)</span> <span class="tok-p">@</span> v</span></div>
+          </div>
+          <div class="tests">
+            <div class="th">Tests · 4</div>
+            <div class="test pass">
+              <span class="mark">✓</span><span class="name">shape_check</span>
+              <span class="t">3.2ms</span>
+            </div>
+            <div class="test pass">
+              <span class="mark">✓</span><span class="name">masked_entries</span>
+              <span class="t">2.7ms</span>
+            </div>
+            <div class="test pass">
+              <span class="mark">✓</span><span class="name">numerical_stability</span>
+              <span class="t">4.1ms</span>
+            </div>
+            <div class="test run">
+              <span class="mark">·</span><span class="name">grad_flow</span>
+              <span class="t">running</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ticker -->
+  <div class="ticker" aria-hidden="true">
+    <div class="track" id="track"></div>
+  </div>
+
+  <!-- Categories -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">§ 01 — Problem set</div>
+        <h2>Thirteen categories. What you already read in papers — now write it.</h2>
+      </div>
+      <a href="Problems.html" class="see-all mono">
+        All 68 problems →
+      </a>
+    </div>
+
+    <div class="cat-grid" id="cats"></div>
+  </section>
+
+  <!-- Paths -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">§ 02 — Learning paths</div>
+        <h2>Pick a destination.</h2>
+      </div>
+      <a href="Paths.html" class="see-all mono">All 8 paths →</a>
+    </div>
+    <div class="paths-grid" id="paths"></div>
+  </section>
+
+  <!-- Features -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">§ 03 — How it works</div>
+        <h2>Read the paper, then write the code.</h2>
+      </div>
+    </div>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="num">01</div>
+        <div class="icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h4>Instant feedback</h4>
+        <p>Pass / fail per test case, execution time, stdout capture. Failures show the expected vs. got tensor diff.</p>
+      </div>
+      <div class="feat">
+        <div class="num">02</div>
+        <div class="icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6l-3 3v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9l-3-3V2"/><path d="M9 2h6"/></svg>
+        </div>
+        <h4>Real PyTorch, no mocks</h4>
+        <p>Your code runs against the same tensor ops the real model uses. If it passes here, it works in production.</p>
+      </div>
+      <div class="feat">
+        <div class="num">03</div>
+        <div class="icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+        </div>
+        <h4>Progress that persists</h4>
+        <p>Submission history per problem, solved count across sessions, best execution time. All local — SQLite on your disk.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <div>PYRE_CODE · v0.4.2 · MIT · Built on torch_judge</div>
+    <div style="display:flex; gap:18px;">
+      <a href="#">GitHub</a>
+      <a href="#">Issues</a>
+      <a href="#">Contribute</a>
+      <a href="#">EN / 中文</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Tweaks panel -->
+<div class="tweaks" id="tweaks" role="dialog" aria-label="Tweaks">
+  <h5>Tweaks</h5>
+  <div class="tweak-row">
+    <span>Theme</span>
+    <div class="seg" data-tweak="theme">
+      <button data-val="light" class="on">Light</button>
+      <button data-val="dark">Dark</button>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <span>Density</span>
+    <div class="seg" data-tweak="density">
+      <button data-val="comfy" class="on">Comfy</button>
+      <button data-val="compact">Compact</button>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <span>Accent</span>
+    <div class="seg" data-tweak="accent">
+      <button data-val="#007aff" class="on">Blue</button>
+      <button data-val="#ff5a1f">Ember</button>
+      <button data-val="#111111">Ink</button>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <span>Code sample</span>
+    <div class="seg" data-tweak="sample">
+      <button data-val="causal" class="on">Causal</button>
+      <button data-val="rope">RoPE</button>
+      <button data-val="rms">RMSNorm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Categories (subset of the 13, displayed 8)
+  const CATS = [
+    { idx: "A", name: "Attention",       desc: "Scaled dot-product, MHA, causal, cross, GQA, sliding window, linear, Flash, Differential, MLA", n: 10, mix: [2,5,3] },
+    { idx: "T", name: "Training",        desc: "Adam, cosine LR, gradient clipping, accumulation, mixed precision, activation checkpointing", n: 6, mix: [2,3,1] },
+    { idx: "I", name: "Inference",       desc: "KV cache, top-k sampling, beam search, speculative decoding, BPE, INT8, paged attention", n: 7, mix: [2,4,1] },
+    { idx: "N", name: "Normalization",   desc: "LayerNorm, BatchNorm, RMSNorm", n: 3, mix: [2,1,0] },
+    { idx: "P", name: "Position",        desc: "Sinusoidal PE, RoPE, ALiBi, NTK-aware RoPE", n: 4, mix: [0,3,1] },
+    { idx: "L", name: "Alignment",       desc: "Cross entropy, label smoothing, focal, contrastive, DPO, GRPO, PPO, reward model", n: 8, mix: [2,4,2] },
+    { idx: "D", name: "Diffusion & DiT", desc: "Noise schedule, DDIM step, flow matching, adaLN-Zero", n: 4, mix: [0,2,2] },
+    { idx: "F", name: "Frontier",        desc: "MoE, MoE balance, MTP, MCTS, Mamba SSM, LoRA, QLoRA", n: 7, mix: [1,3,3] },
+  ];
+  const catEl = document.getElementById("cats");
+  catEl.innerHTML = CATS.map((c,i) => `
+    <div class="cat" onclick="location='Problems.html'">
+      <div class="idx">CAT_${String(i+1).padStart(2,'0')} · ${c.idx}</div>
+      <h3>${c.name}</h3>
+      <p>${c.desc}</p>
+      <div class="meta">
+        <span class="n">${c.n} problems</span>
+        <span class="bars" aria-hidden="true">
+          ${Array(c.mix[0]).fill(0).map(()=>`<span class="e" style="height:${6+Math.random()*4|0}px"></span>`).join('')}
+          ${Array(c.mix[1]).fill(0).map(()=>`<span class="m" style="height:${6+Math.random()*4|0}px"></span>`).join('')}
+          ${Array(c.mix[2]).fill(0).map(()=>`<span class="h" style="height:${6+Math.random()*4|0}px"></span>`).join('')}
+        </span>
+        <span class="arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </div>
+  `).join('');
+
+  // Paths
+  const PATHS = [
+    { tag: "PATH_01", name: "Transformer Internals",   desc: "Activations → Normalization → Attention → GPT-2 Block.",      n: 12, p: 42 },
+    { tag: "PATH_02", name: "Attention & Position",    desc: "Every attention variant plus RoPE, ALiBi, NTK-RoPE.",          n: 13, p: 23 },
+    { tag: "PATH_03", name: "Train a GPT from Scratch",desc: "Embeddings → architecture → loss → optimizer → training tricks.", n: 15, p: 0 },
+    { tag: "PATH_04", name: "Inference & Distributed", desc: "KV cache, quantization, sampling, tensor parallel, FSDP.",    n:  9, p: 11 },
+    { tag: "PATH_05", name: "Alignment & Reasoning",   desc: "Reward model → DPO → GRPO → PPO → MCTS.",                      n:  6, p: 0 },
+    { tag: "PATH_06", name: "Diffusion Models & DiT",  desc: "Noise schedule → DDIM → flow matching → adaLN-Zero.",          n:  5, p: 0 },
+  ];
+  document.getElementById("paths").innerHTML = PATHS.map(p => `
+    <div class="path-card" onclick="location='Path.html'">
+      <div class="head">
+        <span class="tag mono">${p.tag}</span>
+      </div>
+      <h3>${p.name}</h3>
+      <p>${p.desc}</p>
+      <div class="progress">
+        <span>${Math.round(p.p/100 * p.n)}/${p.n}</span>
+        <div class="bar" style="--p:${p.p}%"></div>
+        <span>${p.p}%</span>
+      </div>
+    </div>
+  `).join('');
+
+  // Ticker
+  const TICK = [
+    "MultiHeadAttention",
+    "Flash Attention (tiled)",
+    "Rotary Position Embedding",
+    "DPO Loss",
+    "GRPO Loss",
+    "Speculative Decoding",
+    "Paged Attention",
+    "LoRA / QLoRA",
+    "Mamba SSM",
+    "Mixture of Experts",
+    "FSDP Training Step",
+    "Ring Attention",
+    "Flow Matching",
+    "adaLN-Zero",
+    "Multi-Token Prediction",
+  ];
+  const track = document.getElementById("track");
+  const oneSet = TICK.map(t => `<span class="it"><span class="d"></span>${t}</span>`).join('');
+  track.innerHTML = oneSet + oneSet;
+
+  // Theme toggle
+  const themeBtn = document.getElementById("themeBtn");
+  function setTheme(t) {
+    document.body.setAttribute("data-theme", t);
+    document.querySelectorAll('[data-tweak="theme"] button').forEach(b => b.classList.toggle('on', b.dataset.val === t));
+    persist({ theme: t });
+  }
+  themeBtn.addEventListener("click", () => {
+    setTheme(document.body.getAttribute("data-theme") === "light" ? "dark" : "light");
+  });
+
+  // Accent
+  function setAccent(color) {
+    document.documentElement.style.setProperty("--accent", color);
+    document.documentElement.style.setProperty("--accent-wash", `color-mix(in oklab, ${color} 10%, var(--bg))`);
+    document.documentElement.style.setProperty("--accent-line", `color-mix(in oklab, ${color} 26%, var(--line))`);
+    document.querySelectorAll('[data-tweak="accent"] button').forEach(b => b.classList.toggle('on', b.dataset.val === color));
+    persist({ accent: color });
+  }
+  function setDensity(d) {
+    document.body.setAttribute("data-density", d);
+    document.querySelectorAll('[data-tweak="density"] button').forEach(b => b.classList.toggle('on', b.dataset.val === d));
+    persist({ density: d });
+  }
+
+  // Code sample swap (cosmetic — replaces head path + badge)
+  const SAMPLES = {
+    causal: { path: "attention / causal_self_attention.py", badge: "MEDIUM · 38%" },
+    rope:   { path: "position / rope.py",                    badge: "MEDIUM · 52%" },
+    rms:    { path: "normalization / rmsnorm.py",            badge: "EASY · 71%" },
+  };
+  function setSample(k) {
+    const s = SAMPLES[k]; if (!s) return;
+    document.querySelector('.editor-head .path').innerHTML = s.path.replace(/^(.+?\/)/, '<span class="seg">$1</span>');
+    document.querySelector('.editor-head .badge').textContent = s.badge;
+    document.querySelectorAll('[data-tweak="sample"] button').forEach(b => b.classList.toggle('on', b.dataset.val === k));
+    persist({ sample: k });
+  }
+
+  // Wire seg buttons
+  document.querySelectorAll('.seg').forEach(seg => {
+    seg.addEventListener('click', (e) => {
+      const btn = e.target.closest('button'); if (!btn) return;
+      const key = seg.dataset.tweak;
+      const val = btn.dataset.val;
+      if (key === 'theme') setTheme(val);
+      if (key === 'accent') setAccent(val);
+      if (key === 'density') setDensity(val);
+      if (key === 'sample') setSample(val);
+    });
+  });
+
+  // Tweaks panel toggle
+  const tweaks = document.getElementById("tweaks");
+  document.getElementById("tweakBtn").addEventListener("click", () => tweaks.classList.toggle("open"));
+
+  // ------------ Tweaks host protocol ------------
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "theme": "light",
+    "density": "comfy",
+    "accent": "#007aff",
+    "sample": "causal"
+  }/*EDITMODE-END*/;
+
+  let editModeOn = false;
+  function applyAll(v) {
+    if (v.theme) setTheme(v.theme);
+    if (v.density) setDensity(v.density);
+    if (v.accent) setAccent(v.accent);
+    if (v.sample) setSample(v.sample);
+  }
+  // Apply defaults immediately
+  applyAll(TWEAK_DEFAULTS);
+
+  function persist(patch) {
+    if (!editModeOn) return;
+    try { window.parent.postMessage({ type: "__edit_mode_set_keys", edits: patch }, "*"); } catch (_) {}
+  }
+  window.addEventListener("message", (e) => {
+    const d = e.data;
+    if (!d || typeof d !== "object") return;
+    if (d.type === "__activate_edit_mode") {
+      editModeOn = true;
+      tweaks.classList.add("open");
+    } else if (d.type === "__deactivate_edit_mode") {
+      editModeOn = false;
+      tweaks.classList.remove("open");
+    }
+  });
+  try { window.parent.postMessage({ type: "__edit_mode_available" }, "*"); } catch (_) {}
+</script>
+</body>
+</html>

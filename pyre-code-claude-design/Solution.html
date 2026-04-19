@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%230a0a0a'/><path d='M12 3.5c1.1 3.3.3 4.9-1.35 6.5C9 11.6 7.7 13.35 7.7 15.7a4.3 4.3 0 0 0 8.6 0c0-1.75-.55-3.15-1.75-4.55.55 1.95-.3 3.15-1.45 3.15-.9 0-1.45-.7-1.45-1.6 0-1.35 1.5-2.65 1.5-4.7 0-1.8-.65-3.2-1.15-4.5z' fill='%23ff5a1f'/></svg>">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Solution — Causal Self-Attention</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/pyre.css">
+<style>
+  main { padding-top: 32px; padding-bottom: 80px; }
+  .crumbs { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); display:flex; gap:6px; margin-bottom: 20px; }
+  .crumbs a:hover { color: var(--text); }
+
+  .head-row {
+    display: grid; grid-template-columns: minmax(0,1.4fr) minmax(0, 1fr);
+    gap: 40px; padding-bottom: 32px; margin-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 820px) { .head-row { grid-template-columns: 1fr; } }
+  h1 { font-size: clamp(28px, 3.5vw, 44px); letter-spacing: -0.028em; font-weight: 600; margin: 8px 0 12px; line-height: 1.08; }
+  .lede { margin: 0 0 18px; color: var(--text-2); font-size: 15px; line-height: 1.6; }
+  .tagline { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+
+  .perf-card {
+    padding: 20px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .perf-card h4 { margin: 0 0 14px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); font-weight: 500; }
+  .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .perf-grid .it { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-sunken); }
+  .perf-grid .it .k { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; color: var(--text-3); text-transform: uppercase; }
+  .perf-grid .it .v { font-size: 20px; margin-top: 3px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .perf-grid .it.ok .v { color: var(--easy); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 40px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .sol h2 { font-size: 22px; letter-spacing: -0.02em; margin: 0 0 14px; font-weight: 600; }
+  .sol h3 {
+    font-size: 12px; font-family: var(--font-mono); letter-spacing: .12em;
+    text-transform: uppercase; color: var(--text-3); font-weight: 500;
+    margin: 28px 0 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sol h3::before, .sol h3::after { content:""; height:1px; background: var(--line); }
+  .sol h3::after { flex: 1; }
+  .sol p { font-size: 14.5px; line-height: 1.7; color: var(--text-2); margin: 0 0 14px; max-width: 68ch; }
+  .sol p strong { color: var(--text); font-weight: 500; }
+  .sol code { font-family: var(--font-mono); font-size: 12.5px; padding: 1px 5px; background: var(--bg-sunken); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
+
+  .code-block {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg-elev);
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .code-block .head {
+    padding: 0 14px; height: 38px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in oklab, var(--text) 2%, var(--bg-elev));
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+  }
+  .code-block .head .path { color: var(--text); }
+  .code-block .head .spacer { flex: 1; }
+  .code-block .head button {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+    border: 1px solid var(--line); background: var(--bg-sunken);
+    padding: 3px 8px; border-radius: 5px; cursor: pointer;
+  }
+  .code-block pre {
+    margin: 0; padding: 14px 18px;
+    font-family: var(--font-mono); font-size: 13px; line-height: 1.75;
+    overflow: auto;
+  }
+  .tok-k { color: color-mix(in oklab, var(--accent) 80%, var(--text)); }
+  .tok-f { color: var(--text); }
+  .tok-s { color: color-mix(in oklab, var(--easy) 60%, var(--text)); }
+  .tok-n { color: color-mix(in oklab, var(--hard) 60%, var(--text)); }
+  .tok-c { color: var(--text-3); font-style: italic; }
+  .tok-p { color: var(--text-2); }
+
+  .callout {
+    padding: 14px 16px;
+    background: color-mix(in oklab, var(--accent) 4%, var(--bg));
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 9px;
+    font-size: 13.5px; line-height: 1.65;
+    margin: 0 0 16px;
+  }
+  .callout strong { color: var(--text); }
+  .callout .tag { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; display: block; margin-bottom: 4px; }
+
+  /* Complexity table */
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.cmp th, table.cmp td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); font-family: var(--font-mono); }
+  table.cmp th { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); font-weight: 500; }
+  table.cmp tr:last-child td { border-bottom: none; }
+
+  /* TOC */
+  .toc { position: sticky; top: 76px; }
+  .toc h5 { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); font-weight: 500; margin: 0 0 10px; }
+  .toc a {
+    display: block; padding: 6px 10px; border-radius: 6px;
+    font-size: 13px; color: var(--text-2);
+    border-left: 2px solid transparent;
+  }
+  .toc a:hover { color: var(--text); }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); background: var(--accent-wash); }
+
+</style>
+</head>
+<body data-theme="light">
+<script src="assets/shared.js"></script>
+<script>renderPyreNav({ active: 'problems' });</script>
+
+<main class="container">
+  <div class="crumbs">
+    <a href="Problems.html">Problems</a>
+    <span>/</span>
+    <a href="Workspace.html">#09 Causal Self-Attention</a>
+    <span>/</span>
+    <span style="color:var(--text)">Solution</span>
+  </div>
+
+  <div class="head-row">
+    <div>
+      <div class="eyebrow">§ SOLUTION · #09</div>
+      <h1>Causal Self-Attention</h1>
+      <p class="lede">A short walkthrough of the canonical implementation — why each line is where it is, and where production code departs from it.</p>
+      <div class="tagline">
+        <span class="badge medium">MEDIUM</span>
+        <span class="badge">ATTENTION</span>
+        <span class="badge">O(T²·D)</span>
+        <a href="Workspace.html" class="btn btn-secondary" style="margin-left:4px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to problem
+        </a>
+      </div>
+    </div>
+    <div class="perf-card">
+      <h4>Your submission</h4>
+      <div class="perf-grid">
+        <div class="it ok"><div class="k">Status</div><div class="v">Accepted</div></div>
+        <div class="it"><div class="k">Runtime</div><div class="v">12.4ms</div></div>
+        <div class="it"><div class="k">Attempts</div><div class="v">12</div></div>
+        <div class="it"><div class="k">Percentile</div><div class="v">p64</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sol">
+      <h2>Walkthrough</h2>
+      <p>Causal self-attention is a one-line trick on top of scaled dot-product attention: mask scores above the diagonal with <code>-inf</code> before softmax. The resulting row <em>i</em> has zero probability mass on positions <em>j > i</em>, so token <em>i</em>'s output depends only on itself and its past.</p>
+
+      <div class="callout">
+        <span class="tag">⚑ Core insight</span>
+        <strong>Mask before softmax, not after.</strong> If you zero out entries after softmax, the remaining entries no longer sum to 1, and gradients at masked positions become non-zero — which is how NaNs appear later in training.
+      </div>
+
+      <h3>Reference implementation</h3>
+      <div class="code-block">
+        <div class="head">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="path">solutions / causal_attention.py</span>
+          <span class="spacer"></span>
+          <button>Copy</button>
+        </div>
+<pre><span class="tok-k">import</span> <span class="tok-f">torch</span>
+<span class="tok-k">import</span> <span class="tok-f">torch.nn.functional</span> <span class="tok-k">as</span> <span class="tok-f">F</span>
+
+<span class="tok-k">def</span> <span class="tok-f">causal_attention</span><span class="tok-p">(q, k, v):</span>
+    <span class="tok-c"># q, k, v: (B, H, T, D)</span>
+    B, H, T, D <span class="tok-p">=</span> q<span class="tok-p">.</span>shape
+    scores <span class="tok-p">=</span> q <span class="tok-p">@</span> k<span class="tok-p">.</span>transpose<span class="tok-p">(-</span><span class="tok-n">2</span><span class="tok-p">, -</span><span class="tok-n">1</span><span class="tok-p">)</span> <span class="tok-p">/</span> D<span class="tok-p">**</span><span class="tok-n">0.5</span>
+
+    <span class="tok-c"># build an upper-triangular mask: True = future = forbidden</span>
+    mask <span class="tok-p">=</span> torch<span class="tok-p">.</span>triu<span class="tok-p">(</span>torch<span class="tok-p">.</span>ones<span class="tok-p">(</span>T<span class="tok-p">,</span> T<span class="tok-p">,</span> device<span class="tok-p">=</span>q<span class="tok-p">.</span>device<span class="tok-p">),</span> diagonal<span class="tok-p">=</span><span class="tok-n">1</span><span class="tok-p">).</span>bool<span class="tok-p">()</span>
+    scores <span class="tok-p">=</span> scores<span class="tok-p">.</span>masked_fill<span class="tok-p">(</span>mask<span class="tok-p">,</span> <span class="tok-k">float</span><span class="tok-p">(</span><span class="tok-s">'-inf'</span><span class="tok-p">))</span>
+
+    attn <span class="tok-p">=</span> F<span class="tok-p">.</span>softmax<span class="tok-p">(</span>scores<span class="tok-p">, dim=-</span><span class="tok-n">1</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> attn <span class="tok-p">@</span> v</pre>
+      </div>
+
+      <h3>Why not just zero the entries?</h3>
+      <p>Replacing future scores with <code>0</code> before softmax doesn't forbid them — <code>exp(0) = 1</code>, so they'd still receive mass. Using <code>-inf</code> sends <code>exp(-inf) → 0</code>, which is the only value softmax treats as "not an option."</p>
+
+      <h3>Complexity</h3>
+      <div class="code-block">
+        <table class="cmp">
+          <thead><tr><th>Term</th><th>Cost</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>Q·Kᵀ</td><td>O(B·H·T²·D)</td><td>matmul</td></tr>
+            <tr><td>mask + softmax</td><td>O(B·H·T²)</td><td>elementwise</td></tr>
+            <tr><td>attn·V</td><td>O(B·H·T²·D)</td><td>matmul</td></tr>
+            <tr><td>Memory</td><td>O(B·H·T²)</td><td>stored scores</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What production code does differently</h3>
+      <p><strong>Build the mask once.</strong> Register it as a buffer (e.g. <code>self.register_buffer("bias", tril)</code>) and slice it to the current sequence length. Allocating a new mask per forward is O(T²) wasted memory.</p>
+      <p><strong>Prefer <code>F.scaled_dot_product_attention</code></strong> on any modern PyTorch — it fuses the mask + softmax + matmul and routes to Flash Attention on CUDA. Your implementation here is the educational version; the production call is one line with <code>is_causal=True</code>.</p>
+      <p><strong>Watch the dtype.</strong> In mixed precision, softmax should run in <code>float32</code> even if q/k/v are <code>bfloat16</code>. Otherwise the <code>-inf</code> masking can round to a finite negative value and break causality.</p>
+
+      <h3>See also</h3>
+      <div class="code-block" style="padding:14px 18px;display:flex;flex-direction:column;gap:8px;">
+        <a href="Workspace.html" style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-sunken);">
+          <span><span style="font-family:var(--font-mono);color:var(--text-3);font-size:11.5px;margin-right:8px;">NEXT</span>Multi-Head Attention</span>
+          <span class="badge medium">MEDIUM</span>
+        </a>
+        <a href="Workspace.html" style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-sunken);">
+          <span><span style="font-family:var(--font-mono);color:var(--text-3);font-size:11.5px;margin-right:8px;">RELATED</span>Flash Attention (Tiled)</span>
+          <span class="badge hard">HARD</span>
+        </a>
+        <a href="Workspace.html" style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-sunken);">
+          <span><span style="font-family:var(--font-mono);color:var(--text-3);font-size:11.5px;margin-right:8px;">RELATED</span>Sliding Window Attention</span>
+          <span class="badge medium">MEDIUM</span>
+        </a>
+      </div>
+    </div>
+
+    <aside class="toc">
+      <h5>On this page</h5>
+      <a class="on" href="#">Walkthrough</a>
+      <a href="#">Reference implementation</a>
+      <a href="#">Why not just zero</a>
+      <a href="#">Complexity</a>
+      <a href="#">Production differences</a>
+      <a href="#">See also</a>
+    </aside>
+  </div>
+</main>
+
+<script>renderPyreFooter();</script>
+</body>
+</html>

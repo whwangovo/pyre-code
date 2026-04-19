@@ -23,10 +23,7 @@ function parseBlocks(content: string): Block[] {
     const line = lines[i];
     const trimmed = line.trim();
 
-    if (!trimmed) {
-      i += 1;
-      continue;
-    }
+    if (!trimmed) { i += 1; continue; }
 
     if (trimmed.startsWith('```')) {
       const language = trimmed.slice(3).trim().toLowerCase();
@@ -36,20 +33,14 @@ function parseBlocks(content: string): Block[] {
         codeLines.push(lines[i]);
         i += 1;
       }
-      if (i < lines.length && lines[i].trim().startsWith('```')) {
-        i += 1;
-      }
+      if (i < lines.length && lines[i].trim().startsWith('```')) i += 1;
       blocks.push({ type: 'code', language, content: codeLines.join('\n') });
       continue;
     }
 
     const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
     if (headingMatch) {
-      blocks.push({
-        type: 'heading',
-        level: headingMatch[1].length as 1 | 2 | 3,
-        content: headingMatch[2].trim(),
-      });
+      blocks.push({ type: 'heading', level: headingMatch[1].length as 1 | 2 | 3, content: headingMatch[2].trim() });
       i += 1;
       continue;
     }
@@ -70,10 +61,7 @@ function parseBlocks(content: string): Block[] {
     while (i < lines.length) {
       const paragraphLine = lines[i];
       const paragraphTrimmed = paragraphLine.trim();
-      if (!paragraphTrimmed) break;
-      if (paragraphTrimmed.startsWith('```')) break;
-      if (/^(#{1,3})\s+/.test(paragraphTrimmed)) break;
-      if (/^[-*]\s+/.test(paragraphTrimmed)) break;
+      if (!paragraphTrimmed || paragraphTrimmed.startsWith('```') || /^(#{1,3})\s+/.test(paragraphTrimmed) || /^[-*]\s+/.test(paragraphTrimmed)) break;
       paragraphLines.push(paragraphLine);
       i += 1;
     }
@@ -90,50 +78,39 @@ function renderInline(text: string): ReactNode[] {
   let match: RegExpExecArray | null;
 
   while ((match = pattern.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
     const token = match[0];
     if (token.startsWith('**') && token.endsWith('**')) {
-      parts.push(
-        <strong key={`${match.index}-bold`} className="font-semibold text-text-primary">
-          {token.slice(2, -2)}
-        </strong>
-      );
+      parts.push(<strong key={`${match.index}-bold`} className="font-semibold text-text">{token.slice(2, -2)}</strong>);
     } else if (token.startsWith('`') && token.endsWith('`')) {
       parts.push(
         <code
           key={`${match.index}-code`}
-          className="rounded bg-surface-secondary px-1.5 py-0.5 font-mono text-[0.85em] text-accent"
+          className="rounded px-1.5 py-0.5 font-mono text-[0.85em] text-text"
+          style={{ background: 'var(--bg-sunken)', border: '1px solid var(--line)' }}
         >
           {token.slice(1, -1)}
         </code>
       );
     }
-
     lastIndex = match.index + token.length;
   }
 
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
   return parts;
 }
 
 function renderCodeBlock(language: string, content: string) {
   const isPython = language === '' || language === 'python' || language === 'py';
-
   return (
-    <div className="overflow-hidden rounded-xl border border-border/60 bg-surface-secondary">
+    <div className="overflow-hidden rounded-xl" style={{ border: '1px solid var(--line)', background: 'var(--bg-sunken)' }}>
       {language && (
-        <div className="border-b border-border/60 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+        <div className="px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-text-3" style={{ borderBottom: '1px solid var(--line)' }}>
           {language}
         </div>
       )}
       <pre className="overflow-x-auto px-4 py-3 text-xs leading-relaxed">
-        {isPython ? <PythonCode code={content} /> : <code className="font-mono text-text-primary">{content}</code>}
+        {isPython ? <PythonCode code={content} /> : <code className="font-mono text-text">{content}</code>}
       </pre>
     </div>
   );
@@ -147,39 +124,24 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
       {blocks.map((block, index) => {
         if (block.type === 'heading') {
           const className =
-            block.level === 1
-              ? 'text-lg font-semibold text-text-primary'
-              : block.level === 2
-                ? 'text-base font-semibold text-text-primary'
-                : 'text-sm font-semibold text-text-primary';
-          return (
-            <div key={index} className={className}>
-              {renderInline(block.content)}
-            </div>
-          );
+            block.level === 1 ? 'text-lg font-semibold text-text'
+            : block.level === 2 ? 'text-base font-semibold text-text'
+            : 'text-sm font-semibold text-text';
+          return <div key={index} className={className}>{renderInline(block.content)}</div>;
         }
-
         if (block.type === 'list') {
           return (
-            <ul key={index} className="space-y-2 pl-5 text-sm leading-relaxed text-text-secondary">
+            <ul key={index} className="space-y-2 pl-5 text-sm leading-relaxed text-text-2">
               {block.items.map((item, itemIndex) => (
-                <li key={`${index}-${itemIndex}`} className="list-disc">
-                  {renderInline(item)}
-                </li>
+                <li key={`${index}-${itemIndex}`} className="list-disc">{renderInline(item)}</li>
               ))}
             </ul>
           );
         }
-
         if (block.type === 'code') {
           return <div key={index}>{renderCodeBlock(block.language, block.content)}</div>;
         }
-
-        return (
-          <p key={index} className="whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">
-            {renderInline(block.content)}
-          </p>
-        );
+        return <p key={index} className="whitespace-pre-wrap text-sm leading-relaxed text-text-2">{renderInline(block.content)}</p>;
       })}
     </div>
   );

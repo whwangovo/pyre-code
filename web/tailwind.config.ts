@@ -8,27 +8,38 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        accent: {
-          DEFAULT: '#007aff',
-          hover: '#0062cc',
-        },
-        surface: {
-          DEFAULT: '#ffffff',
-          secondary: '#fafafa',
-        },
-        border: '#e5e5e5',
-        'text-primary': '#1d1d1f',
-        'text-secondary': '#6e6e73',
-        'text-tertiary': '#aeaeb2',
-        easy: '#34c759',
-        medium: '#ff9500',
-        hard: '#ff3b30',
-        solved: '#30b0c7',
+      fontFamily: {
+        sans: ['var(--font-sans)'],
+        mono: ['var(--font-mono)'],
       },
-      boxShadow: {
-        soft: '0 1px 3px rgba(0,0,0,0.06)',
-        'soft-lg': '0 4px 12px rgba(0,0,0,0.08)',
+      colors: {
+        bg: {
+          DEFAULT: 'var(--bg)',
+          elev: 'var(--bg-elev)',
+          sunken: 'var(--bg-sunken)',
+          code: 'var(--bg-code)',
+        },
+        line: {
+          DEFAULT: 'var(--line)',
+          strong: 'var(--line-strong)',
+        },
+        text: {
+          DEFAULT: 'var(--text)',
+          '2': 'var(--text-2)',
+          '3': 'var(--text-3)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          ink: 'var(--accent-ink)',
+          wash: 'var(--accent-wash)',
+          line: 'var(--accent-line)',
+        },
+        easy: 'var(--easy)',
+        medium: 'var(--medium)',
+        hard: 'var(--hard)',
+      },
+      borderColor: {
+        DEFAULT: 'var(--line)',
       },
       borderRadius: {
         pill: '9999px',

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%230a0a0a'/><path d='M12 3.5c1.1 3.3.3 4.9-1.35 6.5C9 11.6 7.7 13.35 7.7 15.7a4.3 4.3 0 0 0 8.6 0c0-1.75-.55-3.15-1.75-4.55.55 1.95-.3 3.15-1.45 3.15-.9 0-1.45-.7-1.45-1.6 0-1.35 1.5-2.65 1.5-4.7 0-1.8-.65-3.2-1.15-4.5z' fill='%23ff5a1f'/></svg>">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Transformer Internals — Pyre Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/pyre.css">
+<style>
+  main { padding-top: 32px; padding-bottom: 80px; }
+  .crumbs {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+    display: flex; gap: 6px; align-items: center; margin-bottom: 20px;
+  }
+  .crumbs a:hover { color: var(--text); }
+  .crumbs .sep { color: var(--text-3); opacity: .6; }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0,1.4fr) minmax(0,1fr);
+    gap: 48px;
+    padding-bottom: 40px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 28px; } }
+  h1 { font-size: clamp(32px, 4vw, 52px); letter-spacing: -0.03em; font-weight: 600; margin: 8px 0 14px; line-height: 1.05; }
+  .lede { margin: 0 0 20px; color: var(--text-2); font-size: 16px; line-height: 1.6; }
+  .meta-line {
+    display: flex; gap: 22px; padding-top: 20px;
+    border-top: 1px dashed var(--line);
+    flex-wrap: wrap;
+  }
+  .meta-line .it { }
+  .meta-line .k { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: .12em; text-transform: uppercase; }
+  .meta-line .v { font-size: 14px; margin-top: 4px; font-variant-numeric: tabular-nums; color: var(--text); font-family: var(--font-mono); }
+
+  .progress-card {
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg-elev);
+  }
+  .progress-card h4 { margin: 0 0 4px; font-size: 13px; font-family: var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); font-weight: 500; }
+  .progress-card .big {
+    font-size: 48px; font-weight: 600; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    display: flex; align-items: baseline; gap: 8px; margin-top: 6px; margin-bottom: 16px;
+  }
+  .progress-card .big small { font-size: 18px; color: var(--text-3); font-weight: 500; }
+  .ring-bar {
+    height: 4px; background: var(--line); border-radius: 999px; overflow: hidden; position: relative;
+    margin-bottom: 14px;
+  }
+  .ring-bar::after { content:""; position: absolute; inset: 0; width: 42%; background: var(--accent); border-radius: 999px; }
+  .stat-row { display: flex; gap: 12px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); }
+  .stat-row .it { flex: 1; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-sunken); }
+  .stat-row .it .n { font-size: 18px; color: var(--text); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  .cta-row { display: flex; gap: 10px; margin-top: 18px; }
+
+  /* Steps */
+  .steps-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 20px;
+  }
+  .steps-head h2 {
+    font-size: 22px; letter-spacing: -0.02em; margin: 0; font-weight: 600;
+  }
+  .steps-head .note {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+  }
+
+  .steps {
+    position: relative;
+    padding-left: 32px;
+  }
+  .steps::before {
+    content: ""; position: absolute; left: 11px; top: 14px; bottom: 14px;
+    width: 1px; background: var(--line);
+  }
+  .step {
+    position: relative;
+    padding: 16px 20px;
+    margin-bottom: 1px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 24px;
+    align-items: center;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .step + .step { margin-top: 10px; }
+  .step:hover { background: color-mix(in oklab, var(--accent) 3%, var(--bg-elev)); border-color: var(--accent-line); }
+  .step::before {
+    content: "";
+    position: absolute;
+    left: -26px; top: 50%; transform: translateY(-50%);
+    width: 10px; height: 10px; border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+  }
+  .step.solved::before { background: var(--easy); border-color: transparent; box-shadow: 0 0 0 3px color-mix(in oklab, var(--easy) 20%, var(--bg)); }
+  .step.attempted::before { background: var(--medium); border-color: transparent; }
+  .step.current::before {
+    background: var(--accent); border-color: transparent;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, var(--bg));
+  }
+  .step .num { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); letter-spacing: .1em; }
+  .step .title {
+    display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  }
+  .step .title strong { font-weight: 500; font-size: 15px; letter-spacing: -0.01em; }
+  .step .title .desc { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
+  .step .time { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .step .go { color: var(--text-3); transition: color .15s, transform .15s; }
+  .step:hover .go { color: var(--accent); transform: translateX(2px); }
+  .step.current { border-color: var(--accent); background: var(--accent-wash); }
+  .step.current .title strong { color: var(--accent); }
+</style>
+</head>
+<body data-theme="light">
+<script src="assets/shared.js"></script>
+<script>renderPyreNav({ active: 'paths' });</script>
+
+<main class="container">
+  <div class="crumbs">
+    <a href="Paths.html">Paths</a>
+    <span class="sep">/</span>
+    <span style="color:var(--text-2)">PATH_01</span>
+    <span class="sep">/</span>
+    <span style="color:var(--text)">Transformer Internals</span>
+  </div>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">§ PATH_01 · 12 PROBLEMS</div>
+      <h1>Transformer Internals</h1>
+      <p class="lede">Build every component of a Transformer from scratch — activation functions, normalization, attention, and the full GPT-2 block. When you finish, you'll know what every line of Andrej Karpathy's nanoGPT actually does.</p>
+      <div class="meta-line">
+        <div class="it"><div class="k">Topics</div><div class="v">Activations · Norm · Attention</div></div>
+        <div class="it"><div class="k">Difficulty</div><div class="v">Easy → Medium</div></div>
+        <div class="it"><div class="k">Prereqs</div><div class="v" style="color:var(--text-3)">None</div></div>
+        <div class="it"><div class="k">Est. time</div><div class="v">8–12 hrs</div></div>
+      </div>
+    </div>
+    <div class="progress-card">
+      <h4>Progress</h4>
+      <div class="big">5<small>/12</small></div>
+      <div class="ring-bar"></div>
+      <div class="stat-row">
+        <div class="it"><div>Solved</div><div class="n" style="color:var(--easy)">5</div></div>
+        <div class="it"><div>Attempted</div><div class="n" style="color:var(--medium)">2</div></div>
+        <div class="it"><div>Todo</div><div class="n">5</div></div>
+      </div>
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="location='Workspace.html'">
+          Continue: MLP
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <button class="btn btn-secondary">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="steps-head">
+    <h2>Sequence</h2>
+    <div class="note">Click any step to jump in. Progress is saved automatically.</div>
+  </div>
+
+  <div class="steps" id="steps"></div>
+</main>
+
+<script>renderPyreFooter();</script>
+
+<script>
+  // Transformer Internals path
+  const STEPS = [
+    { id:"relu",        title:"Implement ReLU",              desc:"Fundamentals · easy",    status:"solved",    time:"14ms" },
+    { id:"gelu",        title:"GELU Activation",             desc:"Fundamentals · easy",    status:"solved",    time:"18ms" },
+    { id:"swiglu",      title:"SwiGLU Activation",           desc:"Fundamentals · easy",    status:"solved",    time:"20ms" },
+    { id:"layernorm",   title:"Implement LayerNorm",         desc:"Normalization · easy",   status:"solved",    time:"28ms" },
+    { id:"batchnorm",   title:"Implement BatchNorm",         desc:"Normalization · medium", status:"attempted", time:"—" },
+    { id:"rmsnorm",     title:"Implement RMSNorm",           desc:"Normalization · easy",   status:"solved",    time:"22ms" },
+    { id:"linear",      title:"Simple Linear Layer",         desc:"Fundamentals · easy",    status:"attempted", time:"—" },
+    { id:"softmax",     title:"Implement Softmax",           desc:"Fundamentals · easy",    status:"todo",      time:"—" },
+    { id:"attention",   title:"Softmax Attention",           desc:"Attention · medium",     status:"todo",      time:"—" },
+    { id:"mha",         title:"Multi-Head Attention",        desc:"Attention · medium",     status:"todo",      time:"—" },
+    { id:"mlp",         title:"SwiGLU MLP",                  desc:"Architecture · medium",  status:"current",   time:"—" },
+    { id:"gpt2_block",  title:"GPT-2 Transformer Block",     desc:"Architecture · medium",  status:"todo",      time:"—" },
+  ];
+  document.getElementById('steps').innerHTML = STEPS.map((s, i) => `
+    <div class="step ${s.status}" onclick="location='Workspace.html'">
+      <div style="display:flex;align-items:center;gap:22px;">
+        <span class="num">${String(i+1).padStart(2,'0')}</span>
+        <div class="title">
+          <strong>${s.title}</strong>
+          <span class="desc">${s.desc}</span>
+        </div>
+      </div>
+      <div class="time">${s.time}</div>
+      <div style="width:100px;">
+        <span class="badge" style="${s.status==='solved'?'color:var(--easy);border-color:color-mix(in oklab,var(--easy) 30%, var(--line));background:color-mix(in oklab,var(--easy) 8%, var(--bg-elev))':s.status==='attempted'?'color:var(--medium);border-color:color-mix(in oklab,var(--medium) 30%, var(--line));background:color-mix(in oklab,var(--medium) 8%, var(--bg-elev))':s.status==='current'?'color:var(--accent);border-color:var(--accent-line);background:var(--accent-wash)':''}">
+          ${s.status.toUpperCase()}
+        </span>
+      </div>
+      <div style="color:var(--text-3);font-family:var(--font-mono);font-size:12px;">${s.id}.py</div>
+      <span class="go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </div>
+  `).join('');
+</script>
+</body>
+</html>

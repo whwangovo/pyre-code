@@ -26,3 +26,30 @@ export const appleLight: editor.IStandaloneThemeData = {
     'editorCursor.foreground': '#007aff',
   },
 };
+
+export const appleDark: editor.IStandaloneThemeData = {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [
+    { token: 'comment', foreground: '6e6e73', fontStyle: 'italic' },
+    { token: 'keyword', foreground: 'c084fc' },
+    { token: 'string', foreground: '6ee7b7' },
+    { token: 'number', foreground: 'fbbf24' },
+    { token: 'type', foreground: '4ea1ff' },
+    { token: 'function', foreground: '4ea1ff' },
+    { token: 'variable', foreground: 'e5e5e5' },
+    { token: 'operator', foreground: '8e8e93' },
+    { token: 'delimiter', foreground: '8e8e93' },
+  ],
+  colors: {
+    'editor.background': '#1e1e1e',
+    'editor.foreground': '#e5e5e5',
+    'editor.lineHighlightBackground': '#2a2a2a',
+    'editor.selectionBackground': '#4ea1ff33',
+    'editorLineNumber.foreground': '#555555',
+    'editorLineNumber.activeForeground': '#8e8e93',
+    'editor.inactiveSelectionBackground': '#4ea1ff18',
+    'editorIndentGuide.background': '#333333',
+    'editorCursor.foreground': '#4ea1ff',
+  },
+};

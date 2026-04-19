@@ -1,32 +1,37 @@
-import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-const badgeVariants = cva(
-  'inline-flex items-center rounded-pill px-2.5 py-0.5 text-xs font-medium',
-  {
-    variants: {
-      variant: {
-        easy: 'bg-easy/10 text-easy',
-        medium: 'bg-medium/10 text-medium',
-        hard: 'bg-hard/10 text-hard',
-        solved: 'bg-solved/10 text-solved',
-        default: 'bg-gray-100 text-text-secondary',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+const difficultyStyles: Record<string, string> = {
+  easy: 'text-easy',
+  medium: 'text-medium',
+  hard: 'text-hard',
+};
 
-interface BadgeProps extends VariantProps<typeof badgeVariants> {
+interface BadgeProps {
   children: React.ReactNode;
+  variant?: 'easy' | 'medium' | 'hard' | 'default';
   className?: string;
 }
 
-export function Badge({ children, variant, className }: BadgeProps) {
+export function Badge({ children, variant = 'default', className }: BadgeProps) {
   return (
-    <span className={cn(badgeVariants({ variant }), className)}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 mono text-[11px] px-[7px] py-[2px] rounded-[5px] tracking-[0.04em]',
+        difficultyStyles[variant] ?? 'text-text-2',
+        className,
+      )}
+      style={
+        variant !== 'default'
+          ? {
+              border: `1px solid color-mix(in oklab, var(--${variant}) 30%, var(--line))`,
+              background: `color-mix(in oklab, var(--${variant}) 7%, var(--bg-elev))`,
+            }
+          : {
+              border: '1px solid var(--line)',
+              background: 'var(--bg-sunken)',
+            }
+      }
+    >
       {children}
     </span>
   );

@@ -21,24 +21,19 @@ export function SolutionTab({ problemId }: SolutionTabProps) {
   const cells = data?.cells ?? [];
 
   if (cells.length === 0) {
-    return <div className="p-6 text-sm text-text-tertiary">{t('noSolution')}</div>;
+    return <div className="p-6 text-sm text-text-3">{t('noSolution')}</div>;
   }
 
   const solutionCode = getSolutionCode(problemId);
-
-  const demoCode = cells
-    .filter((c) => c.role === 'demo')
-    .map((c) => c.source)
-    .join('\n\n');
-
+  const demoCode = cells.filter((c) => c.role === 'demo').map((c) => c.source).join('\n\n');
   const explanations = cells.filter((c) => c.role === 'explanation');
 
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
       {solutionCode && (
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium text-text-secondary px-1">Solution</p>
-          <div className="rounded-lg overflow-hidden border border-border/50">
+          <p className="text-xs font-medium text-text-2 px-1">Solution</p>
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--line)' }}>
             <CodeEditor
               value={solutionCode}
               onChange={() => {}}
@@ -50,12 +45,12 @@ export function SolutionTab({ problemId }: SolutionTabProps) {
         </div>
       )}
       {explanations.map((c, i) => (
-        <p key={i} className="text-sm text-text-secondary px-1 whitespace-pre-wrap">{c.source}</p>
+        <p key={i} className="text-sm text-text-2 px-1 whitespace-pre-wrap">{c.source}</p>
       ))}
       {demoCode && (
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium text-text-secondary px-1">Demo</p>
-          <div className="rounded-lg overflow-hidden border border-border/50">
+          <p className="text-xs font-medium text-text-2 px-1">Demo</p>
+          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--line)' }}>
             <CodeEditor
               value={demoCode}
               onChange={() => {}}

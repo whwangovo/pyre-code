@@ -3,17 +3,100 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-surface text-text-primary antialiased;
+  :root {
+    --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --bg:          oklch(0.992 0.003 85);
+    --bg-elev:     oklch(1.000 0 0);
+    --bg-sunken:   oklch(0.975 0.004 85);
+    --bg-code:     oklch(0.985 0.004 85);
+    --line:        oklch(0.915 0.005 85);
+    --line-strong: oklch(0.86 0.006 85);
+    --text:        oklch(0.20 0.008 80);
+    --text-2:      oklch(0.45 0.010 80);
+    --text-3:      oklch(0.62 0.010 80);
+    --accent:      #007aff;
+    --accent-ink:  #005bd1;
+    --accent-wash: color-mix(in oklab, #007aff 8%, var(--bg));
+    --accent-line: color-mix(in oklab, #007aff 22%, var(--line));
+    --easy:        oklch(0.66 0.14 150);
+    --medium:      oklch(0.72 0.14 70);
+    --hard:        oklch(0.62 0.18 25);
   }
 
-  * {
-    @apply border-border;
+  [data-theme="dark"] {
+    --bg:          oklch(0.145 0.006 85);
+    --bg-elev:     oklch(0.175 0.006 85);
+    --bg-sunken:   oklch(0.125 0.006 85);
+    --bg-code:     oklch(0.185 0.006 85);
+    --line:        oklch(0.265 0.008 85);
+    --line-strong: oklch(0.34 0.010 85);
+    --text:        oklch(0.96 0.004 85);
+    --text-2:      oklch(0.72 0.008 85);
+    --text-3:      oklch(0.55 0.010 85);
+    --accent:      #4ea1ff;
+    --accent-ink:  #8cc0ff;
+    --accent-wash: color-mix(in oklab, #4ea1ff 14%, var(--bg));
+    --accent-line: color-mix(in oklab, #4ea1ff 28%, var(--line));
+    --easy:        oklch(0.74 0.14 150);
+    --medium:      oklch(0.80 0.13 70);
+    --hard:        oklch(0.72 0.16 25);
   }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { background: var(--bg); }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+    font-synthesis-weight: none;
+  }
+
+  a { color: inherit; text-decoration: none; }
 }
 
 @layer components {
-  .glass {
-    @apply bg-white/80 backdrop-blur-lg border-b border-border/50;
+  .mono {
+    font-family: var(--font-mono);
+    font-feature-settings: "zero";
   }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+
+  .kbd {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--bg-sunken);
+    border: 1px solid var(--line);
+    color: var(--text-3);
+  }
+}
+
+/* Scrollbars */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }

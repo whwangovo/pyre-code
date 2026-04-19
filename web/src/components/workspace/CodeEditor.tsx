@@ -1,8 +1,9 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
-import { appleLight } from '@/lib/monacoTheme';
+import { appleLight, appleDark } from '@/lib/monacoTheme';
+import { useTheme } from '@/context/ThemeContext';
 
 interface CodeEditorProps {
   value: string;
@@ -20,12 +21,22 @@ export function CodeEditor({
   allowParentScrollOnWheel = false,
 }: CodeEditorProps) {
   const editorRef = useRef<any>(null);
+  const monacoRef = useRef<any>(null);
+  const { theme } = useTheme();
 
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    monacoRef.current = monaco;
     monaco.editor.defineTheme('apple-light', appleLight);
-    monaco.editor.setTheme('apple-light');
+    monaco.editor.defineTheme('apple-dark', appleDark);
+    monaco.editor.setTheme(theme === 'dark' ? 'apple-dark' : 'apple-light');
   };
+
+  useEffect(() => {
+    if (monacoRef.current) {
+      monacoRef.current.editor.setTheme(theme === 'dark' ? 'apple-dark' : 'apple-light');
+    }
+  }, [theme]);
 
   return (
     <Editor
@@ -38,7 +49,7 @@ export function CodeEditor({
         readOnly,
         fontSize: 14,
         lineHeight: 22,
-        fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', monospace",
+        fontFamily: "'Geist Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace",
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
         padding: { top: 16, bottom: 16 },

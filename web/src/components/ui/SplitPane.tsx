@@ -62,7 +62,8 @@ export function SplitPane({
       </div>
       <div
         onMouseDown={onMouseDown}
-        className="w-1 cursor-col-resize bg-border hover:bg-accent/30 transition-colors flex-shrink-0"
+        className="w-1 cursor-col-resize hover:bg-accent/30 transition-colors flex-shrink-0"
+        style={{ background: 'var(--line)' }}
       />
       <div style={{ width: `${(1 - ratio) * 100}%` }} className="overflow-auto">
         {right}
@@ -130,7 +131,8 @@ export function VerticalSplitPane({
       </div>
       <div
         onMouseDown={onMouseDown}
-        className="h-1 cursor-row-resize bg-border hover:bg-accent/30 transition-colors flex-shrink-0"
+        className="h-1 cursor-row-resize hover:bg-accent/30 transition-colors flex-shrink-0"
+        style={{ background: 'var(--line)' }}
       />
       <div style={{ height: `${(1 - ratio) * 100}%` }} className="overflow-hidden min-h-0">
         {bottom}

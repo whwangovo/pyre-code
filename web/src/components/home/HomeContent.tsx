@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Zap, CheckCircle, FlaskConical, BarChart3, BookOpen } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
 
@@ -12,72 +12,132 @@ interface HomeContentProps {
 export function HomeContent({ stats }: HomeContentProps) {
   const { t } = useLocale();
 
-  const features = [
-    { icon: CheckCircle, color: 'text-easy', bg: 'bg-easy/8', titleKey: 'feat1Title' as const, descKey: 'feat1Desc' as const },
-    { icon: FlaskConical, color: 'text-accent', bg: 'bg-accent/8', titleKey: 'feat2Title' as const, descKey: 'feat2Desc' as const },
-    { icon: BarChart3, color: 'text-medium', bg: 'bg-medium/8', titleKey: 'feat3Title' as const, descKey: 'feat3Desc' as const },
-  ];
-
-  const diffStats = [
-    { key: 'Easy' as const, count: stats.easy, color: 'text-easy', bg: 'bg-easy/6', border: 'border-easy/20' },
-    { key: 'Medium' as const, count: stats.medium, color: 'text-medium', bg: 'bg-medium/6', border: 'border-medium/20' },
-    { key: 'Hard' as const, count: stats.hard, color: 'text-hard', bg: 'bg-hard/6', border: 'border-hard/20' },
-  ];
-
   return (
-    <main className="max-w-4xl mx-auto px-6">
-
+    <main className="max-w-[1280px] mx-auto px-7">
       {/* Hero */}
-      <section className="pt-20 pb-14 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-pill bg-accent/5 text-accent text-xs font-medium mb-5">
-          <Zap className="w-3 h-3" />
-          {t('heroPill', { count: stats.total })}
-        </div>
-        <h1 className="text-[3.25rem] font-bold tracking-tight text-text-primary mb-4 leading-[1.15] whitespace-pre-line">
-          {t('heroTitle')}
-        </h1>
-        <p className="text-base text-text-secondary max-w-lg mx-auto mb-8 leading-relaxed whitespace-pre-line">
-          {t('heroSubtitle')}
-        </p>
-        <div className="flex items-center justify-center gap-3">
-          <Link href="/problems">
-            <Button size="lg">
-              {t('startPracticing')}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-          <Link href="/paths">
-            <Button size="lg" variant="secondary">
-              <BookOpen className="w-4 h-4 mr-2" />
-              {t('browsePaths')}
-            </Button>
-          </Link>
-        </div>
-      </section>
+      <section className="pt-20 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <span
+              className="inline-flex items-center gap-2 px-2.5 py-[5px] rounded-pill mono text-xs text-text-2 mb-7"
+              style={{ border: '1px solid var(--line)', background: 'var(--bg-elev)' }}
+            >
+              <span className="font-semibold text-text">{stats.total}</span>
+              <span>{t('heroPill', { count: stats.total }).replace(`${stats.total} `, '')}</span>
+            </span>
 
-      {/* Feature cards */}
-      <section className="grid grid-cols-3 gap-4 pb-8">
-        {features.map(({ icon: Icon, color, bg, titleKey, descKey }) => (
-          <div key={titleKey} className="rounded-2xl border border-border p-5 bg-surface hover:shadow-soft transition-shadow">
-            <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center mb-3`}>
-              <Icon className={`w-4.5 h-4.5 ${color}`} strokeWidth={2} />
+            <h1 className="text-[clamp(36px,5vw,56px)] font-semibold tracking-[-0.035em] leading-[1.05] mb-5">
+              {t('heroTitle').split('\n').map((line, i) => (
+                <span key={i}>
+                  {i > 0 && <br />}
+                  {line}
+                </span>
+              ))}
+            </h1>
+
+            <p className="text-base text-text-2 leading-relaxed max-w-[52ch] mb-8">
+              {t('heroSubtitle')}
+            </p>
+
+            <div className="flex items-center gap-3">
+              <Link href="/problems">
+                <Button size="lg">
+                  {t('startPracticing')}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/paths">
+                <Button variant="secondary" size="lg">
+                  {t('browsePaths')}
+                </Button>
+              </Link>
             </div>
-            <p className="text-sm font-semibold text-text-primary mb-1.5">{t(titleKey)}</p>
-            <p className="text-xs text-text-secondary leading-relaxed">{t(descKey)}</p>
+
+            <div className="flex gap-6 mt-10 pt-5" style={{ borderTop: '1px dashed var(--line)' }}>
+              {[
+                { k: 'Total', v: `${stats.total} problems` },
+                { k: 'Coverage', v: '13 categories' },
+                { k: 'Runtime', v: 'CPU · local' },
+                { k: 'Judge', v: 'torch_judge' },
+              ].map((m) => (
+                <div key={m.k}>
+                  <div className="eyebrow">{m.k}</div>
+                  <div className="mono text-sm mt-1">{m.v}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+
+          {/* Editor preview */}
+          <div
+            className="rounded-[14px] overflow-hidden hidden lg:block"
+            style={{ border: '1px solid var(--line)', background: 'var(--bg-elev)' }}
+          >
+            <div
+              className="flex items-center gap-3 px-4 h-10 text-xs mono text-text-2"
+              style={{
+                borderBottom: '1px solid var(--line)',
+                background: 'color-mix(in oklab, var(--text) 2%, var(--bg-elev))',
+              }}
+            >
+              <span className="flex gap-1.5">
+                <span className="w-[9px] h-[9px] rounded-full" style={{ background: 'color-mix(in oklab, var(--hard) 60%, transparent)' }} />
+                <span className="w-[9px] h-[9px] rounded-full" style={{ background: 'color-mix(in oklab, var(--medium) 60%, transparent)' }} />
+                <span className="w-[9px] h-[9px] rounded-full" style={{ background: 'color-mix(in oklab, var(--easy) 60%, transparent)' }} />
+              </span>
+              <span className="text-text">causal_self_attention.py</span>
+            </div>
+            <pre className="p-4 text-[13px] leading-[1.75] mono text-text-2 overflow-hidden">
+{`# Implement causal self-attention.
+import torch
+import torch.nn.functional as F
+
+def causal_attention(q, k, v):
+    # (B, H, T, D) → (B, H, T, D)
+    d = q.size(-1)
+    T = q.size(-2)
+    scores = q @ k.transpose(-2,-1) / d**0.5
+    mask = torch.triu(torch.ones(T, T), 1).bool()
+    scores = scores.masked_fill(mask, float('-inf'))
+    attn = F.softmax(scores, -1)
+    return attn @ v`}
+            </pre>
+          </div>
+        </div>
       </section>
 
       {/* Difficulty stats */}
-      <section className="grid grid-cols-3 gap-4 pb-20">
-        {diffStats.map((s) => (
-          <div key={s.key} className={`${s.bg} border ${s.border} rounded-2xl p-5 text-center`}>
-            <p className={`text-3xl font-bold tracking-tight ${s.color}`}>{s.count}</p>
-            <p className="text-xs text-text-secondary mt-1 font-medium">{t(s.key)}</p>
-          </div>
-        ))}
+      <section className="pb-10" style={{ borderTop: '1px solid var(--line)' }}>
+        <div className="grid grid-cols-3 gap-6 py-10">
+          {[
+            { label: t('Easy'), count: stats.easy, color: 'var(--easy)' },
+            { label: t('Medium'), count: stats.medium, color: 'var(--medium)' },
+            { label: t('Hard'), count: stats.hard, color: 'var(--hard)' },
+          ].map((s) => (
+            <div key={s.label} className="text-center">
+              <div className="text-[28px] font-semibold tracking-tight" style={{ color: s.color }}>{s.count}</div>
+              <div className="eyebrow mt-1">{s.label}</div>
+            </div>
+          ))}
+        </div>
       </section>
 
+      {/* Features */}
+      <section style={{ borderTop: '1px solid var(--line)' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-10">
+          {[
+            { num: '01', title: t('feat1Title'), desc: t('feat1Desc') },
+            { num: '02', title: t('feat2Title'), desc: t('feat2Desc') },
+            { num: '03', title: t('feat3Title'), desc: t('feat3Desc') },
+          ].map((f) => (
+            <div key={f.num} className="pt-5" style={{ borderTop: '1px solid var(--line)' }}>
+              <div className="mono text-[11px] text-text-3 tracking-[0.12em]">{f.num}</div>
+              <h4 className="text-[15.5px] font-semibold tracking-[-0.01em] mt-4 mb-1.5">{f.title}</h4>
+              <p className="text-[13.5px] text-text-2 leading-relaxed max-w-[40ch]">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

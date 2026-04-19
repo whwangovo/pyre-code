@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%230a0a0a'/><path d='M12 3.5c1.1 3.3.3 4.9-1.35 6.5C9 11.6 7.7 13.35 7.7 15.7a4.3 4.3 0 0 0 8.6 0c0-1.75-.55-3.15-1.75-4.55.55 1.95-.3 3.15-1.45 3.15-.9 0-1.45-.7-1.45-1.6 0-1.35 1.5-2.65 1.5-4.7 0-1.8-.65-3.2-1.15-4.5z' fill='%23ff5a1f'/></svg>">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Problems — Pyre Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/pyre.css">
+<style>
+  main { padding-top: 32px; padding-bottom: 80px; }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 32px;
+    margin-bottom: 36px; padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  h1 {
+    font-size: clamp(28px, 3vw, 40px);
+    letter-spacing: -0.03em; font-weight: 600;
+    margin: 8px 0 0;
+  }
+  .page-head p { margin: 10px 0 0; color: var(--text-2); font-size: 14px; max-width: 52ch; }
+  .page-head .stats { display: flex; gap: 18px; }
+  .stat { text-align: right; }
+  .stat .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; color: var(--text-3); text-transform: uppercase; }
+  .stat .v { font-size: 20px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .stat.easy .v { color: var(--easy); } .stat.medium .v { color: var(--medium); } .stat.hard .v { color: var(--hard); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  /* Sidebar */
+  .side { position: sticky; top: 76px; }
+  .side .group + .group { margin-top: 24px; }
+  .side h5 { margin: 0 0 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; color: var(--text-3); font-weight: 500; text-transform: uppercase; }
+  .cat-list { display: flex; flex-direction: column; gap: 1px; }
+  .cat-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 7px;
+    color: var(--text-2); font-size: 13.5px; cursor: pointer;
+    transition: background .15s, color .15s;
+    justify-content: space-between;
+  }
+  .cat-row:hover { background: color-mix(in oklab, var(--text) 5%, transparent); color: var(--text); }
+  .cat-row.on {
+    background: var(--accent-wash); color: var(--accent);
+  }
+  .cat-row .n { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .cat-row.on .n { color: var(--accent); opacity: .8; }
+
+  .diff-list { display: flex; flex-direction: column; gap: 2px; }
+  .diff-row {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    padding: 6px 10px; border-radius: 7px; font-size: 13.5px;
+    color: var(--text-2);
+  }
+  .diff-row:hover { background: color-mix(in oklab, var(--text) 5%, transparent); color: var(--text); }
+  .diff-row.on { background: color-mix(in oklab, var(--text) 6%, transparent); color: var(--text); }
+  .diff-row .dot { width: 7px; height: 7px; border-radius: 999px; }
+  .diff-row .n { margin-left: auto; font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); }
+  .dot.e { background: var(--easy); } .dot.m { background: var(--medium); } .dot.h { background: var(--hard); }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex; gap: 10px; margin-bottom: 16px; align-items: center;
+  }
+  .search {
+    flex: 1;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 0 12px; height: 38px;
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 9px;
+  }
+  .search input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: inherit; font-size: 14px; color: var(--text);
+  }
+  .search input::placeholder { color: var(--text-3); }
+  .search svg { color: var(--text-3); }
+  .search .kbd { margin-left: auto; }
+  .seg {
+    display: inline-flex; background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: 9px; padding: 2px; height: 38px; align-items: center;
+  }
+  .seg button {
+    padding: 0 12px; font-size: 13px; border: none; background: transparent;
+    color: var(--text-2); border-radius: 7px; cursor: pointer; height: 30px;
+  }
+  .seg button.on { background: var(--bg-sunken); color: var(--text); box-shadow: 0 0 0 1px var(--line); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  table.problems {
+    width: 100%; border-collapse: collapse;
+  }
+  table.problems th {
+    text-align: left;
+    padding: 11px 16px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    font-family: var(--font-mono); color: var(--text-3); font-weight: 500;
+    background: var(--bg-sunken); border-bottom: 1px solid var(--line);
+  }
+  table.problems td {
+    padding: 13px 16px; font-size: 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  table.problems tr:last-child td { border-bottom: none; }
+  table.problems tr { transition: background .12s; cursor: pointer; }
+  table.problems tbody tr:hover { background: color-mix(in oklab, var(--accent) 4%, var(--bg-elev)); }
+  .row-num { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); width: 48px; }
+  .row-title { color: var(--text); font-weight: 500; }
+  .row-title .sub {
+    font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3);
+    font-weight: 400; display: block; margin-top: 2px;
+  }
+  .row-cat {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+  }
+  .row-cat .d { width: 5px; height: 5px; border-radius: 999px; background: var(--text-3); }
+  .row-status {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+  }
+  .row-status.solved { color: var(--easy); }
+  .row-status.attempted { color: var(--medium); }
+  .time {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* progress pill on header */
+  .overall-progress {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+    margin-bottom: 14px;
+  }
+  .overall-progress .segs {
+    display: flex; flex: 1; height: 6px; gap: 1px;
+    background: var(--line); border-radius: 999px; overflow: hidden;
+  }
+  .overall-progress .segs span { height: 100%; }
+  .overall-progress .segs .p1 { background: var(--easy); width: 12%; }
+  .overall-progress .segs .p2 { background: var(--medium); width: 4%; }
+  .overall-progress .segs .p3 { background: var(--hard); width: 2%; }
+
+  .status-ico {
+    width: 18px; height: 18px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: transparent;
+    border: 1px dashed var(--line);
+  }
+  .status-ico.solved { background: var(--easy); color: white; border-color: transparent; }
+  .status-ico.attempted { border-color: var(--medium); color: var(--medium); border-style: solid;}
+</style>
+</head>
+<body data-theme="light">
+<script src="assets/shared.js"></script>
+<script>renderPyreNav({ active: 'problems' });</script>
+
+<main class="container">
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">§ PROBLEMS</div>
+      <h1>68 problems across 13 categories.</h1>
+      <p>From activation functions to MoE routing — everything you've read in a paper, now under test.</p>
+    </div>
+    <div class="stats">
+      <div class="stat easy"><div class="k">Easy</div><div class="v mono">8 / 17</div></div>
+      <div class="stat medium"><div class="k">Medium</div><div class="v mono">3 / 34</div></div>
+      <div class="stat hard"><div class="k">Hard</div><div class="v mono">1 / 17</div></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="side">
+      <div class="group">
+        <h5>Category</h5>
+        <div class="cat-list" id="cats"></div>
+      </div>
+      <div class="group">
+        <h5>Difficulty</h5>
+        <div class="diff-list">
+          <div class="diff-row on"><span class="dot" style="background:var(--text-3)"></span>All<span class="n">68</span></div>
+          <div class="diff-row"><span class="dot e"></span>Easy<span class="n">17</span></div>
+          <div class="diff-row"><span class="dot m"></span>Medium<span class="n">34</span></div>
+          <div class="diff-row"><span class="dot h"></span>Hard<span class="n">17</span></div>
+        </div>
+      </div>
+      <div class="group">
+        <h5>Status</h5>
+        <div class="diff-list">
+          <div class="diff-row on"><span class="dot" style="background:var(--text-3)"></span>All<span class="n">68</span></div>
+          <div class="diff-row"><span class="dot" style="background:var(--easy)"></span>Solved<span class="n">12</span></div>
+          <div class="diff-row"><span class="dot" style="background:var(--medium)"></span>Attempted<span class="n">4</span></div>
+          <div class="diff-row"><span class="dot" style="border:1px dashed var(--line);background:transparent"></span>Todo<span class="n">52</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <div>
+      <div class="toolbar">
+        <div class="search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input placeholder="Search problems — rope, attention, dpo..." />
+          <span class="kbd">⌘K</span>
+        </div>
+        <div class="seg">
+          <button class="on">Table</button>
+          <button>Grid</button>
+        </div>
+      </div>
+
+      <div class="overall-progress">
+        <span>Progress · 12/68</span>
+        <div class="segs" aria-hidden="true"><span class="p1"></span><span class="p2"></span><span class="p3"></span></div>
+        <span style="color:var(--text-3)">18%</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="problems">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th style="width:28px;"></th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Difficulty</th>
+              <th style="width:92px;">Best</th>
+              <th style="width:72px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>renderPyreFooter();</script>
+
+<script>
+  const CATS = [
+    ["All",          68, true],
+    ["Fundamentals", 9],
+    ["Normalization",3],
+    ["Attention",   10],
+    ["Position",     4],
+    ["Architecture", 9],
+    ["Training",     6],
+    ["Distributed",  3],
+    ["Inference",    7],
+    ["Alignment",    8],
+    ["Diffusion",    4],
+    ["Adaptation",   2],
+    ["Reasoning",    2],
+    ["SSM",          1],
+  ];
+  document.getElementById('cats').innerHTML = CATS.map(([n,c,on]) =>
+    `<div class="cat-row ${on?'on':''}"><span>${n}</span><span class="n">${c}</span></div>`
+  ).join('');
+
+  // Sample (subset) of problems — enough to make the page feel real
+  const P = [
+    // [id, title, cat, diff, solved, attempted, best_ms]
+    ["relu",               "Implement ReLU",                         "Fundamentals",  "easy",   true,  false, 14],
+    ["softmax",            "Implement Softmax",                      "Fundamentals",  "easy",   true,  false, 21],
+    ["gelu",               "GELU Activation",                        "Fundamentals",  "easy",   true,  false, 18],
+    ["swiglu",             "SwiGLU Activation",                      "Fundamentals",  "easy",   false, false, null],
+    ["dropout",             "Implement Dropout",                      "Fundamentals", "easy",   true,  false, 16],
+    ["embedding",          "Embedding Layer",                        "Fundamentals",  "easy",   true,  false, 12],
+    ["linear",             "Simple Linear Layer",                    "Fundamentals",  "easy",   true,  false, 9],
+    ["weight_init",        "Kaiming Initialization",                 "Fundamentals",  "medium", false, true,  null],
+    ["linear_regression",  "Linear Regression",                      "Fundamentals",  "easy",   true,  false, 24],
+    ["layernorm",          "Implement LayerNorm",                    "Normalization", "easy",   true,  false, 28],
+    ["batchnorm",          "Implement BatchNorm",                    "Normalization", "medium", false, false, null],
+    ["rmsnorm",            "Implement RMSNorm",                      "Normalization", "easy",   true,  false, 22],
+    ["attention",          "Softmax Attention",                      "Attention",     "medium", true,  false, 41],
+    ["mha",                "Multi-Head Attention",                   "Attention",     "medium", false, true,  null],
+    ["causal_attention",   "Causal Self-Attention",                  "Attention",     "medium", false, true,  null],
+    ["cross_attention",    "Multi-Head Cross-Attention",             "Attention",     "medium", false, false, null],
+    ["gqa",                "Grouped Query Attention",                "Attention",     "medium", false, false, null],
+    ["sliding_window",     "Sliding Window Attention",               "Attention",     "medium", false, false, null],
+    ["linear_attention",   "Linear Self-Attention",                  "Attention",     "hard",   false, false, null],
+    ["flash_attention",    "Flash Attention (Tiled)",                "Attention",     "hard",   true,  false, 87],
+    ["diff_attention",     "Differential Attention",                 "Attention",     "hard",   false, false, null],
+    ["mla",                "Multi-Head Latent Attention",            "Attention",     "hard",   false, false, null],
+    ["sinusoidal_pe",      "Sinusoidal Position Encoding",           "Position",      "easy",   false, false, null],
+    ["rope",               "Rotary Position Embedding (RoPE)",       "Position",      "medium", false, true,  null],
+    ["alibi",              "ALiBi Attention",                        "Position",      "medium", false, false, null],
+    ["ntk_rope",           "NTK-aware RoPE Scaling",                 "Position",      "hard",   false, false, null],
+    ["gpt2_block",         "GPT-2 Transformer Block",                "Architecture",  "medium", false, false, null],
+    ["vit_patch",          "ViT Patch Embedding",                    "Architecture",  "easy",   false, false, null],
+    ["moe",                "Mixture of Experts (MoE)",               "Architecture",  "hard",   false, false, null],
+    ["adam",               "Adam Optimizer",                         "Training",      "medium", false, false, null],
+    ["cosine_lr",          "Cosine LR Scheduler with Warmup",        "Training",      "easy",   false, false, null],
+    ["kv_cache",           "KV Cache Attention",                     "Inference",     "medium", false, false, null],
+    ["dpo_loss",           "DPO Loss",                               "Alignment",     "hard",   false, false, null],
+    ["grpo_loss",          "GRPO Loss",                              "Alignment",     "hard",   false, false, null],
+    ["lora",               "LoRA (Low-Rank Adaptation)",             "Adaptation",    "medium", false, false, null],
+    ["mamba_ssm",          "Mamba SSM Step",                         "SSM",           "hard",   false, false, null],
+  ];
+
+  const rows = P.map((p, i) => {
+    const [id, title, cat, diff, solved, attempted, best] = p;
+    const statusClass = solved ? 'solved' : (attempted ? 'attempted' : '');
+    const statusLabel = solved ? 'Solved' : (attempted ? 'Attempted' : 'Todo');
+    const icon = solved
+      ? `<span class="status-ico solved"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>`
+      : attempted
+      ? `<span class="status-ico attempted"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></span>`
+      : `<span class="status-ico"></span>`;
+    return `<tr onclick="location='Workspace.html'">
+      <td class="row-num mono">${String(i+1).padStart(3,'0')}</td>
+      <td>${icon}</td>
+      <td class="row-title">${title}<span class="sub mono">${id}.py</span></td>
+      <td><span class="row-cat mono"><span class="d"></span>${cat}</span></td>
+      <td><span class="badge ${diff}">${diff.toUpperCase()}</span></td>
+      <td class="time">${best ? best + 'ms' : '—'}</td>
+      <td class="row-status ${statusClass}">${statusLabel}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tbody').innerHTML = rows;
+</script>
+</body>
+</html>
