@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "SwiGLU MLP",
+    "title_zh": "SwiGLU MLP",
     "difficulty": "Medium",
     "description_en": "Implement a SwiGLU MLP as an nn.Module.\n\nSwiGLU is a gated MLP variant used in LLaMA and other modern LLMs: it applies SiLU gating to one projection and element-wise multiplies with another.\n\n**Signature:** `SwiGLUMLP(d_model, d_ff)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (*, d_model)\n\n**Returns:** output tensor (*, d_model)\n\n**Constraints:**\n- Three projections: gate_proj(d, d_ff), up_proj(d, d_ff), down_proj(d_ff, d)\n- `forward(x) = down_proj(silu(gate_proj(x)) * up_proj(x))`\n- SiLU(x) = x * sigmoid(x)",
     "description_zh": "实现 SwiGLU MLP（nn.Module）。\n\nSwiGLU 是 LLaMA 等现代 LLM 使用的门控 MLP 变体：对一个投影应用 SiLU 门控，与另一个投影逐元素相乘。\n\n**签名:** `SwiGLUMLP(d_model, d_ff)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (*, d_model)\n\n**返回:** 输出张量 (*, d_model)\n\n**约束:**\n- 三个投影：gate_proj(d, d_ff)、up_proj(d, d_ff)、down_proj(d_ff, d)\n- `forward(x) = down_proj(silu(gate_proj(x)) * up_proj(x))`\n- SiLU(x) = x * sigmoid(x)",

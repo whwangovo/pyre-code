@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Sinusoidal Position Encoding",
+    "title_zh": "正弦位置编码",
     "difficulty": "Easy",
     "description_en": "Implement the sinusoidal position encoding from 'Attention Is All You Need'.\n\nPosition encodings are added to token embeddings to give the model information about token positions. The original Transformer uses fixed sinusoidal functions.\n\n**Signature:** `sinusoidal_pe(seq_len, d_model) -> Tensor`\n\n**Parameters:**\n- `seq_len` — number of positions\n- `d_model` — embedding dimension (must be even)\n\n**Returns:** position encoding tensor of shape `(seq_len, d_model)`\n\n**Formula:**\n- `PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))`\n- `PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))`",
     "description_zh": "实现《Attention Is All You Need》中的正弦位置编码。\n\n位置编码加到词嵌入上，让模型感知 token 的位置信息。原始 Transformer 使用固定的正弦函数。\n\n**签名:** `sinusoidal_pe(seq_len, d_model) -> Tensor`\n\n**参数:**\n- `seq_len` — 位置数量\n- `d_model` — 嵌入维度（必须为偶数）\n\n**返回:** 形状为 `(seq_len, d_model)` 的位置编码张量\n\n**公式:**\n- `PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))`\n- `PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))`",

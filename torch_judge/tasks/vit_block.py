@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "ViT Transformer Block",
+    "title_zh": "ViT Transformer Block",
     "difficulty": "Hard",
     "description_en": "Implement a Vision Transformer (ViT) block as an nn.Module.\n\nA ViT block uses pre-norm architecture with multi-head self-attention and an MLP, both wrapped in residual connections.\n\n**Signature:** `ViTBlock(d_model, num_heads)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (B, N, d_model), where N = num_patches + 1 (includes CLS token)\n\n**Returns:** output tensor (B, N, d_model)\n\n**Architecture:**\n```\nx = x + MHA(LayerNorm(x))\nx = x + MLP(LayerNorm(x))\n```\n\n**Constraints:**\n- `nn.Linear` and `nn.LayerNorm` are allowed as building blocks\n- MHA must be hand-implemented (no `nn.MultiheadAttention`)\n- MLP: `Linear(d, 4d) -> GELU -> Linear(4d, d)`\n- GELU must be hand-implemented: `x * 0.5 * (1 + erf(x / sqrt(2)))`\n- No `F.*` or `nn.functional.*` calls anywhere",
     "description_zh": "将 Vision Transformer（ViT）块实现为 nn.Module。\n\nViT 块使用 pre-norm 架构，包含多头自注意力和 MLP，两者都有残差连接。\n\n**签名:** `ViTBlock(d_model, num_heads)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (B, N, d_model)，其中 N = 图像块数 + 1（含 CLS token）\n\n**返回:** 输出张量 (B, N, d_model)\n\n**架构:**\n```\nx = x + MHA(LayerNorm(x))\nx = x + MLP(LayerNorm(x))\n```\n\n**约束:**\n- `nn.Linear` 和 `nn.LayerNorm` 可作为构建块使用\n- MHA 必须手动实现（不得使用 `nn.MultiheadAttention`）\n- MLP：`Linear(d, 4d) -> GELU -> Linear(4d, d)`\n- GELU 必须手动实现：`x * 0.5 * (1 + erf(x / sqrt(2)))`\n- 任何地方都不得调用 `F.*` 或 `nn.functional.*`",

@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Implement BatchNorm",
+    "title_zh": "实现 BatchNorm",
     "difficulty": "Medium",
     "description_en": "Implement Batch Normalization with train/eval modes.\n\nBatchNorm normalizes activations per feature using batch statistics during training and running statistics during inference, stabilizing deep network training.\n\n**Signature:** `my_batch_norm(x, gamma, beta, running_mean, running_var, eps=1e-5, momentum=0.1, training=True) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor (N, D)\n- `gamma`, `beta` — learnable affine parameters (D,)\n- `running_mean`, `running_var` — running statistics (D,), updated in-place during training\n\n**Returns:** normalized and affine-transformed tensor, same shape as x\n\n**Constraints:**\n- Training: use batch stats, update running stats with momentum\n- Inference: use running stats only\n- Use `unbiased=False` for batch variance",
     "description_zh": "实现带训练/推理模式的批归一化。\n\nBatchNorm 在训练时使用批统计量、推理时使用运行统计量对每个特征进行归一化，从而稳定深度网络训练。\n\n**签名:** `my_batch_norm(x, gamma, beta, running_mean, running_var, eps=1e-5, momentum=0.1, training=True) -> Tensor`\n\n**参数:**\n- `x` — 输入张量 (N, D)\n- `gamma`, `beta` — 可学习的仿射参数 (D,)\n- `running_mean`, `running_var` — 运行统计量 (D,)，训练时原地更新\n\n**返回:** 归一化并仿射变换后的张量，形状与 x 相同\n\n**约束:**\n- 训练模式：使用批统计量，用 momentum 更新运行统计量\n- 推理模式：仅使用运行统计量\n- 批方差使用 `unbiased=False`",

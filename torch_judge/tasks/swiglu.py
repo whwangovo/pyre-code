@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "SwiGLU Activation",
+    "title_zh": "SwiGLU 激活函数",
     "difficulty": "Medium",
     "description_en": "Implement the SwiGLU gated activation function.\n\nSwiGLU is used in LLaMA, PaLM, and other modern LLMs as the MLP activation. It gates one linear projection with a Swish-activated version of another.\n\n**Signature:** `swiglu(x, W1, W2, Wgate) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor `(B, d_model)`\n- `W1` — weight matrix `(d_model, d_ff)`\n- `W2` — output projection `(d_ff, d_model)`\n- `Wgate` — gate weight `(d_model, d_ff)`\n\n**Returns:** output tensor `(B, d_model)`\n\n**Formula:** `hidden = (x @ W1) * swish(x @ Wgate)`, output = `hidden @ W2`\n\n**Swish:** `swish(z) = z * sigmoid(z)`",
     "description_zh": "实现 SwiGLU 门控激活函数。\n\nSwiGLU 被 LLaMA、PaLM 等现代大语言模型用作 MLP 激活函数，用一个线性投影的 Swish 激活版本对另一个进行门控。\n\n**签名:** `swiglu(x, W1, W2, Wgate) -> Tensor`\n\n**参数:**\n- `x` — 输入张量 `(B, d_model)`\n- `W1` — 权重矩阵 `(d_model, d_ff)`\n- `W2` — 输出投影 `(d_ff, d_model)`\n- `Wgate` — 门控权重 `(d_model, d_ff)`\n\n**返回:** 输出张量 `(B, d_model)`\n\n**公式:** 隐藏状态 = `(x @ W1) * swish(x @ Wgate)`，输出 = `隐藏状态 @ W2`\n\n**Swish:** `swish(z) = z * sigmoid(z)`",

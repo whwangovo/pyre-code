@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Simple Linear Layer",
+    "title_zh": "简单线性层",
     "difficulty": "Medium",
     "description_en": "Implement a simple linear (fully connected) layer from scratch.\n\nA linear layer computes `y = x @ W^T + b` with learnable weight and bias tensors.\n\n**Signature:** `SimpleLinear(in_features, out_features)` (class)\n\n**Method:** `forward(x) -> Tensor`\n- `x` — input tensor (*, in_features)\n\n**Returns:** output tensor (*, out_features)\n\n**Constraints:**\n- Weight shape: (out_features, in_features) with Kaiming scaling\n- Bias shape: (out_features,) initialized to zeros\n- Both must have `requires_grad=True`",
     "description_zh": "从零实现简单线性（全连接）层。\n\n线性层使用可学习的权重和偏置张量计算 `y = x @ W^T + b`。\n\n**签名:** `SimpleLinear(in_features, out_features)`（类）\n\n**方法:** `forward(x) -> Tensor`\n- `x` — 输入张量 (*, in_features)\n\n**返回:** 输出张量 (*, out_features)\n\n**约束:**\n- 权重形状：(out_features, in_features)，使用 Kaiming 缩放\n- 偏置形状：(out_features,)，初始化为零\n- 两者都必须 `requires_grad=True`",

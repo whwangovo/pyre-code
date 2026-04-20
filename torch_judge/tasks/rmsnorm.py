@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Implement RMSNorm",
+    "title_zh": "实现 RMSNorm",
     "difficulty": "Medium",
     "description_en": "Implement RMSNorm (Root Mean Square Layer Normalization).\n\nRMSNorm is a simpler alternative to LayerNorm that skips mean subtraction, normalizing only by the root mean square of activations.\n\n**Signature:** `rms_norm(x, weight, eps=1e-6) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor (..., D)\n- `weight` — learnable scale parameter (D,)\n- `eps` — epsilon for numerical stability\n\n**Returns:** normalized tensor, same shape as x\n\n**Constraints:**\n- `RMS(x) = sqrt(mean(x^2) + eps)` over last dim\n- Output: `x / RMS(x) * weight`",
     "description_zh": "实现 RMSNorm（均方根层归一化）。\n\nRMSNorm 是 LayerNorm 的简化替代，跳过均值减法，仅通过激活值的均方根进行归一化。\n\n**签名:** `rms_norm(x, weight, eps=1e-6) -> Tensor`\n\n**参数:**\n- `x` — 输入张量 (..., D)\n- `weight` — 可学习的缩放参数 (D,)\n- `eps` — 数值稳定性的 epsilon\n\n**返回:** 归一化后的张量，形状与 x 相同\n\n**约束:**\n- `RMS(x) = sqrt(mean(x^2) + eps)` 沿最后一维\n- 输出：`x / RMS(x) * weight`",

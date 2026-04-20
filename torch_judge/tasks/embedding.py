@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Embedding Layer",
+    "title_zh": "Embedding 层",
     "difficulty": "Easy",
     "description_en": "Implement an embedding lookup layer as an nn.Module.\n\nAn embedding layer maps integer indices to dense vectors via a learnable weight matrix, used as the first layer in NLP models.\n\n**Signature:** `MyEmbedding(num_embeddings, embedding_dim)` (nn.Module)\n\n**Forward:** `forward(indices) -> Tensor`\n- `indices` — integer tensor of any shape\n\n**Returns:** embedded vectors with an extra trailing dimension of size embedding_dim\n\n**Constraints:**\n- Store weights as `nn.Parameter` of shape (num_embeddings, embedding_dim)\n- Forward is simply `weight[indices]`",
     "description_zh": "实现嵌入查找层（nn.Module）。\n\n嵌入层通过可学习的权重矩阵将整数索引映射为稠密向量，是 NLP 模型的第一层。\n\n**签名:** `MyEmbedding(num_embeddings, embedding_dim)`（nn.Module）\n\n**前向传播:** `forward(indices) -> Tensor`\n- `indices` — 任意形状的整数张量\n\n**返回:** 嵌入向量，末尾增加 embedding_dim 维度\n\n**约束:**\n- 权重存储为 `nn.Parameter`，形状 (num_embeddings, embedding_dim)\n- 前向传播即 `weight[indices]`",

@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Implement ReLU",
+    "title_zh": "实现 ReLU",
     "difficulty": "Easy",
     "description_en": "Implement the ReLU activation function.\n\nReLU (Rectified Linear Unit) outputs the input directly if positive, otherwise zero. It is the most widely used activation in deep learning.\n\n**Signature:** `relu(x) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor of any shape\n\n**Returns:** element-wise ReLU activation, same shape as input\n\n**Constraints:**\n- `relu(x) = max(0, x)` element-wise\n- Must support gradient flow\n- Must be efficient on large tensors",
     "description_zh": "实现 ReLU 激活函数。\n\nReLU（修正线性单元）在输入为正时直接输出，否则输出零，是深度学习中最广泛使用的激活函数。\n\n**签名:** `relu(x) -> Tensor`\n\n**参数:**\n- `x` — 任意形状的输入张量\n\n**返回:** 逐元素 ReLU 激活，形状与输入相同\n\n**约束:**\n- `relu(x) = max(0, x)` 逐元素\n- 必须支持梯度流\n- 在大张量上必须高效",

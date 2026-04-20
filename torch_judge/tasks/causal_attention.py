@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Causal Self-Attention",
+    "title_zh": "因果自注意力",
     "difficulty": "Medium",
     "description_en": "Implement causal (masked) self-attention.\n\nLike standard attention but prevents each position from attending to future positions, essential for autoregressive models like GPT.\n\n**Signature:** `causal_attention(Q, K, V) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S, D)\n- `K` — key tensor (B, S, D)\n- `V` — value tensor (B, S, D)\n\n**Returns:** causally masked attention output (B, S, D)\n\n**Constraints:**\n- Mask future positions with `-inf` before softmax\n- Position 0 should only see itself",
     "description_zh": "实现因果（掩码）自注意力。\n\n与标准注意力类似，但阻止每个位置关注未来位置，这对 GPT 等自回归模型至关重要。\n\n**签名:** `causal_attention(Q, K, V) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S, D)\n- `K` — 键张量 (B, S, D)\n- `V` — 值张量 (B, S, D)\n\n**返回:** 因果掩码注意力输出 (B, S, D)\n\n**约束:**\n- 在 softmax 之前用 `-inf` 掩盖未来位置\n- 位置 0 只能看到自身",

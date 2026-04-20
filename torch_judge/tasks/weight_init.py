@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Kaiming Initialization",
+    "title_zh": "Kaiming 初始化",
     "difficulty": "Easy",
     "description_en": "Implement Kaiming (He) weight initialization.\n\nKaiming initialization sets weight variance based on fan-in to preserve signal magnitude through ReLU networks, preventing vanishing/exploding activations.\n\n**Signature:** `kaiming_init(weight) -> Tensor`\n\n**Parameters:**\n- `weight` — tensor to initialize in-place (out_features, in_features)\n\n**Returns:** the same tensor (in-place operation)\n\n**Constraints:**\n- `std = sqrt(2 / fan_in)` where `fan_in = weight.shape[1]`\n- Fill with `normal(0, std)`\n- Smaller fan_in should give larger std",
     "description_zh": "实现 Kaiming（He）权重初始化。\n\nKaiming 初始化根据 fan-in 设置权重方差，以在 ReLU 网络中保持信号幅度，防止激活值消失或爆炸。\n\n**签名:** `kaiming_init(weight) -> Tensor`\n\n**参数:**\n- `weight` — 需要原地初始化的张量 (out_features, in_features)\n\n**返回:** 同一张量（原地操作）\n\n**约束:**\n- `std = sqrt(2 / fan_in)`，其中 `fan_in = weight.shape[1]`\n- 用 `normal(0, std)` 填充\n- 更小的 fan_in 应产生更大的 std",

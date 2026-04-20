@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Multi-Head Cross-Attention",
+    "title_zh": "多头交叉注意力",
     "difficulty": "Medium",
     "description_en": "Implement multi-head cross-attention as an nn.Module.\n\nCross-attention lets a decoder attend to encoder outputs: Q comes from one sequence, K/V from another. No causal mask is applied.\n\n**Signature:** `MultiHeadCrossAttention(d_model, num_heads)` (nn.Module)\n\n**Forward:** `forward(x_q, x_kv) -> Tensor`\n- `x_q` — query input (B, S_q, d_model)\n- `x_kv` — key/value input (B, S_kv, d_model)\n\n**Returns:** attention output (B, S_q, d_model)\n\n**Constraints:**\n- Use separate W_q, W_k, W_v, W_o linear projections\n- Q and KV can have different sequence lengths",
     "description_zh": "实现多头交叉注意力（nn.Module）。\n\n交叉注意力让解码器关注编码器输出：Q 来自一个序列，K/V 来自另一个序列，不使用因果掩码。\n\n**签名:** `MultiHeadCrossAttention(d_model, num_heads)`（nn.Module）\n\n**前向传播:** `forward(x_q, x_kv) -> Tensor`\n- `x_q` — 查询输入 (B, S_q, d_model)\n- `x_kv` — 键/值输入 (B, S_kv, d_model)\n\n**返回:** 注意力输出 (B, S_q, d_model)\n\n**约束:**\n- 使用独立的 W_q、W_k、W_v、W_o 线性投影\n- Q 和 KV 可以有不同的序列长度",

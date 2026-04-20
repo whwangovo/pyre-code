@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "GRPO (Group Relative Policy Optimization) Loss",
+    "title_zh": "GRPO 损失",
     "difficulty": "Hard",
     "description_en": "Implement the GRPO (Group Relative Policy Optimization) loss.\n\nGRPO normalizes rewards within each prompt group to compute advantages, then optimizes the policy using these group-relative advantages.\n\n**Signature:** `grpo_loss(logps, rewards, group_ids, eps=1e-5) -> Tensor`\n\n**Parameters:**\n- `logps` — policy log-probabilities (B,)\n- `rewards` — scalar rewards (B,)\n- `group_ids` — integer group identifiers (B,)\n- `eps` — epsilon for numerical stability\n\n**Returns:** scalar loss\n\n**Constraints:**\n- Per-group z-score normalization: `A_i = (r_i - mean_g) / (std_g + eps)`\n- Advantages must be detached (gradients flow only through logps)\n- Loss = `-mean(A_i * logps_i)`",
     "description_zh": "实现 GRPO（组相对策略优化）损失。\n\nGRPO 在每个提示组内归一化奖励以计算优势值，然后使用这些组相对优势优化策略。\n\n**签名:** `grpo_loss(logps, rewards, group_ids, eps=1e-5) -> Tensor`\n\n**参数:**\n- `logps` — 策略对数概率 (B,)\n- `rewards` — 标量奖励 (B,)\n- `group_ids` — 整数组标识符 (B,)\n- `eps` — 数值稳定性的 epsilon\n\n**返回:** 标量损失\n\n**约束:**\n- 组内 z-score 归一化：`A_i = (r_i - mean_g) / (std_g + eps)`\n- 优势值必须 detach（梯度仅通过 logps 流动）\n- 损失 = `-mean(A_i * logps_i)`",

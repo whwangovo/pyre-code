@@ -44,7 +44,7 @@ function WorkspacePageNew() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathId = searchParams.get('path');
-  const { locale, setLocale, t, tProblem } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const { theme, toggleTheme } = useTheme();
   const { toggleDesign } = useDesign();
   const {
@@ -216,7 +216,7 @@ function WorkspacePageNew() {
         <div className="mono text-xs text-text-3 flex items-center gap-1.5 pl-2 ml-2 h-5" style={{ borderLeft: '1px solid var(--line)' }}>
           <Link href="/problems" className="text-text-2 hover:text-text transition-colors">{t('problems')}</Link>
           <span className="opacity-60">/</span>
-          <span className="text-text font-medium">{tProblem(id)}</span>
+          <span className="text-text font-medium">{problem ? (locale === 'zh' ? problem.titleZh : problem.title) : id}</span>
         </div>
 
         <div className="flex-1" />

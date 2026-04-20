@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Max Pooling 2D",
+    "title_zh": "二维最大池化",
     "difficulty": "Easy",
     "description_en": "Implement 2D max pooling from scratch.\n\nMax pooling slides a window over the spatial dimensions of a feature map and takes the maximum value in each window.\n\n**Signature:** `max_pool2d(x, kernel_size, stride=None) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor of shape (B, C, H, W)\n- `kernel_size` — size of the pooling window (square)\n- `stride` — step size between windows; defaults to `kernel_size` if `None`\n\n**Returns:** tensor of shape (B, C, H_out, W_out) where\n- `H_out = (H - kernel_size) // stride + 1`\n- `W_out = (W - kernel_size) // stride + 1`\n\n**Constraints:**\n- Must match `torch.nn.functional.max_pool2d` numerically\n- Do not call any `F.*` or `nn.functional.*` functions",
     "description_zh": "从零实现二维最大池化。\n\n最大池化在特征图的空间维度上滑动窗口，取每个窗口内的最大值。\n\n**签名:** `max_pool2d(x, kernel_size, stride=None) -> Tensor`\n\n**参数:**\n- `x` — 输入张量，形状为 (B, C, H, W)\n- `kernel_size` — 池化窗口大小（正方形）\n- `stride` — 窗口步长；若为 `None` 则默认等于 `kernel_size`\n\n**返回:** 形状为 (B, C, H_out, W_out) 的张量，其中\n- `H_out = (H - kernel_size) // stride + 1`\n- `W_out = (W - kernel_size) // stride + 1`\n\n**约束:**\n- 结果必须与 `torch.nn.functional.max_pool2d` 在数值上一致\n- 不得调用任何 `F.*` 或 `nn.functional.*` 函数",

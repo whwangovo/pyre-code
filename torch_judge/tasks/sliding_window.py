@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Sliding Window Attention",
+    "title_zh": "滑动窗口注意力",
     "difficulty": "Medium",
     "description_en": "Implement sliding window attention.\n\nSliding window attention restricts each position to attend only within a fixed window, reducing complexity for long sequences while maintaining local context.\n\n**Signature:** `sliding_window_attention(Q, K, V, window_size) -> Tensor`\n\n**Parameters:**\n- `Q`, `K`, `V` — input tensors (B, S, D)\n- `window_size` — each position attends to positions within |i-j| <= window_size\n\n**Returns:** attention output (B, S, D)\n\n**Constraints:**\n- Mask positions where `|i - j| > window_size` with `-inf`\n- `window_size=0` means each position only sees itself\n- Large window equals full attention",
     "description_zh": "实现滑动窗口注意力。\n\n滑动窗口注意力限制每个位置只关注固定窗口内的位置，在保持局部上下文的同时降低长序列的复杂度。\n\n**签名:** `sliding_window_attention(Q, K, V, window_size) -> Tensor`\n\n**参数:**\n- `Q`, `K`, `V` — 输入张量 (B, S, D)\n- `window_size` — 每个位置关注 |i-j| <= window_size 范围内的位置\n\n**返回:** 注意力输出 (B, S, D)\n\n**约束:**\n- 用 `-inf` 掩盖 `|i - j| > window_size` 的位置\n- `window_size=0` 表示每个位置只能看到自身\n- 大窗口等同于全注意力",

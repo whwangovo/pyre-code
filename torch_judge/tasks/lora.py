@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "LoRA (Low-Rank Adaptation)",
+    "title_zh": "LoRA（低秩适配）",
     "difficulty": "Medium",
     "description_en": "Implement LoRA (Low-Rank Adaptation) for a linear layer.\n\nLoRA freezes the base weights and adds trainable low-rank matrices A and B, enabling efficient fine-tuning with far fewer parameters.\n\n**Signature:** `LoRALinear(in_features, out_features, rank, alpha=1.0)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (*, in_features)\n\n**Returns:** `linear(x) + (x @ A^T @ B^T) * (alpha/rank)`\n\n**Constraints:**\n- Base `nn.Linear` weights must be frozen (requires_grad=False)\n- `lora_A`: (rank, in_features), `lora_B`: (out_features, rank) initialized to zeros\n- Only LoRA params should receive gradients",
     "description_zh": "实现线性层的 LoRA（低秩适配）。\n\nLoRA 冻结基础权重并添加可训练的低秩矩阵 A 和 B，以极少的参数实现高效微调。\n\n**签名:** `LoRALinear(in_features, out_features, rank, alpha=1.0)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (*, in_features)\n\n**返回:** `linear(x) + (x @ A^T @ B^T) * (alpha/rank)`\n\n**约束:**\n- 基础 `nn.Linear` 权重必须冻结（requires_grad=False）\n- `lora_A`：(rank, in_features)，`lora_B`：(out_features, rank) 初始化为零\n- 只有 LoRA 参数应接收梯度",

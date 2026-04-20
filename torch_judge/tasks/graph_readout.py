@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Graph Readout (Graph-Level Pooling)",
+    "title_zh": "图读出（图级池化）",
     "difficulty": "Easy",
     "description_en": "Implement graph-level readout (pooling) that aggregates node embeddings into a single vector per graph.\n\n**Signature:** `graph_readout(X, batch, mode='mean') -> Tensor`\n\n**Parameters:**\n- `X` — node embedding matrix (total_nodes, D)\n- `batch` — integer tensor (total_nodes,) mapping each node to its graph index (0-indexed)\n- `mode` — aggregation mode: `'mean'`, `'sum'`, or `'max'`\n\n**Returns:** graph-level embeddings of shape (num_graphs, D) where `num_graphs = batch.max() + 1`\n\n**Algorithm:**\n- `'sum'`: accumulate node features per graph (e.g., `index_add_` or `scatter_add_`)\n- `'mean'`: sum per graph divided by node count per graph\n- `'max'`: per-graph element-wise maximum over node features\n\n**Constraints:**\n- Do not use PyG or DGL — use only raw PyTorch operations\n- Handle all three modes",
     "description_zh": "实现图级别的读出（池化）操作，将节点嵌入聚合为每个图的单一向量表示。\n\n**签名:** `graph_readout(X, batch, mode='mean') -> Tensor`\n\n**参数:**\n- `X` — 节点嵌入矩阵 (total_nodes, D)\n- `batch` — 整数张量 (total_nodes,)，将每个节点映射到所属图的索引（从 0 开始）\n- `mode` — 聚合方式：`'mean'`、`'sum'` 或 `'max'`\n\n**返回:** 形状为 (num_graphs, D) 的图级嵌入，其中 `num_graphs = batch.max() + 1`\n\n**算法:**\n- `'sum'`：按图累加节点特征（可用 `index_add_` 或 `scatter_add_`）\n- `'mean'`：按图求和后除以各图节点数\n- `'max'`：按图对节点特征逐元素取最大值\n\n**约束:**\n- 仅使用原生 PyTorch 操作，不得使用 PyG 或 DGL\n- 需支持全部三种聚合模式",

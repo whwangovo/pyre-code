@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "GELU Activation",
+    "title_zh": "GELU 激活函数",
     "difficulty": "Easy",
     "description_en": "Implement the GELU activation function.\n\nGELU (Gaussian Error Linear Unit) smoothly gates inputs based on their value, used in transformers like BERT and GPT.\n\n**Signature:** `my_gelu(x) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor of any shape\n\n**Returns:** element-wise GELU activation, same shape as input\n\n**Constraints:**\n- Exact formula: `x * 0.5 * (1 + erf(x / sqrt(2)))`\n- Must match `F.gelu` within 1e-4\n- `gelu(0) = 0`",
     "description_zh": "实现 GELU 激活函数。\n\nGELU（高斯误差线性单元）根据输入值平滑地进行门控，广泛用于 BERT 和 GPT 等 Transformer。\n\n**签名:** `my_gelu(x) -> Tensor`\n\n**参数:**\n- `x` — 任意形状的输入张量\n\n**返回:** 逐元素 GELU 激活，形状与输入相同\n\n**约束:**\n- 精确公式：`x * 0.5 * (1 + erf(x / sqrt(2)))`\n- 必须与 `F.gelu` 误差在 1e-4 以内\n- `gelu(0) = 0`",

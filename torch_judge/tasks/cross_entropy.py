@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Cross-Entropy Loss",
+    "title_zh": "交叉熵损失",
     "difficulty": "Easy",
     "description_en": "Implement cross-entropy loss for classification.\n\nCross-entropy measures the difference between predicted logits and true class labels. It is the standard loss for classification tasks.\n\n**Signature:** `cross_entropy_loss(logits, targets) -> Tensor`\n\n**Parameters:**\n- `logits` — raw scores (B, C) where C is the number of classes\n- `targets` — ground-truth class indices (B,)\n\n**Returns:** scalar mean loss\n\n**Constraints:**\n- Must be numerically stable (handle large logits)\n- Use log-sum-exp trick for stability",
     "description_zh": "实现分类交叉熵损失。\n\n交叉熵衡量预测 logits 与真实类别标签之间的差异，是分类任务的标准损失函数。\n\n**签名:** `cross_entropy_loss(logits, targets) -> Tensor`\n\n**参数:**\n- `logits` — 原始分数 (B, C)，C 为类别数\n- `targets` — 真实类别索引 (B,)\n\n**返回:** 标量平均损失\n\n**约束:**\n- 必须数值稳定（处理大 logits）\n- 使用 log-sum-exp 技巧保证稳定性",

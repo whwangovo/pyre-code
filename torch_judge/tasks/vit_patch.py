@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "ViT Patch Embedding",
+    "title_zh": "ViT Patch Embedding",
     "difficulty": "Medium",
     "description_en": "Implement ViT patch embedding as an nn.Module.\n\nPatch embedding splits an image into fixed-size patches and projects each patch into an embedding vector, forming the input sequence for Vision Transformers.\n\n**Signature:** `PatchEmbedding(img_size, patch_size, in_channels, embed_dim)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — image tensor (B, C, H, W)\n\n**Returns:** patch embeddings (B, num_patches, embed_dim)\n\n**Constraints:**\n- `num_patches = (img_size / patch_size)^2`\n- Store `self.num_patches` as an attribute\n- Project with `nn.Linear(C * P * P, embed_dim)`",
     "description_zh": "实现 ViT 图像块嵌入（nn.Module）。\n\n图像块嵌入将图像分割为固定大小的块，并将每个块投影为嵌入向量，形成 Vision Transformer 的输入序列。\n\n**签名:** `PatchEmbedding(img_size, patch_size, in_channels, embed_dim)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 图像张量 (B, C, H, W)\n\n**返回:** 图像块嵌入 (B, num_patches, embed_dim)\n\n**约束:**\n- `num_patches = (img_size / patch_size)^2`\n- 将 `self.num_patches` 存储为属性\n- 使用 `nn.Linear(C * P * P, embed_dim)` 投影",

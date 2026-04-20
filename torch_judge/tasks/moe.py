@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Mixture of Experts (MoE)",
+    "title_zh": "混合专家（MoE）",
     "difficulty": "Hard",
     "description_en": "Implement a Mixture of Experts (MoE) layer as an nn.Module.\n\nMoE routes each token to the top-k experts via a learned router, combining their outputs with softmax-normalized weights for conditional computation.\n\n**Signature:** `MixtureOfExperts(d_model, d_ff, num_experts, top_k=2)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (B, S, d_model)\n\n**Returns:** output tensor (B, S, d_model)\n\n**Constraints:**\n- Router: `nn.Linear(d_model, num_experts)` -> topk -> softmax\n- Each expert: Linear -> ReLU -> Linear\n- Store experts in `self.experts` (nn.ModuleList)",
     "description_zh": "实现混合专家（MoE）层（nn.Module）。\n\nMoE 通过学习的路由器将每个 token 路由到 top-k 个专家，用 softmax 归一化的权重组合它们的输出，实现条件计算。\n\n**签名:** `MixtureOfExperts(d_model, d_ff, num_experts, top_k=2)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (B, S, d_model)\n\n**返回:** 输出张量 (B, S, d_model)\n\n**约束:**\n- 路由器：`nn.Linear(d_model, num_experts)` -> topk -> softmax\n- 每个专家：Linear -> ReLU -> Linear\n- 专家存储在 `self.experts`（nn.ModuleList）中",

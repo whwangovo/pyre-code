@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "PPO (Proximal Policy Optimization) Clipped Loss",
+    "title_zh": "PPO 损失",
     "difficulty": "Medium",
     "description_en": "Implement the PPO clipped surrogate loss.\n\nPPO constrains policy updates by clipping the importance sampling ratio, preventing destructively large updates during reinforcement learning.\n\n**Signature:** `ppo_loss(new_logps, old_logps, advantages, clip_ratio=0.2) -> Tensor`\n\n**Parameters:**\n- `new_logps` — current policy log-probs (B,)\n- `old_logps` — old policy log-probs (B,), treated as constant\n- `advantages` — advantage estimates (B,), treated as constant\n- `clip_ratio` — clipping range epsilon\n\n**Returns:** scalar loss\n\n**Constraints:**\n- Ratio: `r = exp(new_logps - old_logps.detach())`\n- Loss: `-min(r * A, clamp(r, 1-eps, 1+eps) * A).mean()`\n- Gradients flow only through new_logps",
     "description_zh": "实现 PPO 裁剪代理损失。\n\nPPO 通过裁剪重要性采样比率来约束策略更新，防止强化学习中的破坏性大幅更新。\n\n**签名:** `ppo_loss(new_logps, old_logps, advantages, clip_ratio=0.2) -> Tensor`\n\n**参数:**\n- `new_logps` — 当前策略对数概率 (B,)\n- `old_logps` — 旧策略对数概率 (B,)，视为常量\n- `advantages` — 优势估计 (B,)，视为常量\n- `clip_ratio` — 裁剪范围 epsilon\n\n**返回:** 标量损失\n\n**约束:**\n- 比率：`r = exp(new_logps - old_logps.detach())`\n- 损失：`-min(r * A, clamp(r, 1-eps, 1+eps) * A).mean()`\n- 梯度仅通过 new_logps 流动",

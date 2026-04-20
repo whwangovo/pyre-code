@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "GPT-2 Transformer Block",
+    "title_zh": "GPT-2 Transformer Block",
     "difficulty": "Hard",
     "description_en": "Implement a GPT-2 transformer block as an nn.Module.\n\nA GPT-2 block uses pre-norm architecture: LayerNorm before causal self-attention and MLP, with residual connections around both.\n\n**Signature:** `GPT2Block(d_model, num_heads)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (B, S, d_model)\n\n**Returns:** output tensor (B, S, d_model)\n\n**Constraints:**\n- Pre-norm: `x = x + attn(ln1(x))`, `x = x + mlp(ln2(x))`\n- MLP: Linear(d, 4d) -> GELU -> Linear(4d, d)\n- Attention must be causal (future tokens cannot affect past)",
     "description_zh": "实现 GPT-2 Transformer 块（nn.Module）。\n\nGPT-2 块使用 pre-norm 架构：在因果自注意力和 MLP 之前进行 LayerNorm，两者都有残差连接。\n\n**签名:** `GPT2Block(d_model, num_heads)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (B, S, d_model)\n\n**返回:** 输出张量 (B, S, d_model)\n\n**约束:**\n- Pre-norm：`x = x + attn(ln1(x))`，`x = x + mlp(ln2(x))`\n- MLP：Linear(d, 4d) -> GELU -> Linear(4d, d)\n- 注意力必须是因果的（未来 token 不能影响过去）",

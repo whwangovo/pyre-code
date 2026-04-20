@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Tensor Parallel MLP",
+    "title_zh": "张量并行 MLP",
     "difficulty": "Hard",
     "description_en": "Implement a Megatron-style tensor parallel MLP.\n\nTensor parallelism splits the MLP weight matrices across devices. The first (up-projection) layer is column-parallel: each shard computes a slice of the hidden dimension. The second (down-projection) is row-parallel: each shard takes a slice of the input and produces the full output, then results are summed (all-reduce).\n\n**Signature:** `TensorParallelMLP(d_model, d_ff, world_size)` (nn.Module)\n\n**Parameters:**\n- `d_model` — input/output dimension\n- `d_ff` — hidden dimension (divisible by world_size)\n- `world_size` — number of virtual shards\n\n**Forward:** `forward(x) -> Tensor` where x is `(B, d_model)`\n\n**Constraint:** Store sharded weights as `nn.ParameterList`. The forward pass must simulate column-parallel + row-parallel + all-reduce. Result must match a standard `d_model -> d_ff -> d_model` MLP with GELU activation.",
     "description_zh": "实现 Megatron 风格的张量并行 MLP。\n\n张量并行将 MLP 权重矩阵分片到各设备。第一层（上投影）是列并行：每个分片计算隐藏维度的一个切片。第二层（下投影）是行并行：每个分片接收输入的一个切片并产生完整输出，然后求和（all-reduce）。\n\n**签名:** `TensorParallelMLP(d_model, d_ff, world_size)`（nn.Module）\n\n**参数:**\n- `d_model` — 输入/输出维度\n- `d_ff` — 隐藏维度（可被 world_size 整除）\n- `world_size` — 虚拟分片数\n\n**前向:** `forward(x) -> Tensor`，x 形状 `(B, d_model)`\n\n**约束:** 将分片权重存为 `nn.ParameterList`。前向传播必须模拟列并行 + 行并行 + all-reduce。结果必须与带 GELU 激活的标准 `d_model -> d_ff -> d_model` MLP 一致。",

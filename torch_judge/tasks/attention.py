@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Softmax Attention",
+    "title_zh": "Softmax 注意力",
     "difficulty": "Easy",
     "description_en": "Implement scaled dot-product attention.\n\nThis is the core attention mechanism: compute similarity scores between queries and keys, then use them to weight values.\n\n**Signature:** `scaled_dot_product_attention(Q, K, V) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S_q, D)\n- `K` — key tensor (B, S_k, D)\n- `V` — value tensor (B, S_k, D_v)\n\n**Returns:** weighted values tensor (B, S_q, D_v)\n\n**Constraints:**\n- Scale scores by `1/sqrt(d_k)`\n- Support cross-attention (S_q != S_k)",
     "description_zh": "实现缩放点积注意力。\n\n这是核心注意力机制：计算查询和键之间的相似度分数，然后用它们对值进行加权。\n\n**签名:** `scaled_dot_product_attention(Q, K, V) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S_q, D)\n- `K` — 键张量 (B, S_k, D)\n- `V` — 值张量 (B, S_k, D_v)\n\n**返回:** 加权后的值张量 (B, S_q, D_v)\n\n**约束:**\n- 分数需除以 `sqrt(d_k)` 进行缩放\n- 支持交叉注意力（S_q != S_k）",

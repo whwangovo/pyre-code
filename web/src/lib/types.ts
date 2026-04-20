@@ -8,6 +8,7 @@ export interface Test {
 export interface Problem {
   id: string;
   title: string;
+  titleZh: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   functionName: string;
   hint: string;
@@ -64,6 +65,7 @@ export interface LearningPath {
 export interface LearningPathProblemSummary {
   id: string;
   title: string;
+  titleZh: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   status: 'todo' | 'attempted' | 'solved';
 }

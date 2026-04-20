@@ -14,7 +14,7 @@ interface ProblemRowProps {
 
 export function ProblemRow({ problem, index, progress }: ProblemRowProps) {
   const status = progress?.status || 'todo';
-  const { t, tProblem } = useLocale();
+  const { locale } = useLocale();
 
   return (
     <Link
@@ -24,7 +24,7 @@ export function ProblemRow({ problem, index, progress }: ProblemRowProps) {
       <StatusIcon status={status} />
       <span className="text-sm text-text-tertiary w-8">{index + 1}</span>
       <span className="flex-1 text-sm text-text-primary group-hover:text-accent transition-colors">
-        {tProblem(problem.id)}
+        {locale === 'zh' ? problem.titleZh : problem.title}
       </span>
       <DifficultyBadge difficulty={problem.difficulty} />
     </Link>

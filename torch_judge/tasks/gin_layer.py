@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "GIN Layer (Graph Isomorphism Network)",
+    "title_zh": "GIN 层（图同构网络）",
     "difficulty": "Medium",
     "description_en": "Implement a Graph Isomorphism Network (GIN) layer.\n\nGIN updates node features by aggregating neighbor features, scaling the node's own features by (1 + eps), and passing through a 2-layer MLP.\n\n**Signature:** `gin_layer(A, X, eps, W1, b1, W2, b2) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary\n- `X` — node feature matrix (N, F_in)\n- `eps` — learnable scalar tensor\n- `W1` — first linear weight (F_in, F_hidden)\n- `b1` — first linear bias (F_hidden,)\n- `W2` — second linear weight (F_hidden, F_out)\n- `b2` — second linear bias (F_out,)\n\n**Returns:** updated node features (N, F_out)\n\n**Algorithm:**\n1. Aggregate neighbor features: `agg = A @ X`\n2. Combine: `h = (1 + eps) * X + agg`\n3. MLP layer 1: `h = ReLU(h @ W1 + b1)`\n4. MLP layer 2: `h = h @ W2 + b2`\n5. Return h",
     "description_zh": "实现图同构网络（GIN）层。\n\nGIN 通过聚合邻居特征、用 (1 + eps) 缩放自身特征，再经过两层 MLP 来更新节点表示。\n\n**签名:** `gin_layer(A, X, eps, W1, b1, W2, b2) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值\n- `X` — 节点特征矩阵 (N, F_in)\n- `eps` — 可学习标量张量\n- `W1` — 第一层线性权重 (F_in, F_hidden)\n- `b1` — 第一层线性偏置 (F_hidden,)\n- `W2` — 第二层线性权重 (F_hidden, F_out)\n- `b2` — 第二层线性偏置 (F_out,)\n\n**返回:** 更新后的节点特征 (N, F_out)\n\n**算法:**\n1. 聚合邻居特征：`agg = A @ X`\n2. 组合：`h = (1 + eps) * X + agg`\n3. MLP 第一层：`h = ReLU(h @ W1 + b1)`\n4. MLP 第二层：`h = h @ W2 + b2`\n5. 返回 h",

@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Differential Attention",
+    "title_zh": "差分注意力",
     "difficulty": "Hard",
     "description_en": "Implement Differential Attention from the ICLR 2025 paper \"Differential Transformer\".\n\nThe key idea: split Q and K each into two halves, compute two separate softmax attention maps, then subtract them (scaled by a learnable lambda) to cancel noise and improve focus on relevant context.\n\n**Signature:** `diff_attention(Q, K, V, lambda_val) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor (B, S, 2*D_h)\n- `K` — key tensor (B, S, 2*D_h)\n- `V` — value tensor (B, S, D_v)\n- `lambda_val` — scalar float or 0-dim tensor controlling noise cancellation\n\n**Returns:** output tensor (B, S, D_v)\n\n**Formula:**\n```\nout = (softmax(Q1 @ K1.T / √D_h) - lambda_val * softmax(Q2 @ K2.T / √D_h)) @ V\n```\n\n**Constraints:**\n- Split Q into Q1, Q2 along last dim; same for K\n- Use `torch.softmax(..., dim=-1)` (not F.softmax)\n- Scale by 1/√D_h before softmax",
     "description_zh": "实现 ICLR 2025 论文《Differential Transformer》中的差分注意力机制。\n\n核心思想：将 Q 和 K 各自分成两半，分别计算两个 softmax 注意力图，然后相减（乘以可学习的 lambda）以消除噪声，提升对相关上下文的聚焦能力。\n\n**签名:** `diff_attention(Q, K, V, lambda_val) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 (B, S, 2*D_h)\n- `K` — 键张量 (B, S, 2*D_h)\n- `V` — 值张量 (B, S, D_v)\n- `lambda_val` — 标量浮点数或 0 维张量，控制噪声消除强度\n\n**返回:** 输出张量 (B, S, D_v)\n\n**公式:**\n```\nout = (softmax(Q1 @ K1.T / √D_h) - lambda_val * softmax(Q2 @ K2.T / √D_h)) @ V\n```\n\n**约束:**\n- 沿最后一维将 Q 拆分为 Q1、Q2；K 同理\n- 使用 `torch.softmax(..., dim=-1)`（不能用 F.softmax）\n- softmax 前除以 √D_h",

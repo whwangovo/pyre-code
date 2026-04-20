@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Gradient Accumulation",
+    "title_zh": "梯度累积",
     "difficulty": "Easy",
     "description_en": "Implement gradient accumulation over micro-batches.\n\nGradient accumulation simulates a large batch by accumulating gradients from multiple smaller batches before a single optimizer step.\n\n**Signature:** `accumulated_step(model, optimizer, loss_fn, micro_batches) -> float`\n\n**Parameters:**\n- `model` — nn.Module\n- `optimizer` — torch optimizer\n- `loss_fn` — loss function\n- `micro_batches` — list of (x, y) tuples\n\n**Returns:** total loss as a float\n\n**Constraints:**\n- Scale each micro-batch loss by `1/n` before backward\n- Must match a single full-batch update numerically",
     "description_zh": "实现微批次梯度累积。\n\n梯度累积通过在多个小批次上累积梯度后执行一次优化器步骤，模拟大批次训练。\n\n**签名:** `accumulated_step(model, optimizer, loss_fn, micro_batches) -> float`\n\n**参数:**\n- `model` — nn.Module\n- `optimizer` — torch 优化器\n- `loss_fn` — 损失函数\n- `micro_batches` — (x, y) 元组列表\n\n**返回:** 总损失（浮点数）\n\n**约束:**\n- 每个微批次损失在反向传播前除以 `n`\n- 必须与单次全批次更新数值一致",

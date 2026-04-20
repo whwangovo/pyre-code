@@ -11,13 +11,13 @@ import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
 import { useDesign } from '@/context/DesignContext';
 import { PathDetailPageClassic } from '@/components/paths/PathDetailPage.classic';
-import { getProblemTitle } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { LearningPath } from '@/lib/types';
 
 interface PathStep {
   id: string;
   title: string;
+  titleZh: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   status: 'todo' | 'attempted' | 'solved';
 }
@@ -133,7 +133,7 @@ function PathDetailPageNew() {
           <div className="absolute left-[11px] top-0 bottom-0 w-px" style={{ background: 'var(--line)' }} />
 
           {path.problems.map((step, i) => {
-            const stepTitle = getProblemTitle(step.id, locale);
+            const stepTitle = locale === 'zh' ? step.titleZh : step.title;
             const isSolved = step.status === 'solved';
             const isAttempted = step.status === 'attempted';
             const isCurrent = !isSolved && !isAttempted && i === path.problems.findIndex((s) => s.status !== 'solved');

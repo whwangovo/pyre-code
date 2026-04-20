@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Paged Attention",
+    "title_zh": "分页注意力",
     "difficulty": "Hard",
     "description_en": "Implement paged attention (vLLM-style).\n\nInstead of a contiguous KV cache, keys and values are stored in fixed-size pages (blocks). A block table maps logical block indices to physical page indices, enabling non-contiguous memory allocation.\n\n**Signature:** `paged_attention(Q, k_pages, v_pages, block_table, context_len, block_size) -> Tensor`\n\n**Parameters:**\n- `Q` — query tensor `(B, 1, D)` (single decode step)\n- `k_pages` — key pages `(num_pages, block_size, D)`\n- `v_pages` — value pages `(num_pages, block_size, D)`\n- `block_table` — integer tensor `(B, max_blocks)` mapping logical → physical page\n- `context_len` — number of valid KV tokens per sequence (scalar)\n- `block_size` — tokens per page\n\n**Returns:** output tensor `(B, 1, D)`\n\n**Steps:** Use block_table to gather K/V pages, slice to context_len, then compute standard scaled dot-product attention.",
     "description_zh": "实现分页注意力（vLLM 风格）。\n\nKV 缓存不再连续存储，而是存在固定大小的页（block）中。block table 将逻辑块索引映射到物理页索引，实现非连续内存分配。\n\n**签名:** `paged_attention(Q, k_pages, v_pages, block_table, context_len, block_size) -> Tensor`\n\n**参数:**\n- `Q` — 查询张量 `(B, 1, D)`（单步解码）\n- `k_pages` — 键页 `(num_pages, block_size, D)`\n- `v_pages` — 值页 `(num_pages, block_size, D)`\n- `block_table` — 整数张量 `(B, max_blocks)`，逻辑块 → 物理页\n- `context_len` — 每条序列有效 KV token 数（标量）\n- `block_size` — 每页 token 数\n\n**返回:** 输出张量 `(B, 1, D)`\n\n**步骤:** 用 block_table gather K/V 页，截取到 context_len，再做标准缩放点积注意力。",

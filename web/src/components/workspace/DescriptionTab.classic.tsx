@@ -63,7 +63,7 @@ export function DescriptionTab({ problem }: DescriptionTabProps) {
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-xl font-semibold tracking-tight text-text-primary">
-            {problem.title}
+            {locale === 'zh' ? problem.titleZh : problem.title}
           </h1>
           <DifficultyBadge difficulty={problem.difficulty} />
         </div>

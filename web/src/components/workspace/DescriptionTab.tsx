@@ -68,7 +68,7 @@ export function DescriptionTab({ problem }: DescriptionTabProps) {
     <div className="p-6 space-y-6">
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-xl font-semibold tracking-tight">{problem.title}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{locale === 'zh' ? problem.titleZh : problem.title}</h1>
           <Badge variant={problem.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'}>
             {problem.difficulty.toUpperCase()}
           </Badge>

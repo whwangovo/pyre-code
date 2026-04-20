@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "KV Cache Attention",
+    "title_zh": "KV Cache 注意力",
     "difficulty": "Hard",
     "description_en": "Implement multi-head attention with KV cache for efficient autoregressive decoding.\n\nKV caching stores previously computed keys and values, so each decode step only processes the new token instead of the full sequence.\n\n**Signature:** `KVCacheAttention(d_model, num_heads)` (nn.Module)\n\n**Forward:** `forward(x, cache=None) -> (Tensor, tuple)`\n- `x` — input tensor (B, S_new, d_model)\n- `cache` — optional (K, V) tuple from previous steps\n\n**Returns:** (output, (K_all, V_all)) where cache grows each step\n\n**Constraints:**\n- Concatenate new K/V with cached along sequence dim\n- Apply causal mask during prefill (S_new > 1)\n- Incremental decode must match full forward numerically",
     "description_zh": "实现带 KV 缓存的多头注意力，用于高效自回归解码。\n\nKV 缓存存储之前计算的键和值，使每个解码步骤只需处理新 token 而非完整序列。\n\n**签名:** `KVCacheAttention(d_model, num_heads)`（nn.Module）\n\n**前向传播:** `forward(x, cache=None) -> (Tensor, tuple)`\n- `x` — 输入张量 (B, S_new, d_model)\n- `cache` — 可选的前序步骤 (K, V) 元组\n\n**返回:** (输出, (K_all, V_all))，缓存逐步增长\n\n**约束:**\n- 将新 K/V 与缓存沿序列维度拼接\n- 预填充时（S_new > 1）应用因果掩码\n- 增量解码必须与完整前向传播数值一致",

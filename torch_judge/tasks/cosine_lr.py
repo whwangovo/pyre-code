@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Cosine LR Scheduler with Warmup",
+    "title_zh": "余弦学习率调度（含预热）",
     "difficulty": "Medium",
     "description_en": "Implement a cosine learning rate schedule with linear warmup.\n\nThis scheduler linearly ramps the LR during warmup, then decays it following a cosine curve. Widely used in transformer training.\n\n**Signature:** `cosine_lr_schedule(step, total_steps, warmup_steps, max_lr, min_lr=0.0) -> float`\n\n**Parameters:**\n- `step` — current training step\n- `total_steps` — total number of steps\n- `warmup_steps` — number of warmup steps\n- `max_lr`, `min_lr` — peak and minimum learning rates\n\n**Returns:** learning rate as a float\n\n**Constraints:**\n- Warmup: linear from 0 to max_lr\n- Decay: `min_lr + 0.5*(max_lr-min_lr)*(1+cos(pi*progress))`",
     "description_zh": "实现带线性预热的余弦学习率调度。\n\n该调度器在预热阶段线性增加学习率，之后按余弦曲线衰减，广泛用于 Transformer 训练。\n\n**签名:** `cosine_lr_schedule(step, total_steps, warmup_steps, max_lr, min_lr=0.0) -> float`\n\n**参数:**\n- `step` — 当前训练步数\n- `total_steps` — 总步数\n- `warmup_steps` — 预热步数\n- `max_lr`, `min_lr` — 峰值和最小学习率\n\n**返回:** 浮点数学习率\n\n**约束:**\n- 预热阶段：从 0 线性增加到 max_lr\n- 衰减阶段：`min_lr + 0.5*(max_lr-min_lr)*(1+cos(pi*progress))`",

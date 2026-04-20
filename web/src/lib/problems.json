@@ -3,6 +3,7 @@
     {
       "id": "cross_entropy",
       "title": "Cross-Entropy Loss",
+      "titleZh": "交叉熵损失",
       "difficulty": "Easy",
       "functionName": "cross_entropy_loss",
       "hint": "1. `log_probs = logits - logsumexp(logits, dim=-1, keepdim=True)`\n2. `return -log_probs[arange(B), targets].mean()`",
@@ -31,6 +32,7 @@
     {
       "id": "dropout",
       "title": "Implement Dropout",
+      "titleZh": "实现 Dropout",
       "difficulty": "Easy",
       "functionName": "MyDropout",
       "hint": "Train: `mask = (rand_like(x) > p).float()` → `x * mask / (1-p)`\nEval: return `x` unchanged",
@@ -59,6 +61,7 @@
     {
       "id": "embedding",
       "title": "Embedding Layer",
+      "titleZh": "Embedding 层",
       "difficulty": "Easy",
       "functionName": "MyEmbedding",
       "hint": "`self.weight = nn.Parameter(...)` shape `(num_embeddings, embedding_dim)`\nForward: `return self.weight[indices]`",
@@ -87,6 +90,7 @@
     {
       "id": "gelu",
       "title": "GELU Activation",
+      "titleZh": "GELU 激活函数",
       "difficulty": "Easy",
       "functionName": "my_gelu",
       "hint": "Exact: `0.5 * x * (1 + torch.erf(x / sqrt(2)))`\nApprox: `0.5*x*(1+tanh(sqrt(2/π)*(x+0.044715*x³)))`",
@@ -115,6 +119,7 @@
     {
       "id": "gradient_accumulation",
       "title": "Gradient Accumulation",
+      "titleZh": "梯度累积",
       "difficulty": "Easy",
       "functionName": "accumulated_step",
       "hint": "1. optimizer.zero_grad() once\n2. for each micro-batch: forward → loss/n → backward\n3. optimizer.step()\n   Dividing by n ensures accumulated grads match a single full-batch update.",
@@ -139,6 +144,7 @@
     {
       "id": "gradient_clipping",
       "title": "Gradient Norm Clipping",
+      "titleZh": "梯度范数裁剪",
       "difficulty": "Easy",
       "functionName": "clip_grad_norm",
       "hint": "1. total_norm = sqrt(Σ p.grad.norm()²)\n2. clip_coef = max_norm / total_norm\n3. if total_norm > max_norm: scale all grads by clip_coef\n4. return original total_norm (float)",
@@ -167,6 +173,7 @@
     {
       "id": "relu",
       "title": "Implement ReLU",
+      "titleZh": "实现 ReLU",
       "difficulty": "Easy",
       "functionName": "relu",
       "hint": "`relu(x) = max(0, x)` element-wise → `x * (x > 0)`",
@@ -195,6 +202,7 @@
     {
       "id": "softmax",
       "title": "Implement Softmax",
+      "titleZh": "实现 Softmax",
       "difficulty": "Easy",
       "functionName": "my_softmax",
       "hint": "1. `x_max = x.max(dim=dim, keepdim=True).values`\n2. `e_x = exp(x - x_max)`\n3. `return e_x / e_x.sum(dim=dim, keepdim=True)`",
@@ -223,6 +231,7 @@
     {
       "id": "weight_init",
       "title": "Kaiming Initialization",
+      "titleZh": "Kaiming 初始化",
       "difficulty": "Easy",
       "functionName": "kaiming_init",
       "hint": "`fan_in = weight.shape[1]` → `std = sqrt(2 / fan_in)`\n`weight.normal_(0, std)` in-place → return `weight`",
@@ -251,6 +260,7 @@
     {
       "id": "adam",
       "title": "Adam Optimizer",
+      "titleZh": "Adam 优化器",
       "difficulty": "Medium",
       "functionName": "MyAdam",
       "hint": "1. m = β1·m + (1-β1)·g,  v = β2·v + (1-β2)·g²\n2. Bias-correct: m̂ = m/(1-β1ᵗ),  v̂ = v/(1-β2ᵗ)\n3. p -= lr · m̂ / (√v̂ + ε)",
@@ -275,6 +285,7 @@
     {
       "id": "batchnorm",
       "title": "Implement BatchNorm",
+      "titleZh": "实现 BatchNorm",
       "difficulty": "Medium",
       "functionName": "my_batch_norm",
       "hint": "Train: `mean/var = x.mean/var(dim=0)`, update running stats with `momentum`\nEval: use `running_mean/running_var` directly\nBoth: `gamma * (x - mean) / sqrt(var + eps) + beta`",
@@ -303,6 +314,7 @@
     {
       "id": "beam_search",
       "title": "Beam Search Decoding",
+      "titleZh": "束搜索解码",
       "difficulty": "Medium",
       "functionName": "beam_search",
       "hint": "1. beams = [(score=0.0, seq=[start_token])]\n2. each step: expand each beam with all tokens → keep top beam_width by cumulative score\n3. stop when all beams end with eos_token or max_len reached\n4. return seq from highest-scoring beam",
@@ -331,6 +343,7 @@
     {
       "id": "conv2d",
       "title": "2D Convolution",
+      "titleZh": "二维卷积",
       "difficulty": "Medium",
       "functionName": "my_conv2d",
       "hint": "1. Zero-pad input manually (no F.pad)\n2. `x.unfold(2, kH, stride).unfold(3, kW, stride)` → patches `(B, C, H_out, W_out, kH, kW)`\n3. `(patches * weight).sum((-3,-2,-1)) + bias`\n",
@@ -363,6 +376,7 @@
     {
       "id": "cosine_lr",
       "title": "Cosine LR Scheduler with Warmup",
+      "titleZh": "余弦学习率调度（含预热）",
       "difficulty": "Medium",
       "functionName": "cosine_lr_schedule",
       "hint": "1. step < warmup_steps → lr = max_lr * step / warmup_steps\n2. step >= total_steps → lr = min_lr\n3. progress = (step - warmup_steps) / (total_steps - warmup_steps)\n   → min_lr + 0.5*(max_lr-min_lr)*(1 + cos(π·progress))",
@@ -395,6 +409,7 @@
     {
       "id": "cross_attention",
       "title": "Multi-Head Cross-Attention",
+      "titleZh": "多头交叉注意力",
       "difficulty": "Medium",
       "functionName": "MultiHeadCrossAttention",
       "hint": "Q from `x_q`, K/V from `x_kv`. Project → reshape to `(B, H, S, d_k)` → scaled dot-product (no causal mask) → concat heads → `W_o`.",
@@ -427,6 +442,7 @@
     {
       "id": "layernorm",
       "title": "Implement LayerNorm",
+      "titleZh": "实现 LayerNorm",
       "difficulty": "Medium",
       "functionName": "my_layer_norm",
       "hint": "1. `mean = x.mean(dim=-1, keepdim=True)`\n2. `var = x.var(dim=-1, keepdim=True, unbiased=False)`\n3. `x_norm = (x - mean) / sqrt(var + eps)` → `gamma * x_norm + beta`",
@@ -451,6 +467,7 @@
     {
       "id": "linear",
       "title": "Simple Linear Layer",
+      "titleZh": "简单线性层",
       "difficulty": "Medium",
       "functionName": "SimpleLinear",
       "hint": "`weight` shape `(out, in)`, init `randn * 1/sqrt(in_features)`\n`bias` shape `(out,)`, init zeros\nForward: `x @ weight.T + bias`",
@@ -475,6 +492,7 @@
     {
       "id": "linear_regression",
       "title": "Linear Regression",
+      "titleZh": "线性回归",
       "difficulty": "Medium",
       "functionName": "LinearRegression",
       "hint": "closed_form: augment X with ones col → `lstsq(X_aug, y)` → split `w, b`\ngradient_descent: `grad_w = (2/N) * X.T @ (X@w+b - y)`, `w -= lr*grad_w`\nnn_linear: `nn.Linear(D,1)` + `MSELoss` + `optimizer.step()` loop",
@@ -511,6 +529,7 @@
     {
       "id": "lora",
       "title": "LoRA (Low-Rank Adaptation)",
+      "titleZh": "LoRA（低秩适配）",
       "difficulty": "Medium",
       "functionName": "LoRALinear",
       "hint": "1. Freeze `linear.weight/bias` with `requires_grad_(False)`\n2. `lora_A`: `(rank, in)`, `lora_B`: `(out, rank)` init zeros\n3. Forward: `linear(x) + (x @ lora_A.T @ lora_B.T) * (alpha/rank)`",
@@ -543,6 +562,7 @@
     {
       "id": "mlp",
       "title": "SwiGLU MLP",
+      "titleZh": "SwiGLU MLP",
       "difficulty": "Medium",
       "functionName": "SwiGLUMLP",
       "hint": "`gate_proj(d→d_ff)`, `up_proj(d→d_ff)`, `down_proj(d_ff→d)`. Forward: `down_proj(silu(gate_proj(x)) * up_proj(x))`. `silu(x) = x * sigmoid(x)`.",
@@ -575,6 +595,7 @@
     {
       "id": "rmsnorm",
       "title": "Implement RMSNorm",
+      "titleZh": "实现 RMSNorm",
       "difficulty": "Medium",
       "functionName": "rms_norm",
       "hint": "`rms = sqrt(x.pow(2).mean(dim=-1, keepdim=True) + eps)`\n`return x / rms * weight`  ← no mean subtraction",
@@ -607,6 +628,7 @@
     {
       "id": "topk_sampling",
       "title": "Top-k / Top-p Sampling",
+      "titleZh": "Top-k / Top-p 采样",
       "difficulty": "Medium",
       "functionName": "sample_top_k_top_p",
       "hint": "1. logits /= temperature\n2. top-k: set logits below k-th largest to -inf\n3. top-p: sort desc → cumsum of softmax probs → mask where cumsum > p → set to -inf\n4. sample from softmax(logits)",
@@ -639,6 +661,7 @@
     {
       "id": "vit_patch",
       "title": "ViT Patch Embedding",
+      "titleZh": "ViT Patch Embedding",
       "difficulty": "Medium",
       "functionName": "PatchEmbedding",
       "hint": "`(B,C,H,W)` → reshape to `(B, n_h, P, n_w, P, C)` → permute → `(B, num_patches, C*P*P)` → `nn.Linear(C*P*P, embed_dim)`.",
@@ -671,6 +694,7 @@
     {
       "id": "attention",
       "title": "Softmax Attention",
+      "titleZh": "Softmax 注意力",
       "difficulty": "Easy",
       "functionName": "scaled_dot_product_attention",
       "hint": "`scores = torch.bmm(Q, K.transpose(1, 2)) / sqrt(d_k)` → `torch.bmm(softmax(scores, dim=-1), V)`.",
@@ -699,6 +723,7 @@
     {
       "id": "bpe",
       "title": "Byte-Pair Encoding (BPE)",
+      "titleZh": "字节对编码（BPE）",
       "difficulty": "Hard",
       "functionName": "SimpleBPE",
       "hint": "train: split each word → chars + `</w>`, count adjacent pairs, merge most frequent, repeat\nencode: apply learned merges in order to split text into subword tokens",
@@ -735,6 +760,7 @@
     {
       "id": "causal_attention",
       "title": "Causal Self-Attention",
+      "titleZh": "因果自注意力",
       "difficulty": "Medium",
       "functionName": "causal_attention",
       "hint": "Standard attention + causal mask. `torch.triu(ones, diagonal=1)` → upper triangle → fill with `-inf` before softmax.",
@@ -767,6 +793,7 @@
     {
       "id": "dpo_loss",
       "title": "DPO (Direct Preference Optimization) Loss",
+      "titleZh": "DPO 损失",
       "difficulty": "Medium",
       "functionName": "dpo_loss",
       "hint": "1. chosen_logratios = β·(π_chosen - ref_chosen)\n2. rejected_logratios = β·(π_rejected - ref_rejected)\n3. loss = -log(sigmoid(chosen_logratios - rejected_logratios)).mean()",
@@ -799,6 +826,7 @@
     {
       "id": "flash_attention",
       "title": "Flash Attention (Tiled)",
+      "titleZh": "Flash Attention（分块）",
       "difficulty": "Hard",
       "functionName": "flash_attention",
       "hint": "Process Q in tiles. For each Q-block, iterate over K/V blocks:\n1. `block_max = scores.max(dim=-1)` → `new_max = max(row_max, block_max)`\n2. `correction = exp(row_max - new_max)` → rescale `acc` and `row_sum`\n3. `acc += exp(scores - new_max) @ V_block`\n4. `output = acc / row_sum`",
@@ -827,6 +855,7 @@
     {
       "id": "gpt2_block",
       "title": "GPT-2 Transformer Block",
+      "titleZh": "GPT-2 Transformer Block",
       "difficulty": "Hard",
       "functionName": "GPT2Block",
       "hint": "Pre-norm residual: `x = x + attn(ln1(x))`, `x = x + mlp(ln2(x))`. MLP: `Linear(d,4d) → GELU → Linear(4d,d)`. Attention must be causal (mask future with `-inf`).",
@@ -859,6 +888,7 @@
     {
       "id": "gqa",
       "title": "Grouped Query Attention",
+      "titleZh": "分组查询注意力（GQA）",
       "difficulty": "Hard",
       "functionName": "GroupQueryAttention",
       "hint": "1. `W_q` → `(B,H,S,d_k)`, `W_k`/`W_v` → `(B,KV,S,d_k)`\n2. `K = K.repeat_interleave(H//KV, dim=1)` to expand KV heads\n3. Scaled dot-product attn → reshape to `(B,S,d_model)`",
@@ -895,6 +925,7 @@
     {
       "id": "grpo_loss",
       "title": "GRPO (Group Relative Policy Optimization) Loss",
+      "titleZh": "GRPO 损失",
       "difficulty": "Hard",
       "functionName": "grpo_loss",
       "hint": "1. for each group g: A_i = (r_i - mean_g) / (std_g + eps)\n2. advantages = A.detach()  (no grad through rewards)\n3. loss = -(advantages * logps).mean()",
@@ -923,6 +954,7 @@
     {
       "id": "int8_quantization",
       "title": "INT8 Quantized Linear",
+      "titleZh": "INT8 量化线性层",
       "difficulty": "Hard",
       "functionName": "Int8Linear",
       "hint": "1. scale = abs(weight).max(dim=1) / 127  (per output channel, keepdim)\n2. weight_int8 = round(weight / scale).clamp(-128, 127).to(int8)\n3. register both as buffers (not parameters)\n4. forward: dequant = weight_int8.float() * scale → x @ dequant.T",
@@ -955,6 +987,7 @@
     {
       "id": "kv_cache",
       "title": "KV Cache Attention",
+      "titleZh": "KV Cache 注意力",
       "difficulty": "Hard",
       "functionName": "KVCacheAttention",
       "hint": "1. Project Q/K/V → reshape to `(B, num_heads, S, d_k)`\n2. If cache: K = cat([cache_K, K], dim=2),  V = cat([cache_V, V], dim=2)\n3. Apply causal mask when S_new > 1 (prefill)\n4. Scaled dot-product attention → output projection\n5. Return (output, (K_all, V_all))",
@@ -987,6 +1020,7 @@
     {
       "id": "linear_attention",
       "title": "Linear Self-Attention",
+      "titleZh": "线性自注意力",
       "difficulty": "Hard",
       "functionName": "linear_attention",
       "hint": "`phi(x) = elu(x) + 1`. Let `KV = phi(K).transpose(-2, -1) @ V` and `Z = phi(K).sum(dim=-2, keepdim=True)`. Output = `(phi(Q) @ KV) / (phi(Q) @ Z.transpose(-2, -1) + 1e-6)`.",
@@ -1019,6 +1053,7 @@
     {
       "id": "mha",
       "title": "Multi-Head Attention",
+      "titleZh": "多头注意力",
       "difficulty": "Hard",
       "functionName": "MultiHeadAttention",
       "hint": "1. Project Q/K/V with `nn.Linear(d_model, d_model)`\n2. Reshape to `(B, heads, S, d_k)` via `.view(...).transpose(1,2)`\n3. `scores = Q @ K.T / sqrt(d_k)` → `softmax` → `@ V`\n4. Transpose + reshape → `W_o` projection",
@@ -1059,6 +1094,7 @@
     {
       "id": "moe",
       "title": "Mixture of Experts (MoE)",
+      "titleZh": "混合专家（MoE）",
       "difficulty": "Hard",
       "functionName": "MixtureOfExperts",
       "hint": "`router`: `Linear(d, num_experts)` → `topk` → `softmax` weights. Each expert: `Linear → ReLU → Linear`. Weighted sum of top-k expert outputs per token.",
@@ -1091,6 +1127,7 @@
     {
       "id": "ppo_loss",
       "title": "PPO (Proximal Policy Optimization) Clipped Loss",
+      "titleZh": "PPO 损失",
       "difficulty": "Medium",
       "functionName": "ppo_loss",
       "hint": "1. r = exp(new_logps - old_logps.detach())\n2. unclipped = r * advantages.detach()\n3. clipped = clamp(r, 1-ε, 1+ε) * advantages.detach()\n4. loss = -min(unclipped, clipped).mean()",
@@ -1115,6 +1152,7 @@
     {
       "id": "rope",
       "title": "Rotary Position Embedding (RoPE)",
+      "titleZh": "旋转位置编码（RoPE）",
       "difficulty": "Medium",
       "functionName": "apply_rope",
       "hint": "1. `freqs = 1 / 10000^(2i/D)` for i in `range(D//2)`\n2. `angles = pos[:, None] * freqs` → `cos_a`, `sin_a`\n3. Split: `x_e = x[..., 0::2]`, `x_o = x[..., 1::2]`\n4. Rotate: `[x_e*cos - x_o*sin, x_e*sin + x_o*cos]` → stack → flatten",
@@ -1147,6 +1185,7 @@
     {
       "id": "sliding_window",
       "title": "Sliding Window Attention",
+      "titleZh": "滑动窗口注意力",
       "difficulty": "Medium",
       "functionName": "sliding_window_attention",
       "hint": "Standard attention + window mask. Build `|i-j|` matrix → mask positions where `|i-j| > window_size` with `-inf` → softmax → `@ V`.",
@@ -1179,6 +1218,7 @@
     {
       "id": "speculative_decoding",
       "title": "Speculative Decoding",
+      "titleZh": "推测解码",
       "difficulty": "Hard",
       "functionName": "speculative_decode",
       "hint": "for i in range(K):\n  accept_prob = min(1, p_target[i, token] / p_draft[i, token])\n  if accepted: append token, continue\n  else: resample from max(0, p_target[i] - p_draft[i]) normalized, append, return",
@@ -1207,6 +1247,7 @@
     {
       "id": "sinusoidal_pe",
       "title": "Sinusoidal Position Encoding",
+      "titleZh": "正弦位置编码",
       "difficulty": "Easy",
       "functionName": "sinusoidal_pe",
       "hint": "1. `freqs = 1 / 10000^(2i/d_model)` for i in `range(d_model//2)`\n2. `angles = pos[:, None] * freqs[None, :]` → shape `(seq_len, d_model//2)`\n3. `pe[:, 0::2] = sin(angles)`, `pe[:, 1::2] = cos(angles)`",
@@ -1235,6 +1276,7 @@
     {
       "id": "label_smoothing",
       "title": "Label Smoothing Loss",
+      "titleZh": "标签平滑损失",
       "difficulty": "Easy",
       "functionName": "label_smoothing",
       "hint": "1. `soft = full((N,C), ε/(C-1))`, then `soft.scatter_(1, targets, 1-ε)`\n2. `log_probs` via stable log-softmax\n3. `return -(soft * log_probs).sum(dim=-1).mean()`",
@@ -1267,6 +1309,7 @@
     {
       "id": "swiglu",
       "title": "SwiGLU Activation",
+      "titleZh": "SwiGLU 激活函数",
       "difficulty": "Medium",
       "functionName": "swiglu",
       "hint": "1. `gate = (x @ Wgate) * sigmoid(x @ Wgate)`  ← swish\n2. `hidden = (x @ W1) * gate`\n3. `return hidden @ W2`",
@@ -1291,6 +1334,7 @@
     {
       "id": "alibi",
       "title": "ALiBi Attention",
+      "titleZh": "ALiBi 注意力",
       "difficulty": "Medium",
       "functionName": "alibi_attention",
       "hint": "1. slopes: `m_h = 2**(-8*h/H)` for h=1..H\n2. distance matrix: `|i-j|`, shape `(S,S)`\n3. bias: `-slopes[:, None, None] * distances`, shape `(H,S,S)`\n4. standard multi-head attention with bias added to scores",
@@ -1319,6 +1363,7 @@
     {
       "id": "ntk_rope",
       "title": "NTK-aware RoPE Scaling",
+      "titleZh": "NTK-aware RoPE 缩放",
       "difficulty": "Easy",
       "functionName": "ntk_rope",
       "hint": "`new_base = 10000 * scale**(D/(D-2))` → apply standard RoPE with `new_base` instead of `10000`.",
@@ -1351,6 +1396,7 @@
     {
       "id": "mixed_precision",
       "title": "Mixed Precision Training Step",
+      "titleZh": "混合精度训练步骤",
       "difficulty": "Medium",
       "functionName": "mixed_precision_step",
       "hint": "1. model.half() → forward with fp16 input\n2. compute loss → scale by loss_scale → backward\n3. divide all param.grad by loss_scale (unscale)\n4. model.float() → optimizer.step()\n5. return unscaled loss as float",
@@ -1383,6 +1429,7 @@
     {
       "id": "paged_attention",
       "title": "Paged Attention",
+      "titleZh": "分页注意力",
       "difficulty": "Hard",
       "functionName": "paged_attention",
       "hint": "for b in range(B):\n  K = k_pages[block_table[b]].reshape(-1, D)[:context_len]  # gather + slice\n  V = v_pages[block_table[b]].reshape(-1, D)[:context_len]\n  scores = Q[b] @ K.T / √D → softmax → @ V",
@@ -1411,6 +1458,7 @@
     {
       "id": "ring_attention",
       "title": "Ring Attention",
+      "titleZh": "环形注意力",
       "difficulty": "Hard",
       "functionName": "ring_attention",
       "hint": "Split Q/K/V into num_devices chunks. For each Q chunk i, loop over all K/V chunks (ring order).\nOnline softmax per step:\n  m_new = max(m, scores.max)\n  l_new = l·exp(m-m_new) + Σexp(scores-m_new)\n  o = (o·l·exp(m-m_new) + exp(scores-m_new)@V) / l_new",
@@ -1439,6 +1487,7 @@
     {
       "id": "tensor_parallel",
       "title": "Tensor Parallel MLP",
+      "titleZh": "张量并行 MLP",
       "difficulty": "Hard",
       "functionName": "TensorParallelMLP",
       "hint": "1. W1: column-split → w1_shards[i] shape `(d_model, d_ff/world_size)`\n2. W2: row-split → w2_shards[i] shape `(d_ff/world_size, d_model)`\n3. for each shard i: h_i = gelu(x @ w1_i) → partial_i = h_i @ w2_i\n4. all-reduce = sum(partial_i for all i)",
@@ -1467,6 +1516,7 @@
     {
       "id": "fsdp_step",
       "title": "FSDP Training Step",
+      "titleZh": "FSDP 训练步骤",
       "difficulty": "Hard",
       "functionName": "fsdp_step",
       "hint": "1. all-gather: full_param = torch.cat(param_shards)\n2. grad = grad_fn(full_param)\n3. reduce-scatter: grad_shards = list(grad.chunk(world_size))\n4. new_shards[i] = param_shards[i] - 0.01 * grad_shards[i]",
@@ -1495,6 +1545,7 @@
     {
       "id": "max_pool2d",
       "title": "Max Pooling 2D",
+      "titleZh": "二维最大池化",
       "difficulty": "Easy",
       "functionName": "max_pool2d",
       "hint": "`x.unfold(2, k, stride).unfold(3, k, stride)` → `(B, C, H_out, W_out, k, k)` → `.flatten(-2).max(dim=-1).values`.",
@@ -1523,6 +1574,7 @@
     {
       "id": "focal_loss",
       "title": "Focal Loss",
+      "titleZh": "Focal Loss",
       "difficulty": "Medium",
       "functionName": "focal_loss",
       "hint": "1. Stable softmax: `exp(logits - max)` → normalize → `probs`\n2. `p_t = probs[arange(N), targets]`\n3. `return (-alpha * (1-p_t)**gamma * log(p_t+1e-8)).mean()`",
@@ -1551,6 +1603,7 @@
     {
       "id": "contrastive_loss",
       "title": "Contrastive Loss (InfoNCE)",
+      "titleZh": "对比损失（InfoNCE）",
       "difficulty": "Medium",
       "functionName": "contrastive_loss",
       "hint": "1. `logits = (q @ k.T) / temperature`  shape `(N, N)`\n2. `log_sum_exp = logits.logsumexp(dim=-1)`\n3. `pos = logits[arange(N), arange(N)]`\n4. `return -(pos - log_sum_exp).mean()`",
@@ -1587,6 +1640,7 @@
     {
       "id": "qlora",
       "title": "QLoRA",
+      "titleZh": "QLoRA",
       "difficulty": "Hard",
       "functionName": "QLoRALinear",
       "hint": "set_weight: `scale = W.abs().max(dim=1,keepdim=True).values.clamp(1e-8)/127`\n           `q = (W/scale).round().clamp(-127,127).to(int8)`\nForward: `W_fp = q.float()*scale` → `x@W_fp.T + x@lora_A@lora_B*(alpha/rank)`",
@@ -1619,6 +1673,7 @@
     {
       "id": "mamba_ssm",
       "title": "Mamba SSM Step",
+      "titleZh": "Mamba SSM 步骤",
       "difficulty": "Hard",
       "functionName": "mamba_ssm_step",
       "hint": "1. `dA = exp(delta.unsqueeze(-1) * A)`  shape `(B,D,N)`\n2. `dB = delta.unsqueeze(-1) * B`\n3. `h_new = dA * h + dB * x.unsqueeze(-1)`\n4. `y = (h_new * C).sum(dim=-1)`  shape `(B,D)`",
@@ -1651,6 +1706,7 @@
     {
       "id": "activation_checkpointing",
       "title": "Activation Checkpointing",
+      "titleZh": "激活检查点",
       "difficulty": "Medium",
       "functionName": "checkpoint_sequential",
       "hint": "import torch.utils.checkpoint as cp\nLoop over fns: x = cp.checkpoint(fn, x, use_reentrant=False)\nActivations are recomputed on backward instead of stored.",
@@ -1679,6 +1735,7 @@
     {
       "id": "depthwise_conv",
       "title": "Depthwise Separable Convolution",
+      "titleZh": "深度可分离卷积",
       "difficulty": "Medium",
       "functionName": "depthwise_separable_conv",
       "hint": "Depthwise: `x.unfold(2,kH,1).unfold(3,kW,1)` → `(B,C,H_out,W_out,kH,kW)` → multiply `dw_weight` → sum last 2 dims\nPointwise: `torch.einsum('bchw,oc->bohw', dw_out, pw_weight[:,: ,0,0])`\n",
@@ -1707,6 +1764,7 @@
     {
       "id": "vit_block",
       "title": "ViT Transformer Block",
+      "titleZh": "ViT Transformer Block",
       "difficulty": "Hard",
       "functionName": "ViTBlock",
       "hint": "MHA: `nn.Linear(d, 3d)` → split Q/K/V → reshape `(B, H, N, d_h)` → scaled dot-product → `proj`\nGELU: `x * 0.5 * (1 + erf(x / sqrt(2)))`\nBlock: `x = x + MHA(norm1(x))` → `x = x + MLP(norm2(x))`",
@@ -1743,6 +1801,7 @@
     {
       "id": "diff_attention",
       "title": "Differential Attention",
+      "titleZh": "差分注意力",
       "difficulty": "Hard",
       "functionName": "diff_attention",
       "hint": "1. `Q1,Q2 = Q[...,:D_h], Q[...,D_h:]`; same for K\n2. `scale = D_h**-0.5`\n3. `A1 = softmax(Q1@K1.T * scale)`, `A2 = softmax(Q2@K2.T * scale)`\n4. `return (A1 - lambda_val*A2) @ V`",
@@ -1771,6 +1830,7 @@
     {
       "id": "mla",
       "title": "Multi-Head Latent Attention (MLA)",
+      "titleZh": "多头潜在注意力（MLA）",
       "difficulty": "Hard",
       "functionName": "mla_attention",
       "hint": "1. `c_kv = X @ W_dkv`  → `(B,S,kv_rank)`\n2. `K = c_kv @ W_uk`, `V = c_kv @ W_uv`, `Q = X @ W_q`\n3. `.view(B,S,num_heads,D_h).transpose(1,2)` for each\n4. Scaled dot-product attn → `.transpose(1,2).reshape(B,S,-1)`",
@@ -1803,6 +1863,7 @@
     {
       "id": "multi_token_prediction",
       "title": "Multi-Token Prediction Loss",
+      "titleZh": "多 Token 预测",
       "difficulty": "Medium",
       "functionName": "multi_token_prediction_loss",
       "hint": "For each head `i`:\n1. `logits = hidden_states @ heads[i]`\n2. Stable log-softmax: `shifted = logits - logits.max(-1,keepdim=True).values`\n   `log_probs = shifted - log(exp(shifted).sum(-1,keepdim=True))`\n3. `log_p = log_probs.gather(-1, targets[:,:,i].unsqueeze(-1)).squeeze(-1)`\n4. `loss += -log_p.mean()`\nReturn `total_loss / N`",
@@ -1831,6 +1892,7 @@
     {
       "id": "moe_load_balance",
       "title": "MoE Load Balancing Loss",
+      "titleZh": "MoE 负载均衡损失",
       "difficulty": "Medium",
       "functionName": "moe_load_balance_loss",
       "hint": "1. `assignments = logits.argmax(dim=-1)` → `f[e] = (assignments == e).float().mean()`\n2. `P = softmax(logits, dim=-1).mean(dim=0)`\n3. return `num_experts * (f * P).sum()`",
@@ -1859,6 +1921,7 @@
     {
       "id": "mcts_search",
       "title": "MCTS for Reasoning",
+      "titleZh": "推理蒙特卡洛树搜索",
       "difficulty": "Hard",
       "functionName": "mcts_step",
       "hint": "1. UCB(i) = values[i] + c_puct·√(log(parent_visits+1) / (visit_counts[i]+1))\n2. selected = argmax(UCB)\n3. rollout = torch.rand(1).item()  (random value in [0,1])\n4. Q_new = (Q_old·n + rollout) / (n+1);  visit_counts[selected] += 1",
@@ -1891,6 +1954,7 @@
     {
       "id": "reward_model",
       "title": "Bradley-Terry Reward Model Loss",
+      "titleZh": "Bradley-Terry 奖励模型",
       "difficulty": "Medium",
       "functionName": "reward_model_loss",
       "hint": "1. r_chosen = (chosen_hidden @ reward_head).squeeze(-1)  → (B,)\n2. r_rejected = (rejected_hidden @ reward_head).squeeze(-1)\n3. margin = r_chosen - r_rejected\n4. loss = -log(1 / (1 + exp(-margin))).mean()  (manual sigmoid)",
@@ -1923,6 +1987,7 @@
     {
       "id": "adaln_zero",
       "title": "Adaptive LayerNorm Zero (adaLN-Zero)",
+      "titleZh": "自适应层归一化 Zero",
       "difficulty": "Medium",
       "functionName": "adaln_zero",
       "hint": "1. `params = cond @ W_ada + b_ada`  shape `(B, 6*D)`\n2. `γ1,β1,α1,... = params.chunk(6, dim=-1)`\n3. Manual LayerNorm: `mean/var` over `dim=-1`, `unbiased=False`, `eps=1e-6`\n4. `out = α1.unsqueeze(1) * (γ1.unsqueeze(1) * x_norm + β1.unsqueeze(1))`",
@@ -1951,6 +2016,7 @@
     {
       "id": "ddim_step",
       "title": "DDIM Sampling Step",
+      "titleZh": "DDIM 采样步骤",
       "difficulty": "Medium",
       "functionName": "ddim_step",
       "hint": "1. x0_pred = (x_t - √(1-ᾱ_t)·ε) / √ᾱ_t\n2. noise_dir = √(1-ᾱ_{t-1})·ε\n3. x_{t-1} = √ᾱ_{t-1}·x0_pred + noise_dir\n   Use ** 0.5 for square roots.",
@@ -1983,6 +2049,7 @@
     {
       "id": "flow_matching",
       "title": "Flow Matching Loss",
+      "titleZh": "流匹配损失",
       "difficulty": "Easy",
       "functionName": "flow_matching_loss",
       "hint": "target = x1 - x0  (straight-line velocity from noise to data)\nloss = ((model_output - target) ** 2).mean()\n`t` is not used in the loss itself.",
@@ -2019,6 +2086,7 @@
     {
       "id": "noise_schedule",
       "title": "Diffusion Noise Schedules",
+      "titleZh": "扩散噪声调度",
       "difficulty": "Easy",
       "functionName": "noise_schedule",
       "hint": "linear/sigmoid: compute betas → alpha_bar = torch.cumprod(1-betas, dim=0)\ncosine: f(t) = cos(...)² → alpha_bar = f(t)/f(0), clamp to [0.0001, 0.9999]\nsigmoid scaling: shift+scale so min(sig)→β_start, max(sig)→β_end",
@@ -2059,12 +2127,13 @@
     {
       "id": "gae",
       "title": "Graph Autoencoder (GAE)",
+      "titleZh": "图自编码器（GAE）",
       "difficulty": "Hard",
       "functionName": "gae",
-      "hint": "1. `A_hat = A + I` (add self-loops)\n2. `D_inv_sqrt = diag(A_hat.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt`\n4. `W1 = randn(F, 16) * 0.1`, `W2 = randn(16, 8) * 0.1`\n5. `H = relu(A_norm @ X @ W1)`\n6. `Z = A_norm @ H @ W2`\n7. `return sigmoid(Z @ Z.T)`",
-      "hintZh": "1. `A_hat = A + I`（加自环）\n2. `D_inv_sqrt = diag(A_hat.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt`\n4. `W1 = randn(F, 16) * 0.1`，`W2 = randn(16, 8) * 0.1`\n5. `H = relu(A_norm @ X @ W1)`\n6. `Z = A_norm @ H @ W2`\n7. `return sigmoid(Z @ Z.T)`",
-      "descriptionEn": "Implement a Graph Autoencoder that learns node embeddings via a two-layer GCN encoder and reconstructs the adjacency matrix with an inner-product decoder.\n\n**Signature:** `gae(A, X) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary, symmetric, no self-loops\n- `X` — node feature matrix (N, F)\n\n**Returns:** reconstructed adjacency matrix `A_hat` of shape (N, N), with values in [0, 1] (apply sigmoid)\n\n**Architecture:**\n1. Compute degree-normalized adjacency: `A_norm = D^{-1/2} (A + I) D^{-1/2}` where D is the degree matrix of `A + I`\n2. GCN Layer 1: `H = ReLU(A_norm @ X @ W1)` with `W1` shape (F, 16)\n3. GCN Layer 2: `Z = A_norm @ H @ W2` with `Z` shape (N, 8), `W2` shape (16, 8)\n4. Inner-product decoder: `A_hat = sigmoid(Z @ Z^T)`\n\n**Constraints:**\n- Initialize `W1` and `W2` with `torch.manual_seed(0)` then `torch.randn(...) * 0.1` (W1 first, then W2)\n- Do not use `nn.Module` or `nn.Linear`\n- Use `torch.relu` and `torch.sigmoid`",
-      "descriptionZh": "实现图自编码器 (GAE)，通过两层 GCN 编码器学习节点嵌入，并用内积解码器重建邻接矩阵。\n\n**签名:** `gae(A, X) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值、对称、无自环\n- `X` — 节点特征矩阵 (N, F)\n\n**返回:** 重建的邻接矩阵 `A_hat`，形状 (N, N)，值在 [0, 1] 之间（应用 sigmoid）\n\n**架构:**\n1. 计算度归一化邻接矩阵：`A_norm = D^{-1/2} (A + I) D^{-1/2}`，其中 D 是 `A + I` 的度矩阵\n2. GCN 第一层：`H = ReLU(A_norm @ X @ W1)`，`W1` 形状 (F, 16)\n3. GCN 第二层：`Z = A_norm @ H @ W2`，`Z` 形状 (N, 8)，`W2` 形状 (16, 8)\n4. 内积解码器：`A_hat = sigmoid(Z @ Z^T)`\n\n**约束:**\n- 用 `torch.manual_seed(0)` 初始化 `W1` 和 `W2`，然后依次 `torch.randn(...) * 0.1`（先 W1 后 W2）\n- 不得使用 `nn.Module` 或 `nn.Linear`\n- 使用 `torch.relu` 和 `torch.sigmoid`",
+      "hint": "1. `A_hat = A + I` (add self-loops)\n2. `D_inv_sqrt = diag(A_hat.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt`\n4. `W1 = randn(F, 32) * 0.1`, `W2 = randn(32, 16) * 0.1`\n5. `H = relu(A_norm @ X @ W1)`\n6. `Z = A_norm @ H @ W2`\n7. `return sigmoid(Z @ Z.T)`",
+      "hintZh": "1. `A_hat = A + I`（加自环）\n2. `D_inv_sqrt = diag(A_hat.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt`\n4. `W1 = randn(F, 32) * 0.1`，`W2 = randn(32, 16) * 0.1`\n5. `H = relu(A_norm @ X @ W1)`\n6. `Z = A_norm @ H @ W2`\n7. `return sigmoid(Z @ Z.T)`",
+      "descriptionEn": "Implement a Graph Autoencoder that learns node embeddings via a two-layer GCN encoder and reconstructs the adjacency matrix with an inner-product decoder.\n\n**Signature:** `gae(A, X) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary, symmetric, no self-loops\n- `X` — node feature matrix (N, F)\n\n**Returns:** reconstructed adjacency matrix `A_hat` of shape (N, N), with values in [0, 1] (apply sigmoid)\n\n**Architecture:**\n1. Compute degree-normalized adjacency: `A_norm = D^{-1/2} (A + I) D^{-1/2}` where D is the degree matrix of `A + I`\n2. GCN Layer 1: `H = ReLU(A_norm @ X @ W1)` with `W1` shape (F, 32)\n3. GCN Layer 2: `Z = A_norm @ H @ W2` with `Z` shape (N, 16), `W2` shape (32, 16)\n4. Inner-product decoder: `A_hat = sigmoid(Z @ Z^T)`\n\n**Constraints:**\n- Initialize `W1` and `W2` with `torch.manual_seed(0)` then `torch.randn(...) * 0.1` (W1 first, then W2)\n- `W1` shape: (F, 32), `W2` shape: (32, 16)\n- Do not use `nn.Module` or `nn.Linear`\n- Use `torch.relu` and `torch.sigmoid`",
+      "descriptionZh": "实现图自编码器 (GAE)，通过两层 GCN 编码器学习节点嵌入，并用内积解码器重建邻接矩阵。\n\n**签名:** `gae(A, X) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值、对称、无自环\n- `X` — 节点特征矩阵 (N, F)\n\n**返回:** 重建的邻接矩阵 `A_hat`，形状 (N, N)，值在 [0, 1] 之间（应用 sigmoid）\n\n**架构:**\n1. 计算度归一化邻接矩阵：`A_norm = D^{-1/2} (A + I) D^{-1/2}`，其中 D 是 `A + I` 的度矩阵\n2. GCN 第一层：`H = ReLU(A_norm @ X @ W1)`，`W1` 形状 (F, 32)\n3. GCN 第二层：`Z = A_norm @ H @ W2`，`Z` 形状 (N, 16)，`W2` 形状 (32, 16)\n4. 内积解码器：`A_hat = sigmoid(Z @ Z^T)`\n\n**约束:**\n- 用 `torch.manual_seed(0)` 初始化 `W1` 和 `W2`，然后依次 `torch.randn(...) * 0.1`（先 W1 后 W2）\n- 不得使用 `nn.Module` 或 `nn.Linear`\n- 使用 `torch.relu` 和 `torch.sigmoid`",
       "tests": [
         {
           "name": "Output shape matches input",
@@ -2084,7 +2153,7 @@
         },
         {
           "name": "Exact numerical value",
-          "code": "\nimport torch\nN, F = 4, 3\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(0,3)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\ntorch.manual_seed(7)\nX = torch.randn(N, F)\nA_hat = {fn}(A, X)\n# Compute expected\ntorch.manual_seed(0)\nW1 = torch.randn(F, 16) * 0.1\nW2 = torch.randn(16, 8) * 0.1\nA_tilde = A + torch.eye(N)\nD_vec = A_tilde.sum(1)\nD_inv_sqrt = torch.diag(D_vec.pow(-0.5))\nA_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt\nH = torch.relu(A_norm @ X @ W1)\nZ = A_norm @ H @ W2\nexpected = torch.sigmoid(Z @ Z.T)\nassert torch.allclose(A_hat, expected, atol=1e-5), f'Numerical mismatch: max diff = {(A_hat - expected).abs().max().item():.6f}'\n"
+          "code": "\nimport torch\nN, F = 4, 3\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(0,3)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\ntorch.manual_seed(7)\nX = torch.randn(N, F)\nA_hat = {fn}(A, X)\n# Compute expected\ntorch.manual_seed(0)\nW1 = torch.randn(F, 32) * 0.1\nW2 = torch.randn(32, 16) * 0.1\nA_tilde = A + torch.eye(N)\nD_vec = A_tilde.sum(1)\nD_inv_sqrt = torch.diag(D_vec.pow(-0.5))\nA_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt\nH = torch.relu(A_norm @ X @ W1)\nZ = A_norm @ H @ W2\nexpected = torch.sigmoid(Z @ Z.T)\nassert torch.allclose(A_hat, expected, atol=1e-5), f'Numerical mismatch: max diff = {(A_hat - expected).abs().max().item():.6f}'\n"
         },
         {
           "name": "Gradient flow through weights",
@@ -2095,12 +2164,13 @@
     {
       "id": "gcn_layer",
       "title": "GCN Layer (Graph Convolution)",
+      "titleZh": "GCN 层（图卷积）",
       "difficulty": "Easy",
       "functionName": "gcn_layer",
       "hint": "1. `A_tilde = A + torch.eye(N)`\n2. `D_vec = A_tilde.sum(1)`\n3. `D_inv_sqrt = torch.diag(D_vec.pow(-0.5))`\n4. `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. `return torch.relu(A_norm @ X @ W)`",
       "hintZh": "1. `A_tilde = A + torch.eye(N)`\n2. `D_vec = A_tilde.sum(1)`\n3. `D_inv_sqrt = torch.diag(D_vec.pow(-0.5))`\n4. `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. `return torch.relu(A_norm @ X @ W)`",
-      "descriptionEn": "Implement a single Graph Convolutional Network (GCN) layer with symmetric normalization.\n\n**Signature:** `gcn_layer(A, X, W) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), may contain self-loops or not\n- `X` — node feature matrix (N, F_in)\n- `W` — weight matrix (F_in, F_out)\n\n**Returns:** output node features of shape (N, F_out)\n\n**Algorithm:**\n1. Add self-loops: `A_tilde = A + I`\n2. Compute degree vector: `D_vec = A_tilde.sum(1)`\n3. Symmetric normalization: `D_inv_sqrt = diag(D_vec^{-0.5})`\n4. Normalized adjacency: `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. Return `ReLU(A_norm @ X @ W)`\n\n**Constraints:**\n- Weights `W` are passed in — do not create them inside the function\n- Use `torch.relu` for activation",
-      "descriptionZh": "实现单层图卷积网络 (GCN)，采用对称归一化。\n\n**签名:** `gcn_layer(A, X, W) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)\n- `X` — 节点特征矩阵 (N, F_in)\n- `W` — 权重矩阵 (F_in, F_out)\n\n**返回:** 形状为 (N, F_out) 的输出节点特征\n\n**算法:**\n1. 添加自环：`A_tilde = A + I`\n2. 计算度向量：`D_vec = A_tilde.sum(1)`\n3. 对称归一化：`D_inv_sqrt = diag(D_vec^{-0.5})`\n4. 归一化邻接矩阵：`A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. 返回 `ReLU(A_norm @ X @ W)`\n\n**约束:**\n- 权重 `W` 由参数传入，不要在函数内部创建\n- 使用 `torch.relu` 作为激活函数",
+      "descriptionEn": "Implement a single Graph Convolutional Network (GCN) layer with symmetric normalization.\n\n**Signature:** `gcn_layer(A, X, W) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary, symmetric, no self-loops\n- `X` — node feature matrix (N, F_in)\n- `W` — weight matrix (F_in, F_out)\n\n**Returns:** output node features of shape (N, F_out)\n\n**Algorithm:**\n1. Add self-loops: `A_tilde = A + I`\n2. Compute degree vector: `D_vec = A_tilde.sum(1)`\n3. Symmetric normalization: `D_inv_sqrt = diag(D_vec^{-0.5})`\n4. Normalized adjacency: `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. Return `ReLU(A_norm @ X @ W)`\n\n**Constraints:**\n- Weights `W` are passed in — do not create them inside the function\n- Use `torch.relu` for activation",
+      "descriptionZh": "实现单层图卷积网络 (GCN)，采用对称归一化。\n\n**签名:** `gcn_layer(A, X, W) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值、对称、无自环\n- `X` — 节点特征矩阵 (N, F_in)\n- `W` — 权重矩阵 (F_in, F_out)\n\n**返回:** 形状为 (N, F_out) 的输出节点特征\n\n**算法:**\n1. 添加自环：`A_tilde = A + I`\n2. 计算度向量：`D_vec = A_tilde.sum(1)`\n3. 对称归一化：`D_inv_sqrt = diag(D_vec^{-0.5})`\n4. 归一化邻接矩阵：`A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. 返回 `ReLU(A_norm @ X @ W)`\n\n**约束:**\n- 权重 `W` 由参数传入，不要在函数内部创建\n- 使用 `torch.relu` 作为激活函数",
       "tests": [
         {
           "name": "Output shape matches (N, F_out)",
@@ -2131,6 +2201,7 @@
     {
       "id": "graph_readout",
       "title": "Graph Readout (Graph-Level Pooling)",
+      "titleZh": "图读出（图级池化）",
       "difficulty": "Easy",
       "functionName": "graph_readout",
       "hint": "1. `num_graphs = batch.max().item() + 1`\n2. For sum: `out.index_add_(0, batch, X)`\n3. For mean: sum / count per graph\n4. For max: loop over graph indices or use `scatter` with `reduce='amax'`",
@@ -2167,6 +2238,7 @@
     {
       "id": "gat_layer",
       "title": "GAT Layer (Graph Attention)",
+      "titleZh": "GAT 层（图注意力）",
       "difficulty": "Medium",
       "functionName": "gat_layer",
       "hint": "Compute e as (N,N) via broadcasting: `e = (H @ a[:F_out]).unsqueeze(1) + (H @ a[F_out:]).unsqueeze(0)`, then mask with A and softmax.",
@@ -2179,8 +2251,8 @@
           "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 5, 8, 4\nA = torch.ones(N, N)\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\na = torch.randn(2 * F_out)\nout = {fn}(A, X, W, a)\nassert out.shape == (N, F_out), f'Shape mismatch: {out.shape} vs {(N, F_out)}'\n"
         },
         {
-          "name": "Attention weights sum to 1",
-          "code": "\nimport torch\ntorch.manual_seed(0)\nN, F_in, F_out = 4, 6, 3\nA = torch.tensor([[1,1,0,0],[1,1,1,0],[0,1,1,1],[0,0,1,1]], dtype=torch.float)\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\na = torch.randn(2 * F_out)\nH = X @ W\nF_o = F_out\ne = (H @ a[:F_o]).unsqueeze(1) + (H @ a[F_o:]).unsqueeze(0)\ne = torch.nn.functional.leaky_relu(e, 0.2)\ne = e.masked_fill(A == 0, float('-inf'))\nalpha = torch.softmax(e, dim=-1)\nrow_sums = alpha.sum(dim=-1)\nassert torch.allclose(row_sums, torch.ones(N), atol=1e-5), f'Attention rows do not sum to 1: {row_sums}'\n"
+          "name": "Attention weights sum to 1 (via output verification)",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nN, F_in, F_out = 4, 6, 3\nA = torch.tensor([[1,1,0,0],[1,1,1,0],[0,1,1,1],[0,0,1,1]], dtype=torch.float)\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\na = torch.randn(2 * F_out)\nout = {fn}(A, X, W, a)\n# Verify output matches expected (which implies correct attention normalization)\nH = X @ W\nF_o = F_out\ne = (H @ a[:F_o]).unsqueeze(1) + (H @ a[F_o:]).unsqueeze(0)\ne = torch.nn.functional.leaky_relu(e, 0.2)\ne = e.masked_fill(A == 0, float('-inf'))\nalpha = torch.softmax(e, dim=-1)\nexpected = alpha @ H\nassert torch.allclose(out, expected, atol=1e-5), f'Output mismatch — attention normalization may be wrong'\n"
         },
         {
           "name": "Exact numerical value (small graph)",
@@ -2203,6 +2275,7 @@
     {
       "id": "gin_layer",
       "title": "GIN Layer (Graph Isomorphism Network)",
+      "titleZh": "GIN 层（图同构网络）",
       "difficulty": "Medium",
       "functionName": "gin_layer",
       "hint": "Aggregate with `A @ X`, combine as `(1 + eps) * X + agg`, then pass through a 2-layer MLP with ReLU.",
@@ -2239,6 +2312,7 @@
     {
       "id": "mpnn_layer",
       "title": "MPNN Layer (Message Passing)",
+      "titleZh": "MPNN 层（消息传递）",
       "difficulty": "Medium",
       "functionName": "mpnn_layer",
       "hint": "Build (N, N, 2F+D_e) by broadcasting `X[i]` and `X[j]` with `E[i,j]`, matmul with W_msg, mask by A, sum over dim=1.",
@@ -2275,6 +2349,7 @@
     {
       "id": "graphsage_layer",
       "title": "GraphSAGE Layer",
+      "titleZh": "GraphSAGE 层",
       "difficulty": "Hard",
       "functionName": "graphsage_layer",
       "hint": "1. Loop over nodes, gather neighbors from A[i].nonzero()\n2. If k sampling needed: `torch.manual_seed(42)`, `perm = torch.randperm(n_neighbors)[:k]`\n3. Mean-pool neighbor features (or zeros if isolated)\n4. `concat = torch.cat([X, agg], dim=1)` → (N, 2*F_in)\n5. `out = relu(concat @ W)`\n6. `out = out / out.norm(dim=-1, keepdim=True).clamp(min=1e-8)`",
@@ -2305,12 +2380,21 @@
         {
           "name": "Gradient flow through X and W",
           "code": "\nimport torch\ntorch.manual_seed(1)\nN, F_in, F_out = 4, 3, 2\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in, requires_grad=True)\nW = torch.randn(2*F_in, F_out, requires_grad=True)\nout = {fn}(A, X, W)\nloss = out.sum()\nloss.backward()\nassert X.grad is not None, 'No gradient for X'\nassert X.grad.abs().sum() > 0, 'X gradient is all zeros'\nassert W.grad is not None, 'No gradient for W'\nassert W.grad.abs().sum() > 0, 'W gradient is all zeros'\n"
+        },
+        {
+          "name": "k < num_neighbors changes aggregation",
+          "code": "\nimport torch\nN, F_in, F_out = 6, 4, 3\nA = torch.zeros(N, N)\n# Node 0 connected to all others (5 neighbors)\nfor j in range(1, N):\n    A[0,j] = A[j,0] = 1.0\n# Use distinct features so any subset gives a different mean\nX = torch.tensor([[0.,0.,0.,0.],[1.,0.,0.,0.],[0.,2.,0.,0.],[0.,0.,3.,0.],[0.,0.,0.,4.],[5.,5.,5.,5.]])\nW = torch.eye(2*F_in, F_out)[:2*F_in, :F_out]\nW = torch.randn(2*F_in, F_out)\ntorch.manual_seed(99)\nW = torch.randn(2*F_in, F_out)\nout_all = {fn}(A, X, W, k=None)\nout_k2 = {fn}(A, X, W, k=2)\n# Node 0 has 5 neighbors with distinct features; k=2 samples a subset, giving different aggregation\nassert not torch.allclose(out_all[0], out_k2[0], atol=1e-5), 'k=2 with 5 distinct neighbors should differ from using all neighbors'\n"
+        },
+        {
+          "name": "Isolated node gets zero neighbor aggregation",
+          "code": "\nimport torch\nN, F_in, F_out = 3, 2, 2\nA = torch.zeros(N, N)\nA[0,1] = A[1,0] = 1.0\n# Node 2 is isolated\nX = torch.tensor([[1.0, 0.0],[0.0, 1.0],[2.0, 3.0]])\nW = torch.tensor([[0.1,0.2],[0.3,0.4],[0.5,0.6],[0.7,0.8]])\nout = {fn}(A, X, W)\n# Node 2: neighbors=[], agg=zeros(2), concat=[2,3,0,0]\nconcat_2 = torch.tensor([[2.0, 3.0, 0.0, 0.0]])\nraw_2 = torch.relu(concat_2 @ W)\nexpected_2 = raw_2 / raw_2.norm(dim=-1, keepdim=True).clamp(min=1e-8)\nassert torch.allclose(out[2], expected_2.squeeze(), atol=1e-5), f'Isolated node mismatch: {out[2]} vs {expected_2.squeeze()}'\n"
         }
       ]
     },
     {
       "id": "link_prediction",
       "title": "Link Prediction",
+      "titleZh": "链接预测",
       "difficulty": "Hard",
       "functionName": "link_prediction",
       "hint": "1. `A_tilde = A + I`\n2. `D_inv_sqrt = diag(A_tilde.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n4. Two-layer GCN: H = relu(A_norm @ X @ W1), Z = A_norm @ H @ W2\n5. Score each edge: `sigmoid((Z[edges[:,0]] * Z[edges[:,1]]).sum(dim=1))`",
@@ -2339,8 +2423,8 @@
           "code": "\nimport torch\nN, F = 4, 3\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F, requires_grad=True)\nedges = torch.tensor([[0,1],[1,2],[0,3]], dtype=torch.long)\nout = {fn}(A, X, edges)\nloss = out.sum()\nloss.backward()\nassert X.grad is not None, 'No gradient for X'\nassert X.grad.abs().sum() > 0, 'Gradient is all zeros'\n"
         },
         {
-          "name": "Connected nodes score higher than random",
-          "code": "\nimport torch\ntorch.manual_seed(99)\nN, F = 10, 16\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9),(0,9)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\nX = torch.eye(N, F)\nconnected = torch.tensor([[0,1],[1,2],[2,3]], dtype=torch.long)\ndisconnected = torch.tensor([[0,5],[1,7],[3,8]], dtype=torch.long)\nscores_conn = {fn}(A, X, connected)\nscores_disc = {fn}(A, X, disconnected)\nassert scores_conn.mean() > scores_disc.mean(), f'Connected mean {scores_conn.mean().item():.4f} should be > disconnected mean {scores_disc.mean().item():.4f}'\n"
+          "name": "Symmetric node pairs get same score",
+          "code": "\nimport torch\nN, F = 6, 4\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\ntorch.manual_seed(42)\nX = torch.randn(N, F)\n# (i,j) and (j,i) should produce the same score since decoder is dot product\nedges_fwd = torch.tensor([[0,1],[2,3],[1,4]], dtype=torch.long)\nedges_rev = torch.tensor([[1,0],[3,2],[4,1]], dtype=torch.long)\nscores_fwd = {fn}(A, X, edges_fwd)\nscores_rev = {fn}(A, X, edges_rev)\nassert torch.allclose(scores_fwd, scores_rev, atol=1e-5), f'score(i,j) should equal score(j,i): max diff = {(scores_fwd - scores_rev).abs().max().item():.6f}'\n"
         }
       ]
     }

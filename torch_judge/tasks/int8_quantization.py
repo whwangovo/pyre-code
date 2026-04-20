@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "INT8 Quantized Linear",
+    "title_zh": "INT8 量化线性层",
     "difficulty": "Hard",
     "description_en": "Implement INT8 per-channel weight quantization for a linear layer.\n\nQuantization converts float32 weights to int8 with per-channel scaling, reducing model size by 4x while preserving accuracy.\n\n**Signature:** `Int8Linear(weight, bias=None)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (*, in_features)\n\n**Returns:** linear output with dequantized weights\n\n**Constraints:**\n- Per-channel scale: `abs(weight).max(dim=1) / 127`\n- Quantize: `round(weight/scale).clamp(-128, 127).to(int8)`\n- Store weight_int8 and scale as buffers, not parameters",
     "description_zh": "实现 INT8 逐通道权重量化线性层。\n\n量化将 float32 权重转换为 int8 并使用逐通道缩放，将模型大小减少 4 倍同时保持精度。\n\n**签名:** `Int8Linear(weight, bias=None)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (*, in_features)\n\n**返回:** 使用反量化权重的线性输出\n\n**约束:**\n- 逐通道缩放：`abs(weight).max(dim=1) / 127`\n- 量化：`round(weight/scale).clamp(-128, 127).to(int8)`\n- weight_int8 和 scale 存储为 buffer 而非 parameter",

@@ -16,7 +16,7 @@ interface ProblemDrawerProps {
 }
 
 export function ProblemDrawer({ open, onClose, problems, progress, currentId }: ProblemDrawerProps) {
-  const { t, tProblem } = useLocale();
+  const { locale, t } = useLocale();
   return (
     <>
       <div
@@ -60,7 +60,7 @@ export function ProblemDrawer({ open, onClose, problems, progress, currentId }: 
                   status === 'attempted' && 'bg-medium',
                   status === 'todo' && 'bg-gray-300',
                 )} />
-                <span className="truncate flex-1">{tProblem(p.id)}</span>
+                <span className="truncate flex-1">{locale === 'zh' ? p.titleZh : p.title}</span>
                 <Badge variant={p.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'}>
                   {t(p.difficulty as 'Easy' | 'Medium' | 'Hard')}
                 </Badge>

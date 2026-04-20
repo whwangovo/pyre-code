@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Implement Softmax",
+    "title_zh": "实现 Softmax",
     "difficulty": "Easy",
     "description_en": "Implement the softmax function.\n\nSoftmax converts raw logits into a probability distribution by exponentiating and normalizing, used in classification and attention.\n\n**Signature:** `my_softmax(x, dim=-1) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor of any shape\n- `dim` — dimension along which to compute softmax\n\n**Returns:** probability tensor (sums to 1 along dim), same shape as input\n\n**Constraints:**\n- Subtract max for numerical stability before exp\n- Must handle large values without NaN/Inf",
     "description_zh": "实现 softmax 函数。\n\nSoftmax 通过指数化和归一化将原始 logits 转换为概率分布，用于分类和注意力机制。\n\n**签名:** `my_softmax(x, dim=-1) -> Tensor`\n\n**参数:**\n- `x` — 任意形状的输入张量\n- `dim` — 计算 softmax 的维度\n\n**返回:** 概率张量（沿 dim 求和为 1），形状与输入相同\n\n**约束:**\n- 在 exp 之前减去最大值以保证数值稳定\n- 必须处理大值而不产生 NaN/Inf",

@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Grouped Query Attention",
+    "title_zh": "分组查询注意力（GQA）",
     "difficulty": "Hard",
     "description_en": "Implement Grouped Query Attention (GQA).\n\nGQA uses fewer KV heads than query heads, sharing each KV head across a group of query heads. This reduces KV cache size while preserving quality.\n\n**Signature:** `GroupQueryAttention(d_model, num_heads, num_kv_heads)`\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor (B, S, d_model)\n\n**Returns:** attention output (B, S, d_model)\n\n**Constraints:**\n- W_k/W_v project to `num_kv_heads * d_k` dimensions\n- Expand KV heads with `repeat_interleave` to match query heads\n- Degenerates to standard MHA when `num_kv_heads == num_heads`",
     "description_zh": "实现分组查询注意力（GQA）。\n\nGQA 使用比查询头更少的 KV 头，每个 KV 头在一组查询头之间共享，在保持质量的同时减少 KV 缓存大小。\n\n**签名:** `GroupQueryAttention(d_model, num_heads, num_kv_heads)`\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 输入张量 (B, S, d_model)\n\n**返回:** 注意力输出 (B, S, d_model)\n\n**约束:**\n- W_k/W_v 投影到 `num_kv_heads * d_k` 维\n- 使用 `repeat_interleave` 扩展 KV 头以匹配查询头数\n- 当 `num_kv_heads == num_heads` 时退化为标准 MHA",

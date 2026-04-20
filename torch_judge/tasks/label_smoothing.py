@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Label Smoothing Loss",
+    "title_zh": "标签平滑损失",
     "difficulty": "Easy",
     "description_en": "Implement label smoothing cross-entropy loss.\n\nLabel smoothing prevents overconfidence by mixing the one-hot target distribution with a uniform distribution. It is widely used in Transformer training.\n\n**Signature:** `label_smoothing(logits, targets, smoothing=0.1) -> Tensor`\n\n**Parameters:**\n- `logits` — raw model outputs, shape `(N, C)`\n- `targets` — integer class indices, shape `(N,)`\n- `smoothing` — smoothing factor ε ∈ [0, 1)\n\n**Returns:** scalar loss\n\n**Formula:** soft target for correct class = `1 - ε`, for others = `ε / (C - 1)`",
     "description_zh": "实现标签平滑交叉熵损失。\n\n标签平滑通过将 one-hot 目标分布与均匀分布混合来防止过度自信，在 Transformer 训练中被广泛使用。\n\n**签名:** `label_smoothing(logits, targets, smoothing=0.1) -> Tensor`\n\n**参数:**\n- `logits` — 模型原始输出，形状 `(N, C)`\n- `targets` — 整数类别索引，形状 `(N,)`\n- `smoothing` — 平滑系数 ε ∈ [0, 1)\n\n**返回:** 标量损失\n\n**公式:** 正确类别的软目标 = `1 - ε`，其他类别 = `ε / (C - 1)`",

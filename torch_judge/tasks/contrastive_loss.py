@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Contrastive Loss (InfoNCE)",
+    "title_zh": "对比损失（InfoNCE）",
     "difficulty": "Medium",
     "description_en": "Implement InfoNCE / NT-Xent contrastive loss, the objective used in CLIP and SimCLR.\n\nGiven a batch of query-key pairs, each query `q[i]` should be pulled toward its matching key `k[i]` and pushed away from all other keys.\n\n**Signature:** `contrastive_loss(q, k, temperature=0.07) -> Tensor`\n\n**Parameters:**\n- `q` — query embeddings, shape (N, D), assumed L2-normalized\n- `k` — key embeddings, shape (N, D), assumed L2-normalized; `k[i]` is the positive for `q[i]`\n- `temperature` — softmax temperature τ\n\n**Returns:** scalar mean loss\n\n**Formula:**\n```\nL = mean over i of: -log( exp(q_i·k_i / τ) / Σ_j exp(q_i·k_j / τ) )\n```\nThis is equivalent to cross-entropy with targets `[0, 1, 2, ..., N-1]`.\n\n**Constraints:**\n- Do not use `F.*` or `nn.*` for cross-entropy or softmax\n- Implement the log-sum-exp manually",
     "description_zh": "实现 InfoNCE / NT-Xent 对比损失，即 CLIP 和 SimCLR 中使用的训练目标。\n\n给定一批查询-键对，每个查询 `q[i]` 应被拉近其匹配键 `k[i]`，并远离所有其他键。\n\n**签名:** `contrastive_loss(q, k, temperature=0.07) -> Tensor`\n\n**参数:**\n- `q` — 查询嵌入，形状 (N, D)，假设已 L2 归一化\n- `k` — 键嵌入，形状 (N, D)，假设已 L2 归一化；`k[i]` 是 `q[i]` 的正样本\n- `temperature` — softmax 温度 τ\n\n**返回:** 标量均值损失\n\n**公式:**\n```\nL = 对 i 求均值：-log( exp(q_i·k_i / τ) / Σ_j exp(q_i·k_j / τ) )\n```\n等价于目标为 `[0, 1, 2, ..., N-1]` 的交叉熵。\n\n**约束:**\n- 不得使用 `F.*` 或 `nn.*` 计算交叉熵或 softmax\n- 手动实现 log-sum-exp",

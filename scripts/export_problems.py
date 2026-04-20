@@ -18,6 +18,7 @@ from torch_judge.tasks import TASKS, list_tasks
 
 REQUIRED_TASK_KEYS = (
     "title",
+    "title_zh",
     "difficulty",
     "function_name",
     "hint",
@@ -39,6 +40,7 @@ def _problem_entry(task_id: str, task: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": task_id,
         "title": task["title"],
+        "titleZh": task["title_zh"],
         "difficulty": task["difficulty"],
         "functionName": task["function_name"],
         "hint": task["hint"],

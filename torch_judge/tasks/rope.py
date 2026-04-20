@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Rotary Position Embedding (RoPE)",
+    "title_zh": "旋转位置编码（RoPE）",
     "difficulty": "Medium",
     "description_en": "Implement Rotary Position Embedding (RoPE).\n\nRoPE encodes position information by rotating query and key vectors in pairs, enabling relative position awareness through dot-product properties.\n\n**Signature:** `apply_rope(q, k) -> (Tensor, Tensor)`\n\n**Parameters:**\n- `q` — query tensor (B, S, D)\n- `k` — key tensor (B, S, D)\n\n**Returns:** tuple of rotated (q, k) with same shapes\n\n**Constraints:**\n- Split into even/odd pairs, apply rotation with `angles = pos * 1/(10000^(2i/D))`\n- Must preserve vector norms\n- Dot products should depend only on relative position",
     "description_zh": "实现旋转位置编码（RoPE）。\n\nRoPE 通过成对旋转查询和键向量来编码位置信息，利用点积性质实现相对位置感知。\n\n**签名:** `apply_rope(q, k) -> (Tensor, Tensor)`\n\n**参数:**\n- `q` — 查询张量 (B, S, D)\n- `k` — 键张量 (B, S, D)\n\n**返回:** 旋转后的 (q, k) 元组，形状不变\n\n**约束:**\n- 按奇偶对分割，使用 `angles = pos * 1/(10000^(2i/D))` 旋转\n- 必须保持向量范数不变\n- 点积应仅依赖于相对位置",

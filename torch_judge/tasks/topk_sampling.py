@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Top-k / Top-p Sampling",
+    "title_zh": "Top-k / Top-p 采样",
     "difficulty": "Medium",
     "description_en": "Implement top-k / top-p (nucleus) sampling for language model decoding.\n\nThese sampling strategies filter the vocabulary to high-probability tokens before sampling, balancing diversity and quality in text generation.\n\n**Signature:** `sample_top_k_top_p(logits, top_k=0, top_p=1.0, temperature=1.0) -> int`\n\n**Parameters:**\n- `logits` — raw logits over vocabulary (V,)\n- `top_k` — keep only top-k tokens (0 = disabled)\n- `top_p` — keep tokens with cumulative prob <= p (1.0 = disabled)\n- `temperature` — temperature scaling\n\n**Returns:** sampled token index (int)\n\n**Constraints:**\n- Apply temperature first, then top-k, then top-p\n- `top_k=1` must always return argmax",
     "description_zh": "实现语言模型解码的 top-k / top-p（核）采样。\n\n这些采样策略在采样前将词表过滤为高概率 token，在文本生成中平衡多样性和质量。\n\n**签名:** `sample_top_k_top_p(logits, top_k=0, top_p=1.0, temperature=1.0) -> int`\n\n**参数:**\n- `logits` — 词表上的原始 logits (V,)\n- `top_k` — 仅保留 top-k 个 token（0 = 禁用）\n- `top_p` — 保留累积概率 <= p 的 token（1.0 = 禁用）\n- `temperature` — 温度缩放\n\n**返回:** 采样的 token 索引（整数）\n\n**约束:**\n- 先应用温度，再 top-k，再 top-p\n- `top_k=1` 必须始终返回 argmax",

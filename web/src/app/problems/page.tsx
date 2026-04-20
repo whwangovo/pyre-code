@@ -20,7 +20,7 @@ export default function ProblemsPage() {
 }
 
 function ProblemsPageNew() {
-  const { t, tProblem } = useLocale();
+  const { locale, t } = useLocale();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [progress, setProgress] = useState<ProgressMap>({});
   const [search, setSearch] = useState('');
@@ -203,7 +203,7 @@ function ProblemsPageNew() {
                         <td className="px-4 py-3 mono text-[12px] text-text-3 tabular-nums">{String(i + 1).padStart(3, '0')}</td>
                         <td className="px-1 py-3"><StatusIcon status={status} /></td>
                         <td className="px-2 py-3">
-                          <div className="font-medium text-text">{tProblem(p.id)}</div>
+                          <div className="font-medium text-text">{locale === 'zh' ? p.titleZh : p.title}</div>
                           <div className="mono text-[11.5px] text-text-3 mt-0.5">{p.id}.py</div>
                         </td>
                         <td className="px-2 py-3 mono text-[12px] text-text-2">{cat}</td>

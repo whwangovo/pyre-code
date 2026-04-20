@@ -23,7 +23,7 @@ export function WorkspacePageClassic() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathId = searchParams.get('path');
-  const { t, tProblem } = useLocale();
+  const { locale, t } = useLocale();
   const {
     currentCode, setCurrentCode,
     submissionResult, setSubmissionResult,
@@ -162,7 +162,7 @@ export function WorkspacePageClassic() {
               <span className="text-xs text-text-tertiary">{pathIdx + 1}/{pathProblemIds.length}</span>
             </div>
           )}
-          <span className="text-sm font-medium text-text-primary truncate block">{tProblem(problem.id)}</span>
+          <span className="text-sm font-medium text-text-primary truncate block">{locale === 'zh' ? problem.titleZh : problem.title}</span>
         </div>
         {pathData && (
           <div className="flex items-center gap-1 flex-shrink-0">

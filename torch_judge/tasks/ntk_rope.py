@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "NTK-aware RoPE Scaling",
+    "title_zh": "NTK-aware RoPE 缩放",
     "difficulty": "Easy",
     "description_en": "Implement NTK-aware RoPE scaling for long-context extrapolation.\n\nStandard RoPE degrades on sequences longer than the training context. NTK-aware scaling adjusts the base frequency so that high-frequency dimensions are preserved while low-frequency ones are stretched, enabling extrapolation without fine-tuning.\n\n**Signature:** `ntk_rope(q, k, scale) -> (Tensor, Tensor)`\n\n**Parameters:**\n- `q, k` — tensors of shape `(B, S, D)`\n- `scale` — context length ratio (new_len / train_len), e.g. 4.0 for 4× context\n\n**Returns:** rotated `(q, k)` with same shapes\n\n**NTK base:** `base_new = 10000 * scale^(D/(D-2))`\n\nThen apply standard RoPE with the new base.",
     "description_zh": "实现 NTK-aware RoPE 缩放，用于长上下文外推。\n\n标准 RoPE 在超过训练上下文长度的序列上性能下降。NTK-aware 缩放调整基础频率，保留高频维度同时拉伸低频维度，无需微调即可外推。\n\n**签名:** `ntk_rope(q, k, scale) -> (Tensor, Tensor)`\n\n**参数:**\n- `q, k` — 形状 `(B, S, D)` 的张量\n- `scale` — 上下文长度比例（新长度/训练长度），如 4× 上下文传 4.0\n\n**返回:** 旋转后的 `(q, k)`，形状不变\n\n**NTK 基底:** `base_new = 10000 * scale^(D/(D-2))`\n\n然后用新基底应用标准 RoPE。",

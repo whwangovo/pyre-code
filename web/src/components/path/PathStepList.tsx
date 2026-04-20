@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react';
 import { useLocale } from '@/context/LocaleContext';
 import { DifficultyBadge } from '@/components/problem/DifficultyBadge';
-import { getProblemTitle } from '@/lib/i18n';
 
 interface PathStep {
   id: string;
   title: string;
+  titleZh: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   status: 'todo' | 'attempted' | 'solved';
 }
@@ -25,7 +25,7 @@ export function PathStepList({ pathId, steps }: PathStepListProps) {
     <ol className="relative">
       {steps.map((step, i) => {
         const solved = step.status === 'solved';
-        const title = getProblemTitle(step.id, locale);
+        const title = locale === 'zh' ? step.titleZh : step.title;
         return (
           <li key={step.id} className="flex gap-4 pb-0">
             {/* connector line */}

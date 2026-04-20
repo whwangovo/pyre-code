@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Byte-Pair Encoding (BPE)",
+    "title_zh": "字节对编码（BPE）",
     "difficulty": "Hard",
     "description_en": "Implement Byte-Pair Encoding (BPE) tokenization.\n\nBPE iteratively merges the most frequent adjacent symbol pairs to build a subword vocabulary, widely used in modern language models.\n\n**Signature:** `SimpleBPE()` (class)\n\n**Methods:**\n- `train(corpus: list[str], num_merges: int)` — learn merge rules from a word list\n- `encode(text: str) -> list[str]` — tokenize text into subword tokens\n\n**Constraints:**\n- Append `</w>` to mark word boundaries\n- `self.merges` stores learned pairs in order\n- `encode` applies merges sequentially",
     "description_zh": "实现字节对编码（BPE）分词。\n\nBPE 通过迭代合并最频繁的相邻符号对来构建子词词表，广泛用于现代语言模型。\n\n**签名:** `SimpleBPE()`（类）\n\n**方法:**\n- `train(corpus: list[str], num_merges: int)` — 从词列表中学习合并规则\n- `encode(text: str) -> list[str]` — 将文本分词为子词 token\n\n**约束:**\n- 使用 `</w>` 标记词边界\n- `self.merges` 按顺序存储学习到的合并对\n- `encode` 按顺序应用合并规则",

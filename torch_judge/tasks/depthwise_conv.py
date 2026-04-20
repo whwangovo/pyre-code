@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Depthwise Separable Convolution",
+    "title_zh": "深度可分离卷积",
     "difficulty": "Medium",
     "description_en": "Implement MobileNet-style depthwise separable convolution from primitives.\n\nDepthwise separable convolution factorizes a standard convolution into two steps: a depthwise conv (one filter per input channel) followed by a pointwise 1x1 conv (to mix channels). This dramatically reduces parameter count and FLOPs.\n\n**Signature:** `depthwise_separable_conv(x, dw_weight, pw_weight) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor (B, C_in, H, W)\n- `dw_weight` — depthwise filter (C_in, 1, kH, kW)\n- `pw_weight` — pointwise filter (C_out, C_in, 1, 1)\n\n**Returns:** output tensor (B, C_out, H-kH+1, W-kW+1)\n\n**Constraints:**\n- No padding, stride=1\n- Must NOT use `F.conv2d` — implement both steps using `unfold` and `einsum`/matmul\n- Depthwise step: each channel c is convolved only with `dw_weight[c, 0]`\n- Pointwise step: 1x1 conv mixes channels via matrix multiply",
     "description_zh": "从基本原语实现 MobileNet 风格的深度可分离卷积。\n\n深度可分离卷积将标准卷积分解为两步：深度卷积（每个输入通道一个滤波器）和逐点 1x1 卷积（混合通道）。这大幅减少了参数量和计算量。\n\n**签名:** `depthwise_separable_conv(x, dw_weight, pw_weight) -> Tensor`\n\n**参数:**\n- `x` — 输入张量 (B, C_in, H, W)\n- `dw_weight` — 深度滤波器 (C_in, 1, kH, kW)\n- `pw_weight` — 逐点滤波器 (C_out, C_in, 1, 1)\n\n**返回:** 输出张量 (B, C_out, H-kH+1, W-kW+1)\n\n**约束:**\n- 无填充，步长=1\n- 不得使用 `F.conv2d`——使用 `unfold` 和 `einsum`/matmul 实现两步\n- 深度步骤：通道 c 仅与 `dw_weight[c, 0]` 卷积\n- 逐点步骤：1x1 卷积通过矩阵乘法混合通道",

@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Ring Attention",
+    "title_zh": "环形注意力",
     "difficulty": "Hard",
     "description_en": "Implement ring attention (single-device simulation).\n\nRing attention enables sequence parallelism by partitioning Q/K/V across devices in a ring. Each device holds a Q chunk and rotates K/V chunks around the ring, accumulating attention outputs using online softmax.\n\n**Signature:** `ring_attention(Q, K, V, num_devices) -> Tensor`\n\n**Parameters:**\n- `Q, K, V` — tensors of shape `(B, S, D)`, S divisible by num_devices\n- `num_devices` — number of virtual ring participants\n\n**Returns:** output tensor `(B, S, D)`, numerically equivalent to standard attention\n\n**Algorithm:**\n1. Split Q, K, V into `num_devices` chunks along S\n2. For each Q chunk (device i), iterate over all K/V chunks in ring order\n3. Accumulate using online softmax (track running max and sum)\n4. Reassemble output chunks",
     "description_zh": "实现环形注意力（单机模拟）。\n\n环形注意力通过将 Q/K/V 分布在环形拓扑的设备上实现序列并行。每个设备持有一个 Q 分块，K/V 分块在环上轮转，用 online softmax 累加注意力输出。\n\n**签名:** `ring_attention(Q, K, V, num_devices) -> Tensor`\n\n**参数:**\n- `Q, K, V` — 形状 `(B, S, D)` 的张量，S 可被 num_devices 整除\n- `num_devices` — 虚拟环参与者数量\n\n**返回:** 输出张量 `(B, S, D)`，数值上等价于标准注意力\n\n**算法:**\n1. 沿 S 维将 Q, K, V 分成 `num_devices` 个分块\n2. 对每个 Q 分块（设备 i），遍历所有 K/V 分块（环形顺序）\n3. 用 online softmax 累加（跟踪运行最大值和归一化因子）\n4. 重新拼接输出分块",

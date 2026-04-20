@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Multi-Head Attention",
+    "title_zh": "多头注意力",
     "difficulty": "Hard",
     "description_en": "Implement Multi-Head Attention from scratch.\n\nMHA projects inputs into multiple heads, computes scaled dot-product attention per head, then concatenates and projects the results.\n\n**Signature:** `MultiHeadAttention(d_model, num_heads)`\n\n**Method:** `forward(Q, K, V) -> Tensor`\n- `Q` — query tensor (B, S_q, d_model)\n- `K` — key tensor (B, S_k, d_model)\n- `V` — value tensor (B, S_k, d_model)\n\n**Returns:** attention output (B, S_q, d_model)\n\n**Constraints:**\n- Use W_q, W_k, W_v, W_o as `nn.Linear(d_model, d_model)`\n- `d_k = d_model // num_heads`\n- Support cross-attention (S_q != S_k)",
     "description_zh": "从零实现多头注意力。\n\nMHA 将输入投影到多个头，每个头计算缩放点积注意力，然后拼接并投影结果。\n\n**签名:** `MultiHeadAttention(d_model, num_heads)`\n\n**方法:** `forward(Q, K, V) -> Tensor`\n- `Q` — 查询张量 (B, S_q, d_model)\n- `K` — 键张量 (B, S_k, d_model)\n- `V` — 值张量 (B, S_k, d_model)\n\n**返回:** 注意力输出 (B, S_q, d_model)\n\n**约束:**\n- 使用 W_q、W_k、W_v、W_o 作为 `nn.Linear(d_model, d_model)`\n- `d_k = d_model // num_heads`\n- 支持交叉注意力（S_q != S_k）",

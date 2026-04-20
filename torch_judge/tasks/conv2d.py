@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "2D Convolution",
+    "title_zh": "二维卷积",
     "difficulty": "Medium",
     "description_en": "Implement 2D convolution from scratch.\n\nConvolution slides a kernel over a 2D input, computing weighted sums at each position. It is the fundamental operation in CNNs.\n\n**Signature:** `my_conv2d(x, weight, bias=None, stride=1, padding=0) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor (B, C_in, H, W)\n- `weight` — kernel tensor (C_out, C_in, kH, kW)\n- `bias` — optional bias (C_out,)\n- `stride`, `padding` — integer stride and zero-padding\n\n**Returns:** convolved output tensor\n\n**Constraints:**\n- Must match `F.conv2d` numerically\n- Support stride and padding parameters",
     "description_zh": "从零实现二维卷积。\n\n卷积将卷积核在二维输入上滑动，在每个位置计算加权和，是 CNN 的基本操作。\n\n**签名:** `my_conv2d(x, weight, bias=None, stride=1, padding=0) -> Tensor`\n\n**参数:**\n- `x` — 输入张量 (B, C_in, H, W)\n- `weight` — 卷积核张量 (C_out, C_in, kH, kW)\n- `bias` — 可选偏置 (C_out,)\n- `stride`, `padding` — 整数步幅和零填充\n\n**返回:** 卷积输出张量\n\n**约束:**\n- 必须与 `F.conv2d` 数值一致\n- 支持 stride 和 padding 参数",

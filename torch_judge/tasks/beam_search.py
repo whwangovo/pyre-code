@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Beam Search Decoding",
+    "title_zh": "束搜索解码",
     "difficulty": "Medium",
     "description_en": "Implement beam search decoding for sequence generation.\n\nBeam search maintains multiple candidate sequences (beams) at each step, expanding and pruning to find the highest-scoring sequence.\n\n**Signature:** `beam_search(log_prob_fn, start_token, max_len, beam_width, eos_token) -> list[int]`\n\n**Parameters:**\n- `log_prob_fn` — callable that takes a token sequence tensor and returns log-probabilities over vocabulary\n- `start_token` — integer start token\n- `beam_width` — number of beams to keep\n- `eos_token` — end-of-sequence token\n\n**Returns:** list of token IDs for the best sequence\n\n**Constraints:**\n- Stop when all beams end with eos or max_len is reached\n- Return the highest-scoring complete sequence",
     "description_zh": "实现序列生成的束搜索解码。\n\n束搜索在每一步维护多个候选序列（束），通过扩展和剪枝找到得分最高的序列。\n\n**签名:** `beam_search(log_prob_fn, start_token, max_len, beam_width, eos_token) -> list[int]`\n\n**参数:**\n- `log_prob_fn` — 接受 token 序列张量并返回词表上对数概率的可调用对象\n- `start_token` — 起始 token 整数\n- `beam_width` — 保留的束数量\n- `eos_token` — 序列结束 token\n\n**返回:** 最佳序列的 token ID 列表\n\n**约束:**\n- 当所有束以 eos 结尾或达到 max_len 时停止\n- 返回得分最高的完整序列",

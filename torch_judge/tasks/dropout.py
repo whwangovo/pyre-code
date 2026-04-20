@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Implement Dropout",
+    "title_zh": "实现 Dropout",
     "difficulty": "Easy",
     "description_en": "Implement dropout as an nn.Module.\n\nDropout randomly zeroes elements during training and scales survivors by `1/(1-p)` to maintain expected values. During eval, it is an identity.\n\n**Signature:** `MyDropout(p=0.5)` (nn.Module)\n\n**Forward:** `forward(x) -> Tensor`\n- `x` — input tensor of any shape\n\n**Returns:** tensor with dropout applied (training) or unchanged (eval)\n\n**Constraints:**\n- Training: zero with probability p, scale by `1/(1-p)`\n- Eval: return input unchanged",
     "description_zh": "实现 Dropout（nn.Module）。\n\nDropout 在训练时以概率 p 随机将元素置零，并将存活元素缩放 `1/(1-p)` 以保持期望值不变。推理时为恒等映射。\n\n**签名:** `MyDropout(p=0.5)`（nn.Module）\n\n**前向传播:** `forward(x) -> Tensor`\n- `x` — 任意形状的输入张量\n\n**返回:** 应用 dropout 后的张量（训练）或原始输入（推理）\n\n**约束:**\n- 训练模式：以概率 p 置零，缩放 `1/(1-p)`\n- 推理模式：返回原始输入",

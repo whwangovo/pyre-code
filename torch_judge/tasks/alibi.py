@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "ALiBi Attention",
+    "title_zh": "ALiBi 注意力",
     "difficulty": "Medium",
     "description_en": "Implement Attention with Linear Biases (ALiBi).\n\nALiBi replaces positional embeddings with a fixed linear bias added to attention scores. Each head gets a different slope `m_h`, penalizing attention to distant tokens.\n\n**Signature:** `alibi_attention(Q, K, V, num_heads) -> Tensor`\n\n**Parameters:**\n- `Q, K, V` — tensors of shape `(B, S, D)`\n- `num_heads` — number of attention heads\n\n**Returns:** output tensor `(B, S, D)`\n\n**Slope schedule:** `m_h = 1 / 2^(8h/H)` for h = 1..H\n\n**Bias:** `bias[h, i, j] = -m_h * |i - j|` (added to attention scores before softmax)",
     "description_zh": "实现带线性偏置的注意力（ALiBi）。\n\nALiBi 用固定线性偏置替代位置嵌入，直接加到注意力分数上。每个头有不同的斜率 `m_h`，对远距离 token 的注意力施加惩罚。\n\n**签名:** `alibi_attention(Q, K, V, num_heads) -> Tensor`\n\n**参数:**\n- `Q, K, V` — 形状 `(B, S, D)` 的张量\n- `num_heads` — 注意力头数\n\n**返回:** 输出张量 `(B, S, D)`\n\n**斜率:** `m_h = 1 / 2^(8h/H)`，h = 1..H\n\n**偏置:** `bias[h, i, j] = -m_h * |i - j|`（在 softmax 前加到注意力分数上）",

@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Speculative Decoding",
+    "title_zh": "推测解码",
     "difficulty": "Hard",
     "description_en": "Implement speculative decoding for faster LLM inference.\n\nSpeculative decoding uses a fast draft model to propose tokens, then verifies them against the target model, accepting or resampling based on probability ratios.\n\n**Signature:** `speculative_decode(target_probs, draft_probs, draft_tokens) -> list[int]`\n\n**Parameters:**\n- `target_probs` — target model probabilities (K, V)\n- `draft_probs` — draft model probabilities (K, V)\n- `draft_tokens` — proposed token IDs (K,)\n\n**Returns:** list of accepted token IDs (length 1 to K)\n\n**Constraints:**\n- Accept with prob `min(1, p_target/p_draft)`\n- On rejection, resample from `max(0, p_target - p_draft)` normalized\n- Stop at first rejection (return accepted so far + resampled token)",
     "description_zh": "实现推测解码以加速 LLM 推理。\n\n推测解码使用快速草稿模型提议 token，然后根据概率比率与目标模型验证，接受或重新采样。\n\n**签名:** `speculative_decode(target_probs, draft_probs, draft_tokens) -> list[int]`\n\n**参数:**\n- `target_probs` — 目标模型概率 (K, V)\n- `draft_probs` — 草稿模型概率 (K, V)\n- `draft_tokens` — 提议的 token ID (K,)\n\n**返回:** 接受的 token ID 列表（长度 1 到 K）\n\n**约束:**\n- 以概率 `min(1, p_target/p_draft)` 接受\n- 拒绝时从归一化的 `max(0, p_target - p_draft)` 重新采样\n- 在首次拒绝时停止（返回已接受的 + 重采样 token）",

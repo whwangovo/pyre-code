@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Gradient Norm Clipping",
+    "title_zh": "梯度范数裁剪",
     "difficulty": "Easy",
     "description_en": "Implement gradient norm clipping.\n\nGradient clipping rescales all parameter gradients when their combined L2 norm exceeds a threshold, preventing exploding gradients.\n\n**Signature:** `clip_grad_norm(parameters, max_norm) -> float`\n\n**Parameters:**\n- `parameters` — list of tensors with `.grad` attributes\n- `max_norm` — maximum allowed gradient norm\n\n**Returns:** original total gradient norm (float)\n\n**Constraints:**\n- Total norm = `sqrt(sum(p.grad.norm()^2))`\n- Only clip if total norm > max_norm\n- Preserve gradient direction",
     "description_zh": "实现梯度范数裁剪。\n\n梯度裁剪在所有参数梯度的 L2 范数超过阈值时进行缩放，防止梯度爆炸。\n\n**签名:** `clip_grad_norm(parameters, max_norm) -> float`\n\n**参数:**\n- `parameters` — 带 `.grad` 属性的张量列表\n- `max_norm` — 允许的最大梯度范数\n\n**返回:** 原始总梯度范数（浮点数）\n\n**约束:**\n- 总范数 = `sqrt(sum(p.grad.norm()^2))`\n- 仅在总范数 > max_norm 时裁剪\n- 保持梯度方向不变",

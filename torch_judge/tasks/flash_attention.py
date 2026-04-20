@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Flash Attention (Tiled)",
+    "title_zh": "Flash Attention（分块）",
     "difficulty": "Hard",
     "description_en": "Implement tiled (flash) attention with online softmax.\n\nFlash attention processes Q/K/V in blocks to reduce memory usage, using the online softmax trick to maintain numerical correctness across tiles.\n\n**Signature:** `flash_attention(Q, K, V, block_size=32) -> Tensor`\n\n**Parameters:**\n- `Q`, `K`, `V` — input tensors (B, S, D)\n- `block_size` — tile size for blocking\n\n**Returns:** attention output (B, S, D), identical to standard attention\n\n**Constraints:**\n- Must match standard softmax attention numerically\n- Handle non-aligned sequence lengths (S not divisible by block_size)\n- Result must be invariant to block_size choice",
     "description_zh": "实现分块（Flash）注意力与在线 softmax。\n\nFlash 注意力将 Q/K/V 分块处理以减少内存使用，利用在线 softmax 技巧在分块间保持数值正确性。\n\n**签名:** `flash_attention(Q, K, V, block_size=32) -> Tensor`\n\n**参数:**\n- `Q`, `K`, `V` — 输入张量 (B, S, D)\n- `block_size` — 分块大小\n\n**返回:** 注意力输出 (B, S, D)，与标准注意力数值一致\n\n**约束:**\n- 必须与标准 softmax 注意力数值匹配\n- 处理非对齐序列长度（S 不能被 block_size 整除）\n- 结果不受 block_size 选择影响",

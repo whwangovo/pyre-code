@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Implement LayerNorm",
+    "title_zh": "实现 LayerNorm",
     "difficulty": "Medium",
     "description_en": "Implement Layer Normalization.\n\nLayerNorm normalizes each sample across the feature dimension, stabilizing training without dependence on batch size.\n\n**Signature:** `my_layer_norm(x, gamma, beta, eps=1e-5) -> Tensor`\n\n**Parameters:**\n- `x` — input tensor (..., D)\n- `gamma` — scale parameter (D,)\n- `beta` — shift parameter (D,)\n- `eps` — epsilon for numerical stability\n\n**Returns:** normalized tensor, same shape as x\n\n**Constraints:**\n- Normalize over the last dimension\n- Use `unbiased=False` for variance\n- Must match `F.layer_norm`",
     "description_zh": "实现层归一化。\n\nLayerNorm 对每个样本沿特征维度进行归一化，不依赖批大小即可稳定训练。\n\n**签名:** `my_layer_norm(x, gamma, beta, eps=1e-5) -> Tensor`\n\n**参数:**\n- `x` — 输入张量 (..., D)\n- `gamma` — 缩放参数 (D,)\n- `beta` — 偏移参数 (D,)\n- `eps` — 数值稳定性的 epsilon\n\n**返回:** 归一化后的张量，形状与 x 相同\n\n**约束:**\n- 沿最后一个维度归一化\n- 方差使用 `unbiased=False`\n- 必须与 `F.layer_norm` 一致",

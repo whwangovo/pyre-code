@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Focal Loss",
+    "title_zh": "Focal Loss",
     "difficulty": "Medium",
     "description_en": "Implement Focal Loss for handling class imbalance in classification.\n\nFocal Loss down-weights easy examples so the model focuses on hard ones. It was introduced in RetinaNet for dense object detection.\n\n**Signature:** `focal_loss(logits, targets, alpha=0.25, gamma=2.0) -> Tensor`\n\n**Parameters:**\n- `logits` — raw class scores, shape (N, C)\n- `targets` — integer class indices, shape (N,)\n- `alpha` — weighting factor (scalar)\n- `gamma` — focusing parameter; higher values down-weight easy examples more\n\n**Returns:** scalar mean loss\n\n**Formula:**\n```\nFL(p_t) = -alpha * (1 - p_t)^gamma * log(p_t)\n```\nwhere `p_t = softmax(logits)[i, targets[i]]`\n\n**Constraints:**\n- Compute softmax manually (no `F.*`)\n- Use numerically stable softmax (subtract max before exp)\n- Return the mean over the batch",
     "description_zh": "实现用于处理分类任务中类别不平衡问题的 Focal Loss。\n\nFocal Loss 降低简单样本的权重，使模型专注于困难样本。它由 RetinaNet 在密集目标检测中提出。\n\n**签名:** `focal_loss(logits, targets, alpha=0.25, gamma=2.0) -> Tensor`\n\n**参数:**\n- `logits` — 原始类别分数，形状 (N, C)\n- `targets` — 整数类别索引，形状 (N,)\n- `alpha` — 加权因子（标量）\n- `gamma` — 聚焦参数；值越大，对简单样本的降权越强\n\n**返回:** 标量均值损失\n\n**公式:**\n```\nFL(p_t) = -alpha * (1 - p_t)^gamma * log(p_t)\n```\n其中 `p_t = softmax(logits)[i, targets[i]]`\n\n**约束:**\n- 手动计算 softmax（不得使用 `F.*`）\n- 使用数值稳定的 softmax（exp 前减去最大值）\n- 返回批次上的均值",

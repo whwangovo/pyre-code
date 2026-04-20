@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Linear Regression",
+    "title_zh": "线性回归",
     "difficulty": "Medium",
     "description_en": "Implement linear regression three ways: closed-form, gradient descent, and nn.Linear.\n\nThis task covers the fundamental approaches to fitting a linear model, from the normal equation to autograd-based training.\n\n**Signature:** `LinearRegression()` (class)\n\n**Methods:**\n- `closed_form(X, y) -> (w, b)` — solve via normal equation\n- `gradient_descent(X, y, lr, steps) -> (w, b)` — manual gradient updates\n- `nn_linear(X, y, lr, steps) -> (w, b)` — PyTorch autograd training loop\n\n**Constraints:**\n- All three methods should converge to similar weights\n- Closed-form should not use autograd\n- X is (N, D), y is (N,), returns w (D,) and b (scalar)",
     "description_zh": "用三种方式实现线性回归：闭式解、梯度下降和 nn.Linear。\n\n本题涵盖拟合线性模型的基本方法，从正规方程到基于 autograd 的训练。\n\n**签名:** `LinearRegression()`（类）\n\n**方法:**\n- `closed_form(X, y) -> (w, b)` — 通过正规方程求解\n- `gradient_descent(X, y, lr, steps) -> (w, b)` — 手动梯度更新\n- `nn_linear(X, y, lr, steps) -> (w, b)` — PyTorch autograd 训练循环\n\n**约束:**\n- 三种方法应收敛到相近的权重\n- 闭式解不应使用 autograd\n- X 为 (N, D)，y 为 (N,)，返回 w (D,) 和 b（标量）",

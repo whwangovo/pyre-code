@@ -2,6 +2,7 @@
 
 TASK = {
     "title": "Multi-Token Prediction Loss",
+    "title_zh": "多 Token 预测",
     "difficulty": "Medium",
     "description_en": "Implement the Multi-Token Prediction (MTP) training loss from Meta's 2024 paper.\n\nInstead of predicting only the next token, train N independent prediction heads to simultaneously predict the next N tokens from the same hidden states. Average the cross-entropy loss across all heads.\n\n**Signature:** `multi_token_prediction_loss(hidden_states, heads, targets) -> Tensor`\n\n**Parameters:**\n- `hidden_states` — transformer hidden states (B, S, D)\n- `heads` — list of N weight matrices, each (D, vocab_size)\n- `targets` — target token IDs (B, S, N), where `targets[:, :, i]` are the labels for head i\n\n**Returns:** scalar mean loss (average CE across all N heads)\n\n**Constraints:**\n- Implement cross-entropy manually: log-softmax then gather\n- Do NOT use F.cross_entropy or F.log_softmax\n- Use numerically stable log-softmax: subtract max before exp",
     "description_zh": "实现 Meta 2024 年论文中的多 Token 预测（MTP）训练损失。\n\n不只预测下一个 token，而是训练 N 个独立的预测头，从相同的隐藏状态同时预测接下来的 N 个 token。对所有头的交叉熵损失取平均。\n\n**签名:** `multi_token_prediction_loss(hidden_states, heads, targets) -> Tensor`\n\n**参数:**\n- `hidden_states` — Transformer 隐藏状态 (B, S, D)\n- `heads` — N 个权重矩阵的列表，每个形状为 (D, vocab_size)\n- `targets` — 目标 token ID (B, S, N)，其中 `targets[:, :, i]` 是第 i 个头的标签\n\n**返回:** 标量均值损失（所有 N 个头的 CE 均值）\n\n**约束:**\n- 手动实现交叉熵：log-softmax 后 gather\n- 不能使用 F.cross_entropy 或 F.log_softmax\n- 使用数值稳定的 log-softmax：exp 前先减去最大值",

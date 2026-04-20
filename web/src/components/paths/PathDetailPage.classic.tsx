@@ -16,6 +16,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 interface PathStep {
   id: string;
   title: string;
+  titleZh: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   status: 'todo' | 'attempted' | 'solved';
 }
