@@ -89,6 +89,34 @@
 
 /* Scrollbars */
 *::-webkit-scrollbar { width: 10px; height: 10px; }
+
+/* Classic design: map CSS vars to classic palette */
+[data-design="classic"] {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --bg:          #fafafa;
+  --bg-elev:     #ffffff;
+  --bg-sunken:   #f5f5f5;
+  --bg-code:     #f5f5f5;
+  --line:        #e5e5e5;
+  --line-strong: #d4d4d4;
+  --text:        #1d1d1f;
+  --text-2:      #6e6e73;
+  --text-3:      #aeaeb2;
+  --accent:      #007aff;
+  --accent-ink:  #0062cc;
+  --accent-wash: rgba(0,122,255,0.06);
+  --accent-line: rgba(0,122,255,0.18);
+  --easy:        #34c759;
+  --medium:      #ff9500;
+  --hard:        #ff3b30;
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg border-b border-border/50;
+  }
+}
 *::-webkit-scrollbar-thumb {
   background: var(--line-strong);
   border-radius: 8px;

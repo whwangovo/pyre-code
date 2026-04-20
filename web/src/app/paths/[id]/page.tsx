@@ -9,6 +9,8 @@ import { Footer } from '@/components/layout/Footer';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
+import { useDesign } from '@/context/DesignContext';
+import { PathDetailPageClassic } from '@/components/paths/PathDetailPage.classic';
 import { getProblemTitle } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import type { LearningPath } from '@/lib/types';
@@ -27,6 +29,12 @@ type PathDetail = Omit<LearningPath, 'problems'> & {
 };
 
 export default function PathDetailPage() {
+  const { design } = useDesign();
+  if (design === 'classic') return <PathDetailPageClassic />;
+  return <PathDetailPageNew />;
+}
+
+function PathDetailPageNew() {
   const { id } = useParams<{ id: string }>();
   const { locale, t } = useLocale();
   const [path, setPath] = useState<PathDetail | null>(null);

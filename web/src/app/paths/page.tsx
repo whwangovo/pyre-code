@@ -6,11 +6,19 @@ import { ArrowRight } from 'lucide-react';
 import { TopNav } from '@/components/layout/TopNav';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/context/LocaleContext';
+import { useDesign } from '@/context/DesignContext';
+import { PathsPageClassic } from '@/components/paths/PathsPage.classic';
 import type { LearningPath } from '@/lib/types';
 
 type PathWithProgress = LearningPath & { solved: number; total: number };
 
 export default function PathsPage() {
+  const { design } = useDesign();
+  if (design === 'classic') return <PathsPageClassic />;
+  return <PathsPageNew />;
+}
+
+function PathsPageNew() {
   const { locale, t } = useLocale();
   const [paths, setPaths] = useState<PathWithProgress[]>([]);
 

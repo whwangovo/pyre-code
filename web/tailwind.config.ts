@@ -33,10 +33,22 @@ const config: Config = {
           ink: 'var(--accent-ink)',
           wash: 'var(--accent-wash)',
           line: 'var(--accent-line)',
+          hover: '#0062cc',
         },
         easy: 'var(--easy)',
         medium: 'var(--medium)',
         hard: 'var(--hard)',
+        // classic design tokens
+        surface: { DEFAULT: '#ffffff', secondary: '#fafafa' },
+        border: '#e5e5e5',
+        'text-primary': '#1d1d1f',
+        'text-secondary': '#6e6e73',
+        'text-tertiary': '#aeaeb2',
+        solved: '#30b0c7',
+      },
+      boxShadow: {
+        soft: '0 1px 3px rgba(0,0,0,0.06)',
+        'soft-lg': '0 4px 12px rgba(0,0,0,0.08)',
       },
       borderColor: {
         DEFAULT: 'var(--line)',

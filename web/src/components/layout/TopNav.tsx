@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, SwatchBook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useDesign } from '@/context/DesignContext';
 
 interface TopNavProps {
   solvedCount?: number;
@@ -35,6 +36,7 @@ export function TopNav({ solvedCount, totalCount }: TopNavProps) {
   const pathname = usePathname();
   const { locale, setLocale, t } = useLocale();
   const { theme, toggleTheme } = useTheme();
+  const { toggleDesign } = useDesign();
 
   const links = [
     { href: '/', label: t('home'), key: 'home' },
@@ -99,6 +101,17 @@ export function TopNav({ solvedCount, totalCount }: TopNavProps) {
               <span>{t('solvedCount', { solved: solvedCount, total: totalCount })}</span>
             </div>
           )}
+          <button
+            onClick={toggleDesign}
+            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-text-2 cursor-pointer transition-[color,background,border-color] duration-150 hover:text-text hover:border-line-strong"
+            style={{
+              border: '1px solid var(--line)',
+              background: 'var(--bg-elev)',
+            }}
+            title="Switch design"
+          >
+            <SwatchBook className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={toggleTheme}
             className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-text-2 cursor-pointer transition-[color,background,border-color] duration-150 hover:text-text hover:border-line-strong"
