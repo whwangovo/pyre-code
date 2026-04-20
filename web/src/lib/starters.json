@@ -67,5 +67,13 @@
   "adaln_zero": "def adaln_zero(x: torch.Tensor, cond: torch.Tensor, W_ada: torch.Tensor, b_ada: torch.Tensor) -> torch.Tensor:\n    pass",
   "ddim_step": "def ddim_step(x_t: torch.Tensor, noise_pred: torch.Tensor, alpha_bar_t: float, alpha_bar_prev: float) -> torch.Tensor:\n    pass",
   "flow_matching": "def flow_matching_loss(model_output: torch.Tensor, x0: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.Tensor:\n    pass",
-  "noise_schedule": "def noise_schedule(num_timesteps: int, schedule_type: str = 'cosine') -> torch.Tensor:\n    pass"
+  "noise_schedule": "def noise_schedule(num_timesteps: int, schedule_type: str = 'cosine') -> torch.Tensor:\n    pass",
+  "gae": "def gae(A, X):\n    # A: adjacency matrix (N, N)\n    # X: node features (N, F)\n    pass",
+  "gcn_layer": "def gcn_layer(A, X, W):\n    # A: adjacency matrix (N, N)\n    # X: node features (N, F_in)\n    # W: weight matrix (F_in, F_out)\n    pass",
+  "graph_readout": "def graph_readout(X, batch, mode=\"mean\"):\n    # X: node embeddings (total_nodes, D)\n    # batch: graph assignment (total_nodes,)\n    # mode: \"mean\", \"sum\", or \"max\"\n    pass",
+  "gat_layer": "def gat_layer(A, X, W, a, negative_slope=0.2):\n    # A: adjacency matrix (N, N)\n    # X: node features (N, F_in)\n    # W: weight matrix (F_in, F_out)\n    # a: attention vector (2*F_out,)\n    pass",
+  "gin_layer": "def gin_layer(A, X, eps, W1, b1, W2, b2):\n    # A: adjacency matrix (N, N)\n    # X: node features (N, F_in)\n    # eps: scalar, W1: (F_in, F_h), b1: (F_h,), W2: (F_h, F_out), b2: (F_out,)\n    pass",
+  "mpnn_layer": "def mpnn_layer(A, X, E, W_msg, W_upd):\n    # A: adjacency (N, N), X: node features (N, F)\n    # E: edge features (N, N, D_e)\n    # W_msg: (2*F+D_e, F_msg), W_upd: (F+F_msg, F_out)\n    pass",
+  "link_prediction": "def link_prediction(A, X, edges):\n    # A: adjacency matrix (N, N)\n    # X: node features (N, F)\n    # edges: (M, 2) node pairs to predict\n    pass",
+  "graphsage_layer": "def graphsage_layer(A, X, W, k=None):\n    # A: adjacency matrix (N, N)\n    # X: node features (N, F_in)\n    # W: weight matrix (2*F_in, F_out)\n    # k: max neighbors to sample (None = all)\n    pass"
 }

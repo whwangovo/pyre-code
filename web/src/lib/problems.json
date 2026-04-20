@@ -2055,6 +2055,294 @@
           "code": "\nimport torch\nT = 5\nout = {fn}(T, schedule_type='linear')\nbeta_start, beta_end = 1e-4, 0.02\nt = torch.arange(T, dtype=torch.float32)\nbetas = beta_start + (beta_end - beta_start) * t / (T - 1)\nalpha_bars = torch.cumprod(1.0 - betas, dim=0)\nassert torch.allclose(out, alpha_bars, atol=1e-5), f'Linear schedule mismatch.\\nExpected: {alpha_bars}\\nGot: {out}'\n"
         }
       ]
+    },
+    {
+      "id": "gae",
+      "title": "Graph Autoencoder (GAE)",
+      "difficulty": "Hard",
+      "functionName": "gae",
+      "hint": "1. `A_hat = A + I` (add self-loops)\n2. `D_inv_sqrt = diag(A_hat.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt`\n4. `W1 = randn(F, 16) * 0.1`, `W2 = randn(16, 8) * 0.1`\n5. `H = relu(A_norm @ X @ W1)`\n6. `Z = A_norm @ H @ W2`\n7. `return sigmoid(Z @ Z.T)`",
+      "hintZh": "1. `A_hat = A + I`（加自环）\n2. `D_inv_sqrt = diag(A_hat.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt`\n4. `W1 = randn(F, 16) * 0.1`，`W2 = randn(16, 8) * 0.1`\n5. `H = relu(A_norm @ X @ W1)`\n6. `Z = A_norm @ H @ W2`\n7. `return sigmoid(Z @ Z.T)`",
+      "descriptionEn": "Implement a Graph Autoencoder that learns node embeddings via a two-layer GCN encoder and reconstructs the adjacency matrix with an inner-product decoder.\n\n**Signature:** `gae(A, X) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary, symmetric, no self-loops\n- `X` — node feature matrix (N, F)\n\n**Returns:** reconstructed adjacency matrix `A_hat` of shape (N, N), with values in [0, 1] (apply sigmoid)\n\n**Architecture:**\n1. Compute degree-normalized adjacency: `A_norm = D^{-1/2} (A + I) D^{-1/2}` where D is the degree matrix of `A + I`\n2. GCN Layer 1: `H = ReLU(A_norm @ X @ W1)` with `W1` shape (F, 16)\n3. GCN Layer 2: `Z = A_norm @ H @ W2` with `Z` shape (N, 8), `W2` shape (16, 8)\n4. Inner-product decoder: `A_hat = sigmoid(Z @ Z^T)`\n\n**Constraints:**\n- Initialize `W1` and `W2` with `torch.manual_seed(0)` then `torch.randn(...) * 0.1` (W1 first, then W2)\n- Do not use `nn.Module` or `nn.Linear`\n- Use `torch.relu` and `torch.sigmoid`",
+      "descriptionZh": "实现图自编码器 (GAE)，通过两层 GCN 编码器学习节点嵌入，并用内积解码器重建邻接矩阵。\n\n**签名:** `gae(A, X) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值、对称、无自环\n- `X` — 节点特征矩阵 (N, F)\n\n**返回:** 重建的邻接矩阵 `A_hat`，形状 (N, N)，值在 [0, 1] 之间（应用 sigmoid）\n\n**架构:**\n1. 计算度归一化邻接矩阵：`A_norm = D^{-1/2} (A + I) D^{-1/2}`，其中 D 是 `A + I` 的度矩阵\n2. GCN 第一层：`H = ReLU(A_norm @ X @ W1)`，`W1` 形状 (F, 16)\n3. GCN 第二层：`Z = A_norm @ H @ W2`，`Z` 形状 (N, 8)，`W2` 形状 (16, 8)\n4. 内积解码器：`A_hat = sigmoid(Z @ Z^T)`\n\n**约束:**\n- 用 `torch.manual_seed(0)` 初始化 `W1` 和 `W2`，然后依次 `torch.randn(...) * 0.1`（先 W1 后 W2）\n- 不得使用 `nn.Module` 或 `nn.Linear`\n- 使用 `torch.relu` 和 `torch.sigmoid`",
+      "tests": [
+        {
+          "name": "Output shape matches input",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F = 6, 8\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F)\nA_hat = {fn}(A, X)\nassert A_hat.shape == (N, N), f'Expected ({N},{N}), got {A_hat.shape}'\n"
+        },
+        {
+          "name": "Output values in [0, 1]",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F = 6, 8\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F)\nA_hat = {fn}(A, X)\nassert A_hat.min() >= 0.0, f'Min value {A_hat.min().item()} < 0'\nassert A_hat.max() <= 1.0, f'Max value {A_hat.max().item()} > 1'\n"
+        },
+        {
+          "name": "Output is symmetric",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F = 6, 8\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F)\nA_hat = {fn}(A, X)\nassert torch.allclose(A_hat, A_hat.T, atol=1e-5), 'Output should be symmetric since decoder is Z@Z.T'\n"
+        },
+        {
+          "name": "Deterministic with fixed seed",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F = 5, 4\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F)\nA_hat1 = {fn}(A, X)\nA_hat2 = {fn}(A, X)\nassert torch.allclose(A_hat1, A_hat2, atol=1e-6), 'Same input should give same output (seed is set inside function)'\n"
+        },
+        {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\nN, F = 4, 3\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(0,3)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\ntorch.manual_seed(7)\nX = torch.randn(N, F)\nA_hat = {fn}(A, X)\n# Compute expected\ntorch.manual_seed(0)\nW1 = torch.randn(F, 16) * 0.1\nW2 = torch.randn(16, 8) * 0.1\nA_tilde = A + torch.eye(N)\nD_vec = A_tilde.sum(1)\nD_inv_sqrt = torch.diag(D_vec.pow(-0.5))\nA_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt\nH = torch.relu(A_norm @ X @ W1)\nZ = A_norm @ H @ W2\nexpected = torch.sigmoid(Z @ Z.T)\nassert torch.allclose(A_hat, expected, atol=1e-5), f'Numerical mismatch: max diff = {(A_hat - expected).abs().max().item():.6f}'\n"
+        },
+        {
+          "name": "Gradient flow through weights",
+          "code": "\nimport torch\nN, F = 4, 3\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F, requires_grad=True)\nA_hat = {fn}(A, X)\nloss = (A_hat - A).pow(2).mean()\nloss.backward()\nassert X.grad is not None, 'No gradient for X'\nassert X.grad.abs().sum() > 0, 'Gradient is all zeros'\n"
+        }
+      ]
+    },
+    {
+      "id": "gcn_layer",
+      "title": "GCN Layer (Graph Convolution)",
+      "difficulty": "Easy",
+      "functionName": "gcn_layer",
+      "hint": "1. `A_tilde = A + torch.eye(N)`\n2. `D_vec = A_tilde.sum(1)`\n3. `D_inv_sqrt = torch.diag(D_vec.pow(-0.5))`\n4. `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. `return torch.relu(A_norm @ X @ W)`",
+      "hintZh": "1. `A_tilde = A + torch.eye(N)`\n2. `D_vec = A_tilde.sum(1)`\n3. `D_inv_sqrt = torch.diag(D_vec.pow(-0.5))`\n4. `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. `return torch.relu(A_norm @ X @ W)`",
+      "descriptionEn": "Implement a single Graph Convolutional Network (GCN) layer with symmetric normalization.\n\n**Signature:** `gcn_layer(A, X, W) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), may contain self-loops or not\n- `X` — node feature matrix (N, F_in)\n- `W` — weight matrix (F_in, F_out)\n\n**Returns:** output node features of shape (N, F_out)\n\n**Algorithm:**\n1. Add self-loops: `A_tilde = A + I`\n2. Compute degree vector: `D_vec = A_tilde.sum(1)`\n3. Symmetric normalization: `D_inv_sqrt = diag(D_vec^{-0.5})`\n4. Normalized adjacency: `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. Return `ReLU(A_norm @ X @ W)`\n\n**Constraints:**\n- Weights `W` are passed in — do not create them inside the function\n- Use `torch.relu` for activation",
+      "descriptionZh": "实现单层图卷积网络 (GCN)，采用对称归一化。\n\n**签名:** `gcn_layer(A, X, W) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)\n- `X` — 节点特征矩阵 (N, F_in)\n- `W` — 权重矩阵 (F_in, F_out)\n\n**返回:** 形状为 (N, F_out) 的输出节点特征\n\n**算法:**\n1. 添加自环：`A_tilde = A + I`\n2. 计算度向量：`D_vec = A_tilde.sum(1)`\n3. 对称归一化：`D_inv_sqrt = diag(D_vec^{-0.5})`\n4. 归一化邻接矩阵：`A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n5. 返回 `ReLU(A_norm @ X @ W)`\n\n**约束:**\n- 权重 `W` 由参数传入，不要在函数内部创建\n- 使用 `torch.relu` 作为激活函数",
+      "tests": [
+        {
+          "name": "Output shape matches (N, F_out)",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 5, 4, 3\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\nout = {fn}(A, X, W)\nassert out.shape == (N, F_out), f'Expected ({N},{F_out}), got {out.shape}'\n"
+        },
+        {
+          "name": "Output is non-negative (ReLU applied)",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nN, F_in, F_out = 8, 6, 4\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(0,7)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\nout = {fn}(A, X, W)\nassert (out >= 0).all(), f'Output has negative values, ReLU not applied: min={out.min().item()}'\n"
+        },
+        {
+          "name": "Isolated node gets only self-features",
+          "code": "\nimport torch\nN, F_in, F_out = 3, 2, 2\nA = torch.zeros(N, N)\nA[0, 1] = A[1, 0] = 1.0\nX = torch.tensor([[1.0, 0.0], [0.0, 1.0], [2.0, 3.0]])\nW = torch.eye(F_in)\nout = {fn}(A, X, W)\nexpected_node2 = torch.relu(X[2:3] @ W)\nassert torch.allclose(out[2], expected_node2.squeeze(), atol=1e-5), f'Isolated node should only use self-features: got {out[2]}, expected {expected_node2.squeeze()}'\n"
+        },
+        {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\nN, F_in, F_out = 3, 2, 2\nA = torch.tensor([[0.,1.,0.],[1.,0.,1.],[0.,1.,0.]])\nX = torch.tensor([[1.,0.],[0.,1.],[1.,1.]])\nW = torch.tensor([[1.,0.],[0.,1.]])\nout = {fn}(A, X, W)\nA_tilde = A + torch.eye(N)\nD_vec = A_tilde.sum(1)\nD_inv_sqrt = torch.diag(D_vec.pow(-0.5))\nA_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt\nexpected = torch.relu(A_norm @ X @ W)\nassert torch.allclose(out, expected, atol=1e-5), f'Numerical mismatch: max diff = {(out - expected).abs().max().item():.6f}'\n"
+        },
+        {
+          "name": "Gradient flows through X and W",
+          "code": "\nimport torch\nN, F_in, F_out = 4, 3, 2\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in, requires_grad=True)\nW = torch.randn(F_in, F_out, requires_grad=True)\nout = {fn}(A, X, W)\nloss = out.sum()\nloss.backward()\nassert X.grad is not None and X.grad.abs().sum() > 0, 'No gradient for X'\nassert W.grad is not None and W.grad.abs().sum() > 0, 'No gradient for W'\n"
+        },
+        {
+          "name": "Works with different F_in and F_out sizes",
+          "code": "\nimport torch\ntorch.manual_seed(7)\nN, F_in, F_out = 6, 10, 3\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\nout = {fn}(A, X, W)\nassert out.shape == (N, F_out), f'Expected ({N},{F_out}), got {out.shape}'\nassert (out >= 0).all(), 'Output has negative values'\n"
+        }
+      ]
+    },
+    {
+      "id": "graph_readout",
+      "title": "Graph Readout (Graph-Level Pooling)",
+      "difficulty": "Easy",
+      "functionName": "graph_readout",
+      "hint": "1. `num_graphs = batch.max().item() + 1`\n2. For sum: `out.index_add_(0, batch, X)`\n3. For mean: sum / count per graph\n4. For max: loop over graph indices or use `scatter` with `reduce='amax'`",
+      "hintZh": "1. `num_graphs = batch.max().item() + 1`\n2. sum 模式：`out.index_add_(0, batch, X)`\n3. mean 模式：sum / 每个图的节点数\n4. max 模式：按图索引循环或使用 `scatter` 配合 `reduce='amax'`",
+      "descriptionEn": "Implement graph-level readout (pooling) that aggregates node embeddings into a single vector per graph.\n\n**Signature:** `graph_readout(X, batch, mode='mean') -> Tensor`\n\n**Parameters:**\n- `X` — node embedding matrix (total_nodes, D)\n- `batch` — integer tensor (total_nodes,) mapping each node to its graph index (0-indexed)\n- `mode` — aggregation mode: `'mean'`, `'sum'`, or `'max'`\n\n**Returns:** graph-level embeddings of shape (num_graphs, D) where `num_graphs = batch.max() + 1`\n\n**Algorithm:**\n- `'sum'`: accumulate node features per graph (e.g., `index_add_` or `scatter_add_`)\n- `'mean'`: sum per graph divided by node count per graph\n- `'max'`: per-graph element-wise maximum over node features\n\n**Constraints:**\n- Do not use PyG or DGL — use only raw PyTorch operations\n- Handle all three modes",
+      "descriptionZh": "实现图级别的读出（池化）操作，将节点嵌入聚合为每个图的单一向量表示。\n\n**签名:** `graph_readout(X, batch, mode='mean') -> Tensor`\n\n**参数:**\n- `X` — 节点嵌入矩阵 (total_nodes, D)\n- `batch` — 整数张量 (total_nodes,)，将每个节点映射到所属图的索引（从 0 开始）\n- `mode` — 聚合方式：`'mean'`、`'sum'` 或 `'max'`\n\n**返回:** 形状为 (num_graphs, D) 的图级嵌入，其中 `num_graphs = batch.max() + 1`\n\n**算法:**\n- `'sum'`：按图累加节点特征（可用 `index_add_` 或 `scatter_add_`）\n- `'mean'`：按图求和后除以各图节点数\n- `'max'`：按图对节点特征逐元素取最大值\n\n**约束:**\n- 仅使用原生 PyTorch 操作，不得使用 PyG 或 DGL\n- 需支持全部三种聚合模式",
+      "tests": [
+        {
+          "name": "Single graph (all batch=0), mean mode",
+          "code": "\nimport torch\nX = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])\nbatch = torch.tensor([0, 0, 0])\nout = {fn}(X, batch, mode='mean')\nassert out.shape == (1, 2), f'Expected (1, 2), got {out.shape}'\nexpected = X.mean(dim=0, keepdim=True)\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected}, got {out}'\n"
+        },
+        {
+          "name": "Multi-graph batch, sum mode",
+          "code": "\nimport torch\nX = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]])\nbatch = torch.tensor([0, 0, 1, 1])\nout = {fn}(X, batch, mode='sum')\nassert out.shape == (2, 2), f'Expected (2, 2), got {out.shape}'\nexpected = torch.tensor([[4.0, 6.0], [12.0, 14.0]])\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected}, got {out}'\n"
+        },
+        {
+          "name": "Sum mode accumulates correctly",
+          "code": "\nimport torch\nX = torch.tensor([[1.0, 0.0], [0.0, 1.0], [2.0, 3.0]])\nbatch = torch.tensor([0, 1, 0])\nout = {fn}(X, batch, mode='sum')\nassert out.shape == (2, 2), f'Expected (2, 2), got {out.shape}'\nexpected = torch.tensor([[3.0, 3.0], [0.0, 1.0]])\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected}, got {out}'\n"
+        },
+        {
+          "name": "Mean mode divides by node count",
+          "code": "\nimport torch\nX = torch.tensor([[2.0, 4.0], [4.0, 6.0], [10.0, 20.0]])\nbatch = torch.tensor([0, 0, 1])\nout = {fn}(X, batch, mode='mean')\nexpected = torch.tensor([[3.0, 5.0], [10.0, 20.0]])\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected}, got {out}'\n"
+        },
+        {
+          "name": "Max mode picks element-wise maximum",
+          "code": "\nimport torch\nX = torch.tensor([[1.0, 5.0], [3.0, 2.0], [4.0, 1.0]])\nbatch = torch.tensor([0, 0, 1])\nout = {fn}(X, batch, mode='max')\nexpected = torch.tensor([[3.0, 5.0], [4.0, 1.0]])\nassert torch.allclose(out, expected, atol=1e-5), f'Expected {expected}, got {out}'\n"
+        },
+        {
+          "name": "Exact numerical value with three graphs",
+          "code": "\nimport torch\nX = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0]])\nbatch = torch.tensor([0, 0, 1, 2, 2])\nout_sum = {fn}(X, batch, mode='sum')\nout_mean = {fn}(X, batch, mode='mean')\nout_max = {fn}(X, batch, mode='max')\nexp_sum = torch.tensor([[4.0, 6.0], [5.0, 6.0], [16.0, 18.0]])\nexp_mean = torch.tensor([[2.0, 3.0], [5.0, 6.0], [8.0, 9.0]])\nexp_max = torch.tensor([[3.0, 4.0], [5.0, 6.0], [9.0, 10.0]])\nassert torch.allclose(out_sum, exp_sum, atol=1e-5), f'Sum mismatch: {out_sum} vs {exp_sum}'\nassert torch.allclose(out_mean, exp_mean, atol=1e-5), f'Mean mismatch: {out_mean} vs {exp_mean}'\nassert torch.allclose(out_max, exp_max, atol=1e-5), f'Max mismatch: {out_max} vs {exp_max}'\n"
+        }
+      ]
+    },
+    {
+      "id": "gat_layer",
+      "title": "GAT Layer (Graph Attention)",
+      "difficulty": "Medium",
+      "functionName": "gat_layer",
+      "hint": "Compute e as (N,N) via broadcasting: `e = (H @ a[:F_out]).unsqueeze(1) + (H @ a[F_out:]).unsqueeze(0)`, then mask with A and softmax.",
+      "hintZh": "利用广播计算 e 矩阵：`e = (H @ a[:F_out]).unsqueeze(1) + (H @ a[F_out:]).unsqueeze(0)`，然后用 A 掩码并 softmax。",
+      "descriptionEn": "Implement a single-head Graph Attention Network (GAT) layer.\n\nGAT computes attention coefficients between connected nodes, then aggregates neighbor features weighted by those coefficients.\n\n**Signature:** `gat_layer(A, X, W, a, negative_slope=0.2) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary, already includes self-loops\n- `X` — node feature matrix (N, F_in)\n- `W` — weight matrix (F_in, F_out)\n- `a` — attention vector (2*F_out,)\n- `negative_slope` — LeakyReLU negative slope (default 0.2)\n\n**Returns:** updated node features (N, F_out)\n\n**Algorithm:**\n1. Project features: `H = X @ W` → (N, F_out)\n2. Compute attention scores: `e_ij = LeakyReLU(a[:F_out]·H[i] + a[F_out:]·H[j])`\n3. Mask non-edges: set `e[i,j] = -inf` where `A[i,j] = 0`\n4. Normalize: `alpha = softmax(e, dim=-1)` over neighbors\n5. Aggregate: `output = alpha @ H`\n\n**Hint:** Compute e efficiently as an (N, N) matrix using broadcasting:\n`e = (H @ a[:F_out]).unsqueeze(1) + (H @ a[F_out:]).unsqueeze(0)`",
+      "descriptionZh": "实现单头图注意力网络（GAT）层。\n\nGAT 计算相连节点之间的注意力系数，然后用这些系数对邻居特征进行加权聚合。\n\n**签名:** `gat_layer(A, X, W, a, negative_slope=0.2) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值，已包含自环\n- `X` — 节点特征矩阵 (N, F_in)\n- `W` — 权重矩阵 (F_in, F_out)\n- `a` — 注意力向量 (2*F_out,)\n- `negative_slope` — LeakyReLU 负斜率（默认 0.2）\n\n**返回:** 更新后的节点特征 (N, F_out)\n\n**算法:**\n1. 特征投影：`H = X @ W` → (N, F_out)\n2. 计算注意力分数：`e_ij = LeakyReLU(a[:F_out]·H[i] + a[F_out:]·H[j])`\n3. 掩码非边：将 `A[i,j] = 0` 处的 `e[i,j]` 设为 `-inf`\n4. 归一化：`alpha = softmax(e, dim=-1)` 对邻居求 softmax\n5. 聚合：`output = alpha @ H`\n\n**提示:** 利用广播高效计算 e 矩阵：\n`e = (H @ a[:F_out]).unsqueeze(1) + (H @ a[F_out:]).unsqueeze(0)`",
+      "tests": [
+        {
+          "name": "Output shape",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 5, 8, 4\nA = torch.ones(N, N)\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\na = torch.randn(2 * F_out)\nout = {fn}(A, X, W, a)\nassert out.shape == (N, F_out), f'Shape mismatch: {out.shape} vs {(N, F_out)}'\n"
+        },
+        {
+          "name": "Attention weights sum to 1",
+          "code": "\nimport torch\ntorch.manual_seed(0)\nN, F_in, F_out = 4, 6, 3\nA = torch.tensor([[1,1,0,0],[1,1,1,0],[0,1,1,1],[0,0,1,1]], dtype=torch.float)\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\na = torch.randn(2 * F_out)\nH = X @ W\nF_o = F_out\ne = (H @ a[:F_o]).unsqueeze(1) + (H @ a[F_o:]).unsqueeze(0)\ne = torch.nn.functional.leaky_relu(e, 0.2)\ne = e.masked_fill(A == 0, float('-inf'))\nalpha = torch.softmax(e, dim=-1)\nrow_sums = alpha.sum(dim=-1)\nassert torch.allclose(row_sums, torch.ones(N), atol=1e-5), f'Attention rows do not sum to 1: {row_sums}'\n"
+        },
+        {
+          "name": "Exact numerical value (small graph)",
+          "code": "\nimport torch\ntorch.manual_seed(123)\nN, F_in, F_out = 3, 2, 2\nA = torch.tensor([[1,1,0],[1,1,1],[0,1,1]], dtype=torch.float)\nX = torch.tensor([[1.0, 0.0],[0.0, 1.0],[1.0, 1.0]])\nW = torch.tensor([[0.5, -0.5],[0.5, 0.5]])\na = torch.tensor([1.0, 0.0, 0.0, 1.0])\nout = {fn}(A, X, W, a, negative_slope=0.2)\nH = X @ W\nF_o = F_out\ne = (H @ a[:F_o]).unsqueeze(1) + (H @ a[F_o:]).unsqueeze(0)\ne = torch.nn.functional.leaky_relu(e, 0.2)\ne = e.masked_fill(A == 0, float('-inf'))\nalpha = torch.softmax(e, dim=-1)\nref = alpha @ H\nassert torch.allclose(out, ref, atol=1e-5), f'Value mismatch:\\n{out}\\nvs\\n{ref}'\n"
+        },
+        {
+          "name": "Gradient flow",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 4, 6, 3\nA = torch.ones(N, N)\nX = torch.randn(N, F_in, requires_grad=True)\nW = torch.randn(F_in, F_out, requires_grad=True)\na = torch.randn(2 * F_out, requires_grad=True)\nout = {fn}(A, X, W, a)\nout.sum().backward()\nassert X.grad is not None, 'X.grad is None'\nassert W.grad is not None, 'W.grad is None'\nassert a.grad is not None, 'a.grad is None'\n"
+        },
+        {
+          "name": "Different graph sizes",
+          "code": "\nimport torch\ntorch.manual_seed(7)\nfor N in [2, 8, 16]:\n    F_in, F_out = 4, 3\n    A = (torch.rand(N, N) > 0.5).float()\n    A = A + torch.eye(N)\n    A = (A > 0).float()\n    X = torch.randn(N, F_in)\n    W = torch.randn(F_in, F_out)\n    a = torch.randn(2 * F_out)\n    out = {fn}(A, X, W, a)\n    assert out.shape == (N, F_out), f'Shape mismatch for N={N}: {out.shape}'\n"
+        },
+        {
+          "name": "Custom negative_slope",
+          "code": "\nimport torch\ntorch.manual_seed(99)\nN, F_in, F_out = 3, 4, 2\nA = torch.ones(N, N)\nX = torch.randn(N, F_in)\nW = torch.randn(F_in, F_out)\na = torch.randn(2 * F_out)\nout1 = {fn}(A, X, W, a, negative_slope=0.01)\nout2 = {fn}(A, X, W, a, negative_slope=0.5)\nassert not torch.allclose(out1, out2, atol=1e-6), 'Different negative_slope should produce different outputs'\n"
+        }
+      ]
+    },
+    {
+      "id": "gin_layer",
+      "title": "GIN Layer (Graph Isomorphism Network)",
+      "difficulty": "Medium",
+      "functionName": "gin_layer",
+      "hint": "Aggregate with `A @ X`, combine as `(1 + eps) * X + agg`, then pass through a 2-layer MLP with ReLU.",
+      "hintZh": "用 `A @ X` 聚合邻居，组合为 `(1 + eps) * X + agg`，然后通过带 ReLU 的两层 MLP。",
+      "descriptionEn": "Implement a Graph Isomorphism Network (GIN) layer.\n\nGIN updates node features by aggregating neighbor features, scaling the node's own features by (1 + eps), and passing through a 2-layer MLP.\n\n**Signature:** `gin_layer(A, X, eps, W1, b1, W2, b2) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary\n- `X` — node feature matrix (N, F_in)\n- `eps` — learnable scalar tensor\n- `W1` — first linear weight (F_in, F_hidden)\n- `b1` — first linear bias (F_hidden,)\n- `W2` — second linear weight (F_hidden, F_out)\n- `b2` — second linear bias (F_out,)\n\n**Returns:** updated node features (N, F_out)\n\n**Algorithm:**\n1. Aggregate neighbor features: `agg = A @ X`\n2. Combine: `h = (1 + eps) * X + agg`\n3. MLP layer 1: `h = ReLU(h @ W1 + b1)`\n4. MLP layer 2: `h = h @ W2 + b2`\n5. Return h",
+      "descriptionZh": "实现图同构网络（GIN）层。\n\nGIN 通过聚合邻居特征、用 (1 + eps) 缩放自身特征，再经过两层 MLP 来更新节点表示。\n\n**签名:** `gin_layer(A, X, eps, W1, b1, W2, b2) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值\n- `X` — 节点特征矩阵 (N, F_in)\n- `eps` — 可学习标量张量\n- `W1` — 第一层线性权重 (F_in, F_hidden)\n- `b1` — 第一层线性偏置 (F_hidden,)\n- `W2` — 第二层线性权重 (F_hidden, F_out)\n- `b2` — 第二层线性偏置 (F_out,)\n\n**返回:** 更新后的节点特征 (N, F_out)\n\n**算法:**\n1. 聚合邻居特征：`agg = A @ X`\n2. 组合：`h = (1 + eps) * X + agg`\n3. MLP 第一层：`h = ReLU(h @ W1 + b1)`\n4. MLP 第二层：`h = h @ W2 + b2`\n5. 返回 h",
+      "tests": [
+        {
+          "name": "Output shape",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_hid, F_out = 5, 8, 16, 4\nA = torch.ones(N, N)\nX = torch.randn(N, F_in)\neps = torch.tensor(0.0)\nW1 = torch.randn(F_in, F_hid)\nb1 = torch.randn(F_hid)\nW2 = torch.randn(F_hid, F_out)\nb2 = torch.randn(F_out)\nout = {fn}(A, X, eps, W1, b1, W2, b2)\nassert out.shape == (N, F_out), f'Shape mismatch: {out.shape} vs {(N, F_out)}'\n"
+        },
+        {
+          "name": "eps=0 behavior",
+          "code": "\nimport torch\ntorch.manual_seed(10)\nN, F_in, F_hid, F_out = 3, 4, 8, 2\nA = torch.eye(N)\nX = torch.randn(N, F_in)\neps = torch.tensor(0.0)\nW1 = torch.randn(F_in, F_hid)\nb1 = torch.zeros(F_hid)\nW2 = torch.randn(F_hid, F_out)\nb2 = torch.zeros(F_out)\nout = {fn}(A, X, eps, W1, b1, W2, b2)\nh = X + A @ X\nh = torch.relu(h @ W1 + b1)\nref = h @ W2 + b2\nassert torch.allclose(out, ref, atol=1e-5), f'eps=0 with identity A should give (1+0)*X + I@X = 2X through MLP'\n"
+        },
+        {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\ntorch.manual_seed(77)\nA = torch.tensor([[0,1,0],[1,0,1],[0,1,0]], dtype=torch.float)\nX = torch.tensor([[1.0, 0.0],[0.0, 1.0],[1.0, 1.0]])\neps = torch.tensor(0.5)\nW1 = torch.tensor([[1.0, -1.0, 0.5],[0.5, 1.0, -0.5]])\nb1 = torch.tensor([0.0, 0.0, 0.0])\nW2 = torch.tensor([[1.0, 0.0],[0.0, 1.0],[1.0, 1.0]])\nb2 = torch.tensor([0.0, 0.0])\nout = {fn}(A, X, eps, W1, b1, W2, b2)\nagg = A @ X\nh = (1 + eps) * X + agg\nh = torch.relu(h @ W1 + b1)\nref = h @ W2 + b2\nassert torch.allclose(out, ref, atol=1e-5), f'Value mismatch:\\n{out}\\nvs\\n{ref}'\n"
+        },
+        {
+          "name": "Gradient flow",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_hid, F_out = 4, 6, 8, 3\nA = torch.ones(N, N)\nX = torch.randn(N, F_in, requires_grad=True)\neps = torch.tensor(0.1, requires_grad=True)\nW1 = torch.randn(F_in, F_hid, requires_grad=True)\nb1 = torch.randn(F_hid, requires_grad=True)\nW2 = torch.randn(F_hid, F_out, requires_grad=True)\nb2 = torch.randn(F_out, requires_grad=True)\nout = {fn}(A, X, eps, W1, b1, W2, b2)\nout.sum().backward()\nassert X.grad is not None, 'X.grad is None'\nassert eps.grad is not None, 'eps.grad is None'\nassert W1.grad is not None, 'W1.grad is None'\nassert W2.grad is not None, 'W2.grad is None'\n"
+        },
+        {
+          "name": "Isolated node (no neighbors)",
+          "code": "\nimport torch\ntorch.manual_seed(55)\nA = torch.tensor([[0,0,0],[0,0,1],[0,1,0]], dtype=torch.float)\nX = torch.tensor([[1.0, 2.0],[3.0, 4.0],[5.0, 6.0]])\neps = torch.tensor(0.0)\nW1 = torch.ones(2, 2)\nb1 = torch.zeros(2)\nW2 = torch.ones(2, 1)\nb2 = torch.zeros(1)\nout = {fn}(A, X, eps, W1, b1, W2, b2)\nh0 = (1 + 0.0) * X[0] + torch.zeros(2)\nh0 = torch.relu(h0 @ W1[:, :] + b1)\nref0 = h0 @ W2 + b2\nassert torch.allclose(out[0], ref0, atol=1e-5), f'Isolated node output wrong: {out[0]} vs {ref0}'\n"
+        },
+        {
+          "name": "Different dimensions",
+          "code": "\nimport torch\ntorch.manual_seed(33)\nfor F_in, F_hid, F_out in [(2, 4, 1), (8, 16, 8), (3, 6, 2)]:\n    N = 4\n    A = (torch.rand(N, N) > 0.3).float()\n    X = torch.randn(N, F_in)\n    eps = torch.tensor(0.1)\n    W1 = torch.randn(F_in, F_hid)\n    b1 = torch.randn(F_hid)\n    W2 = torch.randn(F_hid, F_out)\n    b2 = torch.randn(F_out)\n    out = {fn}(A, X, eps, W1, b1, W2, b2)\n    assert out.shape == (N, F_out), f'Shape mismatch for dims ({F_in},{F_hid},{F_out}): {out.shape}'\n"
+        }
+      ]
+    },
+    {
+      "id": "mpnn_layer",
+      "title": "MPNN Layer (Message Passing)",
+      "difficulty": "Medium",
+      "functionName": "mpnn_layer",
+      "hint": "Build (N, N, 2F+D_e) by broadcasting `X[i]` and `X[j]` with `E[i,j]`, matmul with W_msg, mask by A, sum over dim=1.",
+      "hintZh": "利用广播构建 (N, N, 2F+D_e) 张量，拼接 `X[i]`、`X[j]` 和 `E[i,j]`，与 W_msg 矩阵乘，用 A 掩码后沿 dim=1 求和。",
+      "descriptionEn": "Implement a Message Passing Neural Network (MPNN) layer.\n\nMPNN computes messages along edges using node and edge features, aggregates them per node, then updates node representations.\n\n**Signature:** `mpnn_layer(A, X, E, W_msg, W_upd) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary\n- `X` — node feature matrix (N, F)\n- `E` — edge feature tensor (N, N, D_e)\n- `W_msg` — message weight matrix (2*F + D_e, F_msg)\n- `W_upd` — update weight matrix (F + F_msg, F_out)\n\n**Returns:** updated node features (N, F_out)\n\n**Algorithm:**\n1. For each edge (i,j) where A[i,j]=1, compute message: `m_ij = ReLU(concat(X[i], X[j], E[i,j]) @ W_msg)`\n2. For each node i, aggregate: `agg_i = sum of m_ij over neighbors j`\n3. For each node i, update: `out_i = ReLU(concat(X[i], agg_i) @ W_upd)`\n\n**Hint:** Build an (N, N, 2F+D_e) tensor by broadcasting X, then matmul with W_msg, mask by A, and sum over dim=1.",
+      "descriptionZh": "实现消息传递神经网络（MPNN）层。\n\nMPNN 利用节点和边特征沿边计算消息，按节点聚合后更新节点表示。\n\n**签名:** `mpnn_layer(A, X, E, W_msg, W_upd) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值\n- `X` — 节点特征矩阵 (N, F)\n- `E` — 边特征张量 (N, N, D_e)\n- `W_msg` — 消息权重矩阵 (2*F + D_e, F_msg)\n- `W_upd` — 更新权重矩阵 (F + F_msg, F_out)\n\n**返回:** 更新后的节点特征 (N, F_out)\n\n**算法:**\n1. 对每条边 (i,j)（A[i,j]=1），计算消息：`m_ij = ReLU(concat(X[i], X[j], E[i,j]) @ W_msg)`\n2. 对每个节点 i，聚合：`agg_i = 对邻居 j 的 m_ij 求和`\n3. 对每个节点 i，更新：`out_i = ReLU(concat(X[i], agg_i) @ W_upd)`\n\n**提示:** 利用广播构建 (N, N, 2F+D_e) 张量，与 W_msg 矩阵乘，用 A 掩码后沿 dim=1 求和。",
+      "tests": [
+        {
+          "name": "Output shape",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F, D_e, F_msg, F_out = 5, 4, 3, 8, 6\nA = (torch.rand(N, N) > 0.5).float()\nX = torch.randn(N, F)\nE = torch.randn(N, N, D_e)\nW_msg = torch.randn(2 * F + D_e, F_msg)\nW_upd = torch.randn(F + F_msg, F_out)\nout = {fn}(A, X, E, W_msg, W_upd)\nassert out.shape == (N, F_out), f'Shape mismatch: {out.shape} vs {(N, F_out)}'\n"
+        },
+        {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\ntorch.manual_seed(100)\nN, F, D_e, F_msg, F_out = 3, 2, 1, 4, 2\nA = torch.tensor([[1,1,0],[1,1,1],[0,1,1]], dtype=torch.float)\nX = torch.tensor([[1.0, 0.0],[0.0, 1.0],[1.0, 1.0]])\nE = torch.zeros(N, N, D_e)\nE[0,1,0] = 0.5; E[1,0,0] = -0.5; E[1,2,0] = 1.0; E[2,1,0] = -1.0\nE[0,0,0] = 0.1; E[1,1,0] = 0.2; E[2,2,0] = 0.3\nW_msg = torch.randn(2 * F + D_e, F_msg)\nW_upd = torch.randn(F + F_msg, F_out)\nout = {fn}(A, X, E, W_msg, W_upd)\n# Reference\nXi = X.unsqueeze(1).expand(N, N, F)\nXj = X.unsqueeze(0).expand(N, N, F)\ninp = torch.cat([Xi, Xj, E], dim=-1)\nmsgs = torch.relu(inp @ W_msg)\nmsgs = msgs * A.unsqueeze(-1)\nagg = msgs.sum(dim=1)\nupd_inp = torch.cat([X, agg], dim=-1)\nref = torch.relu(upd_inp @ W_upd)\nassert torch.allclose(out, ref, atol=1e-5), f'Value mismatch:\\n{out}\\nvs\\n{ref}'\n"
+        },
+        {
+          "name": "Gradient flow",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F, D_e, F_msg, F_out = 4, 3, 2, 6, 3\nA = torch.ones(N, N)\nX = torch.randn(N, F, requires_grad=True)\nE = torch.randn(N, N, D_e, requires_grad=True)\nW_msg = torch.randn(2 * F + D_e, F_msg, requires_grad=True)\nW_upd = torch.randn(F + F_msg, F_out, requires_grad=True)\nout = {fn}(A, X, E, W_msg, W_upd)\nout.sum().backward()\nassert X.grad is not None, 'X.grad is None'\nassert E.grad is not None, 'E.grad is None'\nassert W_msg.grad is not None, 'W_msg.grad is None'\nassert W_upd.grad is not None, 'W_upd.grad is None'\n"
+        },
+        {
+          "name": "Single edge graph",
+          "code": "\nimport torch\ntorch.manual_seed(7)\nN, F, D_e, F_msg, F_out = 3, 2, 1, 4, 2\nA = torch.zeros(N, N)\nA[0, 1] = 1.0\nX = torch.randn(N, F)\nE = torch.randn(N, N, D_e)\nW_msg = torch.randn(2 * F + D_e, F_msg)\nW_upd = torch.randn(F + F_msg, F_out)\nout = {fn}(A, X, E, W_msg, W_upd)\n# Node 0 has one outgoing edge to node 1\nmsg_01 = torch.relu(torch.cat([X[0], X[1], E[0,1]]) @ W_msg)\nagg_0 = msg_01\nref_0 = torch.relu(torch.cat([X[0], agg_0]) @ W_upd)\nassert torch.allclose(out[0], ref_0, atol=1e-5), f'Node 0 mismatch: {out[0]} vs {ref_0}'\n# Node 2 has no neighbors\nagg_2 = torch.zeros(F_msg)\nref_2 = torch.relu(torch.cat([X[2], agg_2]) @ W_upd)\nassert torch.allclose(out[2], ref_2, atol=1e-5), f'Node 2 (no neighbors) mismatch: {out[2]} vs {ref_2}'\n"
+        },
+        {
+          "name": "Symmetric graph behavior",
+          "code": "\nimport torch\ntorch.manual_seed(88)\nN, F, D_e, F_msg, F_out = 4, 3, 2, 5, 3\nA = torch.ones(N, N)\nX = torch.randn(N, F)\nE_sym = torch.randn(N, N, D_e)\nE_sym = (E_sym + E_sym.transpose(0, 1)) / 2\nW_msg = torch.randn(2 * F + D_e, F_msg)\nW_upd = torch.randn(F + F_msg, F_out)\nout = {fn}(A, X, E_sym, W_msg, W_upd)\nassert out.shape == (N, F_out), f'Shape mismatch: {out.shape}'\nassert not torch.isnan(out).any(), 'Output contains NaN'\nassert not torch.isinf(out).any(), 'Output contains Inf'\n"
+        },
+        {
+          "name": "No edges (empty graph)",
+          "code": "\nimport torch\ntorch.manual_seed(11)\nN, F, D_e, F_msg, F_out = 3, 2, 1, 4, 2\nA = torch.zeros(N, N)\nX = torch.randn(N, F)\nE = torch.randn(N, N, D_e)\nW_msg = torch.randn(2 * F + D_e, F_msg)\nW_upd = torch.randn(F + F_msg, F_out)\nout = {fn}(A, X, E, W_msg, W_upd)\nagg = torch.zeros(N, F_msg)\nref = torch.relu(torch.cat([X, agg], dim=-1) @ W_upd)\nassert torch.allclose(out, ref, atol=1e-5), f'Empty graph mismatch:\\n{out}\\nvs\\n{ref}'\n"
+        }
+      ]
+    },
+    {
+      "id": "graphsage_layer",
+      "title": "GraphSAGE Layer",
+      "difficulty": "Hard",
+      "functionName": "graphsage_layer",
+      "hint": "1. Loop over nodes, gather neighbors from A[i].nonzero()\n2. If k sampling needed: `torch.manual_seed(42)`, `perm = torch.randperm(n_neighbors)[:k]`\n3. Mean-pool neighbor features (or zeros if isolated)\n4. `concat = torch.cat([X, agg], dim=1)` → (N, 2*F_in)\n5. `out = relu(concat @ W)`\n6. `out = out / out.norm(dim=-1, keepdim=True).clamp(min=1e-8)`",
+      "hintZh": "1. 遍历节点，从 A[i].nonzero() 获取邻居\n2. 若需采样：`torch.manual_seed(42)`，`perm = torch.randperm(n_neighbors)[:k]`\n3. 均值池化邻居特征（孤立节点用零向量）\n4. `concat = torch.cat([X, agg], dim=1)` → (N, 2*F_in)\n5. `out = relu(concat @ W)`\n6. `out = out / out.norm(dim=-1, keepdim=True).clamp(min=1e-8)`",
+      "descriptionEn": "Implement a GraphSAGE layer that aggregates neighbor features via mean pooling, concatenates with self features, and applies a linear transformation with L2 normalization.\n\n**Signature:** `graphsage_layer(A, X, W, k=None) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary\n- `X` — node feature matrix (N, F_in)\n- `W` — weight matrix (2*F_in, F_out)\n- `k` — if not None, sample at most k neighbors per node (use `torch.manual_seed(42)` before sampling for determinism)\n\n**Returns:** (N, F_out) tensor, L2-normalized along the feature dimension\n\n**Algorithm:**\n1. For each node i:\n   - Get neighbor indices where A[i] > 0\n   - If k is not None and num_neighbors > k: set `torch.manual_seed(42)`, use `torch.randperm(num_neighbors)[:k]` to sample\n   - Compute mean of neighbor features (zero vector if no neighbors)\n2. Concatenate [X, neighbor_agg] along feature dim to get (N, 2*F_in)\n3. Apply linear transform: `out = ReLU(concat @ W)`\n4. L2 normalize: `out = out / ||out||_2` per row (clamp norm min to 1e-8)\n\n**Constraints:**\n- Do not use `nn.Module` or `nn.Linear`\n- Use `torch.relu` for activation\n- Sampling must be deterministic with `torch.manual_seed(42)` called immediately before each `randperm`",
+      "descriptionZh": "实现 GraphSAGE 层：通过均值池化聚合邻居特征，与自身特征拼接后进行线性变换，最后做 L2 归一化。\n\n**签名:** `graphsage_layer(A, X, W, k=None) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值\n- `X` — 节点特征矩阵 (N, F_in)\n- `W` — 权重矩阵 (2*F_in, F_out)\n- `k` — 若不为 None，每个节点最多采样 k 个邻居（采样前调用 `torch.manual_seed(42)` 保证确定性）\n\n**返回:** (N, F_out) 张量，沿特征维度做 L2 归一化\n\n**算法:**\n1. 对每个节点 i：\n   - 获取 A[i] > 0 的邻居索引\n   - 若 k 不为 None 且邻居数 > k：设置 `torch.manual_seed(42)`，用 `torch.randperm(num_neighbors)[:k]` 采样\n   - 计算邻居特征均值（无邻居则为零向量）\n2. 沿特征维拼接 [X, neighbor_agg] 得到 (N, 2*F_in)\n3. 线性变换：`out = ReLU(concat @ W)`\n4. L2 归一化：`out = out / ||out||_2`（每行归一化，范数下限 clamp 为 1e-8）\n\n**约束:**\n- 不得使用 `nn.Module` 或 `nn.Linear`\n- 使用 `torch.relu` 作为激活函数\n- 采样必须确定性：每次 `randperm` 前立即调用 `torch.manual_seed(42)`",
+      "tests": [
+        {
+          "name": "Output shape check",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 5, 4, 3\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in)\nW = torch.randn(2*F_in, F_out)\nout = {fn}(A, X, W)\nassert out.shape == (N, F_out), f'Expected shape ({N},{F_out}), got {out.shape}'\n"
+        },
+        {
+          "name": "Output is L2-normalized",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 6, 4, 8\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in)\nW = torch.randn(2*F_in, F_out)\nout = {fn}(A, X, W)\nnorms = out.norm(dim=-1)\n# Rows with non-zero output should have unit norm\nnonzero_mask = norms > 1e-7\nassert torch.allclose(norms[nonzero_mask], torch.ones_like(norms[nonzero_mask]), atol=1e-5), f'Output rows not L2-normalized: norms = {norms}'\n"
+        },
+        {
+          "name": "k=None uses all neighbors",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 4, 3, 2\nA = torch.zeros(N, N)\n# Node 0 connected to all others\nA[0,1] = A[1,0] = 1.0\nA[0,2] = A[2,0] = 1.0\nA[0,3] = A[3,0] = 1.0\nX = torch.randn(N, F_in)\nW = torch.randn(2*F_in, F_out)\nout_none = {fn}(A, X, W, k=None)\nout_large_k = {fn}(A, X, W, k=100)\nassert torch.allclose(out_none, out_large_k, atol=1e-6), 'k=None and k>num_neighbors should give same result'\n"
+        },
+        {
+          "name": "k sampling is deterministic",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F_in, F_out = 8, 4, 3\nA = torch.zeros(N, N)\n# Dense graph\nfor i in range(N):\n    for j in range(i+1, N):\n        A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in)\nW = torch.randn(2*F_in, F_out)\nout1 = {fn}(A, X, W, k=2)\nout2 = {fn}(A, X, W, k=2)\nassert torch.allclose(out1, out2, atol=1e-6), 'k-sampling should be deterministic with manual_seed(42)'\n"
+        },
+        {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\nN, F_in, F_out = 3, 2, 2\nA = torch.tensor([[0.,1.,1.],[1.,0.,0.],[1.,0.,0.]])\nX = torch.tensor([[1.,0.],[0.,1.],[1.,1.]])\nW = torch.tensor([[0.1,0.2],[0.3,0.4],[0.5,0.6],[0.7,0.8]])\nout = {fn}(A, X, W)\n# Manual computation\n# Node 0 neighbors: [1,2], mean = ([0,1]+[1,1])/2 = [0.5, 1.0]\n# Node 1 neighbors: [0], mean = [1, 0]\n# Node 2 neighbors: [0], mean = [1, 0]\nagg = torch.tensor([[0.5, 1.0],[1.0, 0.0],[1.0, 0.0]])\nconcat = torch.cat([X, agg], dim=1)  # (3, 4)\nraw = torch.relu(concat @ W)  # (3, 2)\nexpected = raw / raw.norm(dim=-1, keepdim=True).clamp(min=1e-8)\nassert torch.allclose(out, expected, atol=1e-5), f'Numerical mismatch: max diff = {(out - expected).abs().max().item():.6f}'\n"
+        },
+        {
+          "name": "Gradient flow through X and W",
+          "code": "\nimport torch\ntorch.manual_seed(1)\nN, F_in, F_out = 4, 3, 2\nA = torch.zeros(N, N)\nedges = [(0,1),(1,2),(2,3)]\nfor i,j in edges:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F_in, requires_grad=True)\nW = torch.randn(2*F_in, F_out, requires_grad=True)\nout = {fn}(A, X, W)\nloss = out.sum()\nloss.backward()\nassert X.grad is not None, 'No gradient for X'\nassert X.grad.abs().sum() > 0, 'X gradient is all zeros'\nassert W.grad is not None, 'No gradient for W'\nassert W.grad.abs().sum() > 0, 'W gradient is all zeros'\n"
+        }
+      ]
+    },
+    {
+      "id": "link_prediction",
+      "title": "Link Prediction",
+      "difficulty": "Hard",
+      "functionName": "link_prediction",
+      "hint": "1. `A_tilde = A + I`\n2. `D_inv_sqrt = diag(A_tilde.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n4. Two-layer GCN: H = relu(A_norm @ X @ W1), Z = A_norm @ H @ W2\n5. Score each edge: `sigmoid((Z[edges[:,0]] * Z[edges[:,1]]).sum(dim=1))`",
+      "hintZh": "1. `A_tilde = A + I`（加自环）\n2. `D_inv_sqrt = diag(A_tilde.sum(1))^{-0.5}`\n3. `A_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt`\n4. 两层 GCN：H = relu(A_norm @ X @ W1)，Z = A_norm @ H @ W2\n5. 对每条边打分：`sigmoid((Z[edges[:,0]] * Z[edges[:,1]]).sum(dim=1))`",
+      "descriptionEn": "Implement a link prediction model using a two-layer GCN encoder that predicts edge existence probabilities.\n\n**Signature:** `link_prediction(A, X, edges) -> Tensor`\n\n**Parameters:**\n- `A` — adjacency matrix (N, N), binary, symmetric, no self-loops\n- `X` — node feature matrix (N, F)\n- `edges` — (M, 2) long tensor of node pairs to predict\n\n**Returns:** (M,) tensor of probabilities in [0, 1], where each value is the predicted likelihood of an edge existing between the corresponding node pair\n\n**Algorithm:**\n1. Initialize weights with `torch.manual_seed(0)`: `W1 = randn(F, 16) * 0.1`, then `W2 = randn(16, 8) * 0.1`\n2. Compute degree-normalized adjacency: `A_norm = D^{-1/2} (A + I) D^{-1/2}`\n3. GCN Layer 1: `H = ReLU(A_norm @ X @ W1)`\n4. GCN Layer 2: `Z = A_norm @ H @ W2` (no activation)\n5. For each edge (i, j): `score = sigmoid(Z[i] · Z[j])`\n6. Return all scores as (M,) tensor\n\n**Constraints:**\n- Do not use `nn.Module` or `nn.Linear`\n- Use `torch.relu` and `torch.sigmoid`",
+      "descriptionZh": "实现基于两层 GCN 编码器的链接预测模型，预测节点对之间存在边的概率。\n\n**签名:** `link_prediction(A, X, edges) -> Tensor`\n\n**参数:**\n- `A` — 邻接矩阵 (N, N)，二值、对称、无自环\n- `X` — 节点特征矩阵 (N, F)\n- `edges` — (M, 2) 长整型张量，表示待预测的节点对\n\n**返回:** (M,) 概率张量，值在 [0, 1] 之间，每个值表示对应节点对之间存在边的预测概率\n\n**算法:**\n1. 用 `torch.manual_seed(0)` 初始化权重：`W1 = randn(F, 16) * 0.1`，然后 `W2 = randn(16, 8) * 0.1`\n2. 计算度归一化邻接矩阵：`A_norm = D^{-1/2} (A + I) D^{-1/2}`\n3. GCN 第一层：`H = ReLU(A_norm @ X @ W1)`\n4. GCN 第二层：`Z = A_norm @ H @ W2`（无激活函数）\n5. 对每条边 (i, j)：`score = sigmoid(Z[i] · Z[j])`\n6. 返回所有分数组成的 (M,) 张量\n\n**约束:**\n- 不得使用 `nn.Module` 或 `nn.Linear`\n- 使用 `torch.relu` 和 `torch.sigmoid`",
+      "tests": [
+        {
+          "name": "Output shape is (M,)",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F = 6, 8\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F)\nedges = torch.tensor([[0,1],[2,3],[0,4],[1,5]], dtype=torch.long)\nout = {fn}(A, X, edges)\nassert out.shape == (4,), f'Expected shape (4,), got {out.shape}'\n"
+        },
+        {
+          "name": "Values in [0, 1]",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F = 6, 8\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F)\nedges = torch.tensor([[0,1],[2,3],[0,4],[1,5],[3,5],[0,2]], dtype=torch.long)\nout = {fn}(A, X, edges)\nassert out.min() >= 0.0, f'Min value {out.min().item()} < 0'\nassert out.max() <= 1.0, f'Max value {out.max().item()} > 1'\n"
+        },
+        {
+          "name": "Deterministic with same input",
+          "code": "\nimport torch\ntorch.manual_seed(42)\nN, F = 5, 4\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(3,4)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F)\nedges = torch.tensor([[0,2],[1,3],[0,4]], dtype=torch.long)\nout1 = {fn}(A, X, edges)\nout2 = {fn}(A, X, edges)\nassert torch.allclose(out1, out2, atol=1e-6), 'Same input should give same output (seed is set inside function)'\n"
+        },
+        {
+          "name": "Exact numerical value",
+          "code": "\nimport torch\nN, F = 4, 3\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(0,3)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\ntorch.manual_seed(7)\nX = torch.randn(N, F)\nedges = torch.tensor([[0,1],[1,2],[0,2]], dtype=torch.long)\nout = {fn}(A, X, edges)\n# Compute expected\ntorch.manual_seed(0)\nW1 = torch.randn(F, 16) * 0.1\nW2 = torch.randn(16, 8) * 0.1\nA_tilde = A + torch.eye(N)\nD_vec = A_tilde.sum(1)\nD_inv_sqrt = torch.diag(D_vec.pow(-0.5))\nA_norm = D_inv_sqrt @ A_tilde @ D_inv_sqrt\nH = torch.relu(A_norm @ X @ W1)\nZ = A_norm @ H @ W2\nscores = torch.sigmoid((Z[edges[:,0]] * Z[edges[:,1]]).sum(dim=1))\nassert torch.allclose(out, scores, atol=1e-5), f'Numerical mismatch: max diff = {(out - scores).abs().max().item():.6f}'\n"
+        },
+        {
+          "name": "Gradient flow through X",
+          "code": "\nimport torch\nN, F = 4, 3\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\nX = torch.randn(N, F, requires_grad=True)\nedges = torch.tensor([[0,1],[1,2],[0,3]], dtype=torch.long)\nout = {fn}(A, X, edges)\nloss = out.sum()\nloss.backward()\nassert X.grad is not None, 'No gradient for X'\nassert X.grad.abs().sum() > 0, 'Gradient is all zeros'\n"
+        },
+        {
+          "name": "Connected nodes score higher than random",
+          "code": "\nimport torch\ntorch.manual_seed(99)\nN, F = 10, 16\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9),(0,9)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\nX = torch.eye(N, F)\nconnected = torch.tensor([[0,1],[1,2],[2,3]], dtype=torch.long)\ndisconnected = torch.tensor([[0,5],[1,7],[3,8]], dtype=torch.long)\nscores_conn = {fn}(A, X, connected)\nscores_disc = {fn}(A, X, disconnected)\nassert scores_conn.mean() > scores_disc.mean(), f'Connected mean {scores_conn.mean().item():.4f} should be > disconnected mean {scores_disc.mean().item():.4f}'\n"
+        }
+      ]
     }
   ]
 }

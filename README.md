@@ -19,9 +19,9 @@
 
 ## 🧠 What is Pyre Code?
 
-68 problems. You write the implementation, a local grading service runs the tests, you see what broke. That's it.
+76 problems. You write the implementation, a local grading service runs the tests, you see what broke. That's it.
 
-The problems cover what's actually inside Transformers, vLLM, TRL, and diffusion models — attention variants, training tricks, inference kernels, alignment algorithms. No GPU needed.
+The problems cover what's actually inside Transformers, vLLM, TRL, diffusion models, and GNNs — attention variants, training tricks, inference kernels, alignment algorithms, graph neural networks. No GPU needed.
 
 ### Who is this for?
 
@@ -51,6 +51,7 @@ The problems cover what's actually inside Transformers, vLLM, TRL, and diffusion
 
 ## 📢 News
 
+- **[2026/04/20]** New GNN learning path — 8 problems covering GCN, GAT, GIN, MPNN, GraphSAGE, link prediction, and graph autoencoders. 🔥
 - **[2026/04/20]** New UI redesign with OKLch color system, dark mode, and Geist typography — classic design still available via toggle. 🔥
 - **[2026/04/13]** Submission history — review all your past attempts per problem.
 - **[2026/04/10]** AI Help — optional AI-powered hints via any OpenAI-compatible API. 🔥
@@ -138,7 +139,7 @@ Any OpenAI-compatible endpoint works (OpenAI, Anthropic via proxy, Ollama, etc.)
 
 ## 📋 Problem Set
 
-68 problems organized by category:
+76 problems organized by category:
 
 | Category | Problems |
 |---|---|
@@ -155,6 +156,7 @@ Any OpenAI-compatible endpoint works (OpenAI, Anthropic via proxy, Ollama, etc.)
 | **Adaptation** | LoRA, QLoRA |
 | **Reasoning** | MCTS, Multi-Token Prediction |
 | **SSM** | Mamba SSM |
+| **Graph Neural Networks** | GCN, Graph Readout, GAT, GIN, MPNN, GraphSAGE, Link Prediction, Graph Autoencoder |
 
 ### Learning Paths
 
@@ -170,6 +172,7 @@ Pick one based on what you're working toward:
 | **Vision Transformer Pipeline** | 7 | Conv → patch embedding → ViT block |
 | **Diffusion Models & DiT** | 5 | Noise schedule → DDIM → flow matching → adaLN-Zero |
 | **LLM Frontier Architectures** | 7 | GQA, Differential Attention, MLA, MoE, Multi-Token Prediction |
+| **Graph Neural Networks** | 8 | GCN → GAT → GIN → MPNN → GraphSAGE → Link Prediction → GAE |
 
 ```
 Not sure where to start?
@@ -182,9 +185,9 @@ Fundamentals ──→ Transformer Internals ──→ Train a GPT from Scratch
                        ▼                          ▼
               LLM Frontier Archs         Alignment & Reasoning
                        │
-               ┌───────┴───────┐
-               ▼               ▼
-     Vision Transformer   Diffusion & DiT
+               ┌───────┼───────┐
+               ▼       ▼       ▼
+     Vision Trans.  Diffusion  Graph Neural Networks
 ```
 
 ---

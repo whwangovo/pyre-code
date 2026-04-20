@@ -79,6 +79,16 @@
       "icon": "Sparkles",
       "problems": ["mha", "gqa", "diff_attention", "mla", "moe", "moe_load_balance", "multi_token_prediction"],
       "prerequisites": []
+    },
+    {
+      "id": "graph-neural-networks",
+      "titleEn": "Graph Neural Networks",
+      "titleZh": "图神经网络",
+      "descriptionEn": "Master GNN fundamentals — from basic graph convolution to attention, message passing, and graph-level tasks.",
+      "descriptionZh": "掌握图神经网络基础——从图卷积到注意力、消息传递和图级任务。",
+      "icon": "Network",
+      "problems": ["gcn_layer", "graph_readout", "gat_layer", "gin_layer", "mpnn_layer", "link_prediction", "graphsage_layer", "gae"],
+      "prerequisites": []
     }
   ]
 }
