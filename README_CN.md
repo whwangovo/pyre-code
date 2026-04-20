@@ -70,6 +70,8 @@
 
 **方式 A — 一键启动（推荐）**
 
+macOS / Linux:
+
 ```bash
 git clone https://github.com/whwangovo/pyre-code.git
 cd pyre-code
@@ -77,7 +79,25 @@ cd pyre-code
 npm run dev
 ```
 
-`setup.sh` 会自动创建 `.venv` 虚拟环境（优先用 `uv`，没有就回退到 `python3 -m venv`），装好所有依赖。
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
+.\setup.ps1
+npm run dev
+```
+
+Windows (CMD):
+
+```cmd
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
+setup.bat
+npm run dev
+```
+
+安装脚本会自动创建 `.venv` 虚拟环境（优先用 `uv`，没有就回退到 `python -m venv`），装好所有依赖。
 
 如果仓库里存在 `.venv`，`npm run dev` 会优先使用项目内 Python；如果没有，再回退到当前 shell 里的 `python`。
 
@@ -101,6 +121,7 @@ cd pyre-code
 # 二选一：
 uv venv --python 3.11 .venv && source .venv/bin/activate && uv pip install -e ".[dev]"
 # 或者：python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
+# Windows：python -m venv .venv && .venv\Scripts\activate && pip install -e ".[dev]"
 
 npm install
 npm run dev

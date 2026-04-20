@@ -72,6 +72,8 @@ The problems cover what's actually inside Transformers, vLLM, TRL, diffusion mod
 
 **Option A — one-liner (recommended)**
 
+macOS / Linux:
+
 ```bash
 git clone https://github.com/whwangovo/pyre-code.git
 cd pyre-code
@@ -79,7 +81,25 @@ cd pyre-code
 npm run dev
 ```
 
-`setup.sh` automatically creates a `.venv` Python environment (prefers `uv`, falls back to `python3 -m venv`), installs all dependencies, then prints the start command.
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
+.\setup.ps1
+npm run dev
+```
+
+Windows (CMD):
+
+```cmd
+git clone https://github.com/whwangovo/pyre-code.git
+cd pyre-code
+setup.bat
+npm run dev
+```
+
+The setup script automatically creates a `.venv` Python environment (prefers `uv`, falls back to `python -m venv`), installs all dependencies, then prints the start command.
 
 When `.venv` exists, `npm run dev` prefers that project-local Python automatically. If `.venv` is missing, it falls back to the current shell's `python`.
 
@@ -103,6 +123,7 @@ cd pyre-code
 # create a Python env — pick one:
 uv venv --python 3.11 .venv && source .venv/bin/activate && uv pip install -e ".[dev]"
 # or: python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
+# Windows: python -m venv .venv && .venv\Scripts\activate && pip install -e ".[dev]"
 
 npm install
 npm run dev
