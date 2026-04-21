@@ -1,14 +1,13 @@
 import { ReactNode } from 'react';
 
-// Token types and their colors (using the app's design tokens)
 const COLORS = {
-  keyword:  '#007aff', // accent blue
-  string:   '#34c759', // green
-  comment:  '#aeaeb2', // text-tertiary
-  number:   '#ff9500', // orange
-  builtin:  '#af52de', // purple
-  funcname: '#ff9500', // orange for function calls
-  default:  '#1d1d1f', // text-primary
+  keyword:  'var(--code-keyword)',
+  string:   'var(--code-string)',
+  comment:  'var(--code-comment)',
+  number:   'var(--code-number)',
+  builtin:  'var(--code-builtin)',
+  funcname: 'var(--code-func)',
+  default:  'var(--text)',
 };
 
 const KEYWORDS = new Set([

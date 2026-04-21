@@ -23,6 +23,13 @@
     --easy:        oklch(0.66 0.14 150);
     --medium:      oklch(0.72 0.14 70);
     --hard:        oklch(0.62 0.18 25);
+
+    --code-keyword: #007aff;
+    --code-string:  #34c759;
+    --code-comment: #aeaeb2;
+    --code-number:  #ff9500;
+    --code-builtin: #af52de;
+    --code-func:    #ff9500;
   }
 
   [data-theme="dark"] {
@@ -42,6 +49,13 @@
     --easy:        oklch(0.74 0.14 150);
     --medium:      oklch(0.80 0.13 70);
     --hard:        oklch(0.72 0.16 25);
+
+    --code-keyword: #4ea1ff;
+    --code-string:  #4ade80;
+    --code-comment: #6b7280;
+    --code-number:  #fbbf24;
+    --code-builtin: #c084fc;
+    --code-func:    #fbbf24;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
