@@ -5,7 +5,7 @@
   "linear": "class SimpleLinear:\n\n    def __init__(self, in_features: int, out_features: int):\n        pass\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        pass",
   "layernorm": "def my_layer_norm(x, gamma, beta, eps=1e-05):\n    pass",
   "attention": "def scaled_dot_product_attention(Q, K, V):\n    pass",
-  "multihead_attention": "class MultiHeadAttention:\n\n    def __init__(self, d_model: int, num_heads: int):\n        pass\n\n    def forward(self, Q, K, V):\n        pass",
+  "mha": "class MultiHeadAttention(nn.Module):\n\n    def __init__(self, d_model: int, num_heads: int):\n        super().__init__()\n        pass\n\n    def forward(self, Q, K, V):\n        pass",
   "batchnorm": "def my_batch_norm(x, gamma, beta, running_mean, running_var, eps=1e-05, momentum=0.1, training=True):\n    pass",
   "rmsnorm": "def rms_norm(x, weight, eps=1e-06):\n    pass",
   "causal_attention": "def causal_attention(Q, K, V):\n    pass",
