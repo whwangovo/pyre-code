@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -20,6 +20,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useDesign } from '@/context/DesignContext';
 import { WorkspacePageClassic } from '@/components/workspace/WorkspacePage.classic';
 import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory } from '@/lib/types';
+import { loadCodeDraft, saveCodeDraft } from '@/lib/codeDraft';
 
 function FlameGlyph() {
   return (
@@ -63,13 +64,17 @@ function WorkspacePageNew() {
   const [progress, setProgress] = useState<ProgressMap>({});
   const [pathData, setPathData] = useState<(Omit<LearningPath, 'problems'> & { problems: LearningPathProblemSummary[] }) | null>(null);
   const [feedbackResult, setFeedbackResult] = useState<SubmissionResult | null>(null);
+  const codeReadyRef = useRef(false);
 
   useEffect(() => {
+    codeReadyRef.current = false;
     fetch(`/api/problems/${id}`)
       .then((r) => r.json())
       .then((data) => {
         setProblem(data);
-        setCurrentCode(data.starterCode || '');
+        const cachedCode = loadCodeDraft(id);
+        setCurrentCode(cachedCode ?? data.starterCode ?? '');
+        codeReadyRef.current = true;
         setSubmissionResult(null);
         resetTestPanel();
         resetAiHelp();
@@ -92,6 +97,11 @@ function WorkspacePageNew() {
       setPathData(null);
     }
   }, [id, pathId, setCurrentCode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
+
+  useEffect(() => {
+    if (!codeReadyRef.current) return;
+    saveCodeDraft(id, currentCode);
+  }, [id, currentCode]);
 
   const handleRun = async () => {
     if (!problem || isRunning) return;
