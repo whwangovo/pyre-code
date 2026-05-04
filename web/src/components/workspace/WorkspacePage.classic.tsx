@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -17,6 +17,7 @@ import { ActionBar } from '@/components/workspace/ActionBar.classic';
 import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
 import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory } from '@/lib/types';
+import { loadCodeDraft, saveCodeDraft } from '@/lib/codeDraft';
 
 export function WorkspacePageClassic() {
   const { id } = useParams<{ id: string }>();
@@ -38,13 +39,17 @@ export function WorkspacePageClassic() {
   const [allProblems, setAllProblems] = useState<Problem[]>([]);
   const [progress, setProgress] = useState<ProgressMap>({});
   const [pathData, setPathData] = useState<(Omit<LearningPath, 'problems'> & { problems: LearningPathProblemSummary[] }) | null>(null);
+  const codeReadyRef = useRef(false);
 
   useEffect(() => {
+    codeReadyRef.current = false;
     fetch(`/api/problems/${id}`)
       .then((r) => r.json())
       .then((data) => {
         setProblem(data);
-        setCurrentCode(data.starterCode || '');
+        const cachedCode = loadCodeDraft(id);
+        setCurrentCode(cachedCode ?? data.starterCode ?? '');
+        codeReadyRef.current = true;
         setSubmissionResult(null);
         resetTestPanel();
         resetAiHelp();
@@ -67,6 +72,11 @@ export function WorkspacePageClassic() {
       setPathData(null);
     }
   }, [id, pathId, setCurrentCode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
+
+  useEffect(() => {
+    if (!codeReadyRef.current) return;
+    saveCodeDraft(id, currentCode);
+  }, [id, currentCode]);
 
   const handleRun = async () => {
     if (!problem || isRunning) return;
