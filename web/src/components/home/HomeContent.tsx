@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, FlaskConical, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
@@ -95,8 +96,28 @@ const TESTS = [
 
 export function HomeContent({ stats }: HomeContentProps) {
   const { locale, t } = useLocale();
+  const router = useRouter();
   const [paths, setPaths] = useState<PathWithProgress[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLElement &&
+        (e.target.tagName === 'INPUT' ||
+          e.target.tagName === 'TEXTAREA' ||
+          e.target.isContentEditable)
+      ) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        router.push('/paths');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [router]);
 
   useEffect(() => {
     fetch('/api/paths')

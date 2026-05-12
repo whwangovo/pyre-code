@@ -36,6 +36,7 @@ export function ActionBar({ onSubmit, onRun, isSubmitting, isRunning, attemptCou
       <Button variant="primary" size="sm" onClick={onSubmit} disabled={busy}>
         {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
         {isSubmitting ? t('judging') : t('submit')}
+        <span className="kbd">⌘⇧↵</span>
       </Button>
     </div>
   );

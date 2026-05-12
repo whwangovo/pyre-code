@@ -88,6 +88,45 @@ function WorkspacePageNew() {
     }
   }, [id, pathId, setCurrentCode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
 
+  // Keyboard shortcuts: [ / ] for prev/next problem, Esc to close drawer.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLElement &&
+        (e.target.tagName === 'INPUT' ||
+          e.target.tagName === 'TEXTAREA' ||
+          e.target.isContentEditable ||
+          e.target.closest('.monaco-editor'))
+      )
+        return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === 'Escape' && drawerOpen) {
+        setDrawerOpen(false);
+        e.preventDefault();
+        return;
+      }
+
+      const pathProblems = pathData?.problems ?? [];
+      const currentIdx = pathProblems.findIndex((p) => p.id === id);
+      const prev = currentIdx > 0 ? pathProblems[currentIdx - 1] : null;
+      const next =
+        currentIdx >= 0 && currentIdx < pathProblems.length - 1
+          ? pathProblems[currentIdx + 1]
+          : null;
+
+      if (e.key === '[' && prev) {
+        router.push(`/problems/${prev.id}?path=${pathId}`);
+        e.preventDefault();
+      } else if (e.key === ']' && next) {
+        router.push(`/problems/${next.id}?path=${pathId}`);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [pathData, id, pathId, router, drawerOpen, setDrawerOpen]);
+
   const handleRun = async () => {
     if (!problem || isRunning) return;
     setIsRunning(true);
@@ -134,6 +173,22 @@ function WorkspacePageNew() {
       setIsSubmitting(false);
     }
   };
+
+  // Keyboard shortcuts: Cmd/Ctrl+Enter runs, Cmd/Ctrl+Shift+Enter submits.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!((e.metaKey || e.ctrlKey) && e.key === 'Enter')) return;
+      if (isRunning || isSubmitting) return;
+      e.preventDefault();
+      if (e.shiftKey) {
+        handleSubmit();
+      } else {
+        handleRun();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleRun, handleSubmit, isRunning, isSubmitting]);
 
   if (!problem) {
     return (
@@ -203,7 +258,7 @@ function WorkspacePageNew() {
               <span className="ml-auto mono text-[11.5px] text-text-3 px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-sunken)', border: '1px solid var(--line)' }}>Python</span>
             </div>
             <div className="flex-1 overflow-hidden">
-              <CodeEditor value={currentCode} onChange={setCurrentCode} />
+              <CodeEditor value={currentCode} onChange={setCurrentCode} onRunShortcut={handleRun} onSubmitShortcut={handleSubmit} />
             </div>
           </div>
         }

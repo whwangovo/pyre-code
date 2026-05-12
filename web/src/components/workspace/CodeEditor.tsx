@@ -17,6 +17,8 @@ interface CodeEditorProps {
   readOnly?: boolean;
   height?: string;
   allowParentScrollOnWheel?: boolean;
+  onRunShortcut?: () => void;
+  onSubmitShortcut?: () => void;
 }
 
 export function CodeEditor({
@@ -25,10 +27,19 @@ export function CodeEditor({
   readOnly = false,
   height = '100%',
   allowParentScrollOnWheel = false,
+  onRunShortcut,
+  onSubmitShortcut,
 }: CodeEditorProps) {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
+  const runRef = useRef(onRunShortcut);
+  const submitRef = useRef(onSubmitShortcut);
   const { theme } = useTheme();
+
+  useEffect(() => {
+    runRef.current = onRunShortcut;
+    submitRef.current = onSubmitShortcut;
+  });
 
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -36,6 +47,8 @@ export function CodeEditor({
     monaco.editor.defineTheme('apple-light', appleLight);
     monaco.editor.defineTheme('apple-dark', appleDark);
     monaco.editor.setTheme(theme === 'dark' ? 'apple-dark' : 'apple-light');
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current?.());
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => submitRef.current?.());
   };
 
   useEffect(() => {
