@@ -31,7 +31,8 @@ The problems cover what's actually inside Transformers, vLLM, TRL, diffusion mod
 
 ### Features
 
-- **Browser editor** — Monaco with Python syntax highlighting, no IDE setup
+- **Browser editor** — Monaco with Python syntax highlighting and autocomplete for
+  `torch`, `nn`, `F`, `np`, `math` and tensor methods, no IDE setup
 - **Instant feedback** — submit and see pass/fail per test case in seconds
 - **Reference solutions** — compare after your own attempt
 - **Progress tracking** — solved count and attempt history, persisted across sessions
