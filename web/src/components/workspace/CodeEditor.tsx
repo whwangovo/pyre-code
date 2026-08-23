@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import type { OnMount } from '@monaco-editor/react';
 import { appleLight, appleDark } from '@/lib/monacoTheme';
+import { registerPythonCompletions } from '@/lib/pythonCompletions';
 import { useTheme } from '@/context/ThemeContext';
 
 const Editor = dynamic(() => import('@monaco-editor/react').then((m) => m.default), {
@@ -47,6 +48,7 @@ export function CodeEditor({
     monaco.editor.defineTheme('apple-light', appleLight);
     monaco.editor.defineTheme('apple-dark', appleDark);
     monaco.editor.setTheme(theme === 'dark' ? 'apple-dark' : 'apple-light');
+    void registerPythonCompletions(monaco);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current?.());
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => submitRef.current?.());
   };
@@ -77,6 +79,10 @@ export function CodeEditor({
         cursorBlinking: 'smooth',
         cursorSmoothCaretAnimation: 'on',
         bracketPairColorization: { enabled: true },
+        quickSuggestions: { other: true, comments: false, strings: false },
+        suggestOnTriggerCharacters: true,
+        wordBasedSuggestions: 'currentDocument',
+        suggest: { showWords: true, localityBonus: true },
         overviewRulerBorder: false,
         hideCursorInOverviewRuler: true,
         scrollbar: {
