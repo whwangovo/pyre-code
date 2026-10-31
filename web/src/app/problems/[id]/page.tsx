@@ -64,6 +64,8 @@ function WorkspacePageNew() {
   const [progress, setProgress] = useState<ProgressMap>({});
   const [pathData, setPathData] = useState<(Omit<LearningPath, 'problems'> & { problems: LearningPathProblemSummary[] }) | null>(null);
   const [feedbackResult, setFeedbackResult] = useState<SubmissionResult | null>(null);
+  // Set when the problem can't be shown: an unknown id (old link, typo) or a backend error
+  const [loadError, setLoadError] = useState<'notFound' | 'failed' | null>(null);
   const codeReadyRef = useRef(false);
   // The code last loaded or saved, so only real edits get saved
   const savedCodeRef = useRef<string | null>(null);
@@ -75,9 +77,14 @@ function WorkspacePageNew() {
     const seq = ++loadSeqRef.current;
     const isStale = () => seq !== loadSeqRef.current;
     codeReadyRef.current = false;
+    setLoadError(null);
     fetch(`/api/problems/${id}`)
-      .then((r) => r.json())
-      .then(async (data: Problem & { starterCode?: string }) => {
+      .then(async (r) => {
+        if (!r.ok) {
+          if (!isStale()) setLoadError(r.status === 404 ? 'notFound' : 'failed');
+          return;
+        }
+        const data: Problem & { starterCode?: string } = await r.json();
         if (isStale()) return;
         // Hot 100 remembers the learner's answer mode; AI problems are always core
         const mode: CodeMode = data.starters ? loadCodeMode() : 'core';
@@ -91,13 +98,16 @@ function WorkspacePageNew() {
         codeReadyRef.current = true;
         setSubmissionResult(null);
         resetTestPanel();
-      });
+      })
+      .catch(() => { if (!isStale()) setLoadError('failed'); });
     fetch('/api/problems')
       .then((r) => r.json())
-      .then((d) => setAllProblems(d.problems));
+      .then((d) => setAllProblems(d.problems))
+      .catch(() => {});
     fetch('/api/progress')
       .then((r) => r.json())
-      .then((d) => setProgress(d.progress || {}));
+      .then((d) => setProgress(d.progress || {}))
+      .catch(() => {});
     // Cleared up front (not in resetTestPanel after the problem loads), so a history
     // response that beats the problem response isn't wiped
     setSubmissionHistory([]);
@@ -264,6 +274,15 @@ function WorkspacePageNew() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [handleRun, handleSubmit, isRunning, isSubmitting]);
+
+  if (loadError) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-3 bg-bg">
+        <p className="text-sm text-text-2">{t(loadError === 'notFound' ? 'problemNotFound' : 'problemLoadFailed')}</p>
+        <Link href="/problems" className="text-sm text-accent hover:underline">{t('backToProblems')}</Link>
+      </div>
+    );
+  }
 
   if (!problem) {
     return (
