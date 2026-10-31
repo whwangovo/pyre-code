@@ -17,7 +17,9 @@ from torch_judge.tasks import TASKS
 @pytest.mark.parametrize("task_id", sorted(TASKS))
 def test_reference_solution_passes(task_id):
     task = TASKS[task_id]
-    result = _execute_tests(task["solution"], task, capture_output=False)
+    # In-process: the reference solutions are trusted, and a runner process per task would
+    # turn a 3 s run into minutes. scripts/test_grading_service.py covers the isolation.
+    result = _execute_tests(task["solution"], task, capture_output=False, isolated=False)
     failures = [(r.name, r.error) for r in result.results if not r.passed]
     assert result.allPassed, result.error or failures
 
@@ -39,5 +41,5 @@ def test_mutant_dir_names_a_task_and_has_enough_mutants(task_dir):
 def test_classic_mistake_is_caught(path):
     code = path.read_text(encoding="utf-8")
     assert code.startswith("# Mistake:")
-    result = _execute_tests(code, TASKS[path.parent.name], capture_output=False)
+    result = _execute_tests(code, TASKS[path.parent.name], capture_output=False, isolated=False)
     assert not result.allPassed, f"every test passes; first line: {code.splitlines()[0]}"

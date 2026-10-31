@@ -7,23 +7,23 @@ from pathlib import Path
 # Add project root to sys.path for torch_judge imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import io
 import json
 import os
+import queue
+import signal
+import subprocess
 import threading
-import time
+from collections import deque
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from grading_service import runner
 from torch_judge.algo import judge as algo_judge
 from torch_judge.tasks import get_task
 
 app = FastAPI(title="Grading Service")
-
-# Lock to serialize sys.stdout redirects across concurrent request threads
-_stdout_lock = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # SQLite DB (user sessions + progress)
@@ -158,30 +158,151 @@ def _validate_code(code: str) -> str | None:
     return None
 
 
-def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None, capture_output: bool = True) -> GradeResponse:
-    import torch, math
+# ---------------------------------------------------------------------------
+# AI-track execution: an isolated runner process per submission (see runner.py)
+# ---------------------------------------------------------------------------
+
+RUNNER_PATH = Path(runner.__file__)
+# Interpreter start, importing torch and loading the learner's code, before the first test
+LOAD_BUDGET_S = float(os.environ.get("AI_JUDGE_LOAD_BUDGET_S", "30"))
+# Wall-clock limit for one test case
+TEST_LIMIT_S = float(os.environ.get("AI_JUDGE_TEST_LIMIT_S", "10"))
+MAX_STDERR_LINES = 12
+
+
+def _spawn_runner(job: dict[str, Any]) -> subprocess.Popen:
+    # Its own session (process group), so a kill also reaches anything the learner's code spawned
+    proc = subprocess.Popen(
+        [sys.executable, "-I", str(RUNNER_PATH)],
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, encoding="utf-8", errors="replace", start_new_session=(os.name == "posix"),
+    )
+    try:
+        assert proc.stdin is not None
+        proc.stdin.write(json.dumps(job))
+        proc.stdin.close()
+    except OSError:
+        pass  # it died before reading; the missing outcomes are reported by the caller
+    return proc
+
+
+def _kill_runner(proc: subprocess.Popen) -> None:
+    try:
+        if os.name == "posix":
+            os.killpg(proc.pid, signal.SIGKILL)
+        else:
+            proc.kill()
+    except OSError:
+        pass
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        pass
+
+
+def _pump_lines(stream, out: queue.Queue) -> None:
+    try:
+        for line in stream:
+            out.put(line)
+    except (OSError, ValueError):
+        pass
+    finally:
+        out.put(None)  # EOF: the process ended
+
+
+def _pump_stderr(stream, tail: deque) -> None:
+    # Drained in its own thread so a chatty process can't block on a full stderr pipe
+    try:
+        for line in stream:
+            tail.append(line.rstrip("\n"))
+    except (OSError, ValueError):
+        pass
+
+
+def _failed(test: dict[str, Any], error: str) -> dict[str, Any]:
+    return {"name": test["name"], "passed": False, "execTimeMs": 0.0, "error": error, "output": None}
+
+
+def _run_job_isolated(job: dict[str, Any]) -> list[dict[str, Any]]:
+    """Run ``job`` in runner subprocesses and return its outcomes (shapes in runner.py).
+
+    One process normally runs every test. When a test exceeds TEST_LIMIT_S or takes the
+    process down with it, that test is recorded as failed and the remaining tests continue
+    in a fresh process: one bad test costs itself, not the submission or the service.
+    """
+    tests = job["tests"]
+    outcomes: list[dict[str, Any]] = []
+    while len(outcomes) < len(tests):
+        first = len(outcomes)
+        proc = _spawn_runner({**job, "tests": tests[first:]})
+        lines: queue.Queue = queue.Queue()
+        stderr_tail: deque = deque(maxlen=MAX_STDERR_LINES)
+        pumps = [
+            threading.Thread(target=_pump_lines, args=(proc.stdout, lines), daemon=True),
+            threading.Thread(target=_pump_stderr, args=(proc.stderr, stderr_tail), daemon=True),
+        ]
+        for pump in pumps:
+            pump.start()
+        loaded = False
+        try:
+            while len(outcomes) < len(tests):
+                current = tests[len(outcomes)]
+                try:
+                    line = lines.get(timeout=TEST_LIMIT_S if loaded else LOAD_BUDGET_S)
+                except queue.Empty:
+                    if not loaded and first == 0:
+                        return [{"load_error": f"Time Limit Exceeded: the code did not finish loading within {LOAD_BUDGET_S:g}s"}]
+                    outcomes.append(_failed(current, f"Time Limit Exceeded (> {TEST_LIMIT_S:g}s)"))
+                    break
+                if line is None:
+                    detail = "\n".join(stderr_tail) or "the process exited unexpectedly"
+                    if not loaded and first == 0:
+                        return [{"load_error": f"Runtime Error\n{detail}"}]
+                    outcomes.append(_failed(current, f"Runtime Error\n{detail}"))
+                    break
+                try:
+                    item = json.loads(line)
+                except json.JSONDecodeError:
+                    continue  # something wrote to the real stdout; the outcome line follows
+                if item.get("loaded"):
+                    loaded = True
+                elif "load_error" in item:
+                    if first == 0:
+                        return [item]
+                    outcomes.append(_failed(current, item["load_error"]))
+                    break
+                else:
+                    outcomes.append({**item, "name": current["name"]})
+        finally:
+            _kill_runner(proc)
+            for pump in pumps:
+                pump.join(timeout=2)
+            for stream in (proc.stdin, proc.stdout, proc.stderr):
+                if stream is not None:
+                    stream.close()
+    return outcomes
+
+
+def _execute_tests(
+    code: str,
+    task: dict,
+    test_indices: list[int] | None = None,
+    capture_output: bool = True,
+    isolated: bool = True,
+) -> GradeResponse:
+    """Grade ``code`` against an AI-track task.
+
+    ``isolated=False`` runs the tests in this process. It exists for the test-suite, where the
+    reference solutions are trusted and an interpreter per task would dominate the run; the
+    service always isolates.
+    """
     err = _validate_code(code)
     if err:
         return GradeResponse(passed=0, total=0, allPassed=False, results=[], totalTimeMs=0.0, error=err)
-    user_ns: dict[str, Any] = {
-        "torch": torch,
-        "Tensor": torch.Tensor,
-        "nn": torch.nn,
-        "F": torch.nn.functional,
-        "np": __import__("numpy"),
-        "math": math,
-    }
-    try:
-        exec(code, user_ns)
-    except SyntaxError as e:
-        return GradeResponse(passed=0, total=0, allPassed=False, results=[], totalTimeMs=0.0, error=f"Syntax error: {e}")
 
     fn_name = task.get("function_name")
     if fn_name is None:
         return GradeResponse(passed=0, total=0, allPassed=False, results=[], totalTimeMs=0.0, error="Task has no function_name defined")
-
-    if fn_name not in user_ns:
-        return GradeResponse(passed=0, total=0, allPassed=False, results=[], totalTimeMs=0.0, error=f"Function '{fn_name}' not found in submitted code")
 
     all_tests = task.get("tests", [])
     tests = [all_tests[i] for i in test_indices if 0 <= i < len(all_tests)] if test_indices is not None else all_tests
@@ -192,62 +313,25 @@ def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None,
             error=f"All provided test indices are out of range (valid range: 0..{len(all_tests) - 1})",
         )
 
-    results: list[TestResult] = []
-    passed = 0
-    total_time_ms = 0.0
+    job = {
+        "code": code,
+        "function_name": fn_name,
+        "capture": capture_output,
+        "tests": [{"name": test["name"], "code": test["code"].replace("{fn}", fn_name)} for test in tests],
+    }
+    outcomes = _run_job_isolated(job) if isolated else list(runner.run_job(job))
+    if outcomes and "load_error" in outcomes[0]:
+        return GradeResponse(passed=0, total=0, allPassed=False, results=[], totalTimeMs=0.0, error=outcomes[0]["load_error"])
 
-    for test in tests:
-        _torch = __import__("torch")
-        test_ns: dict[str, Any] = {
-            "torch": _torch,
-            "Tensor": _torch.Tensor,
-            "nn": _torch.nn,
-            "F": _torch.nn.functional,
-            "np": __import__("numpy"),
-            "math": math,
-            fn_name: user_ns[fn_name],
-        }
-        test_code = test["code"].replace("{fn}", fn_name)
-
-        # Capture stdout for print output
-        output = None
-        if capture_output:
-            with _stdout_lock:
-                old_stdout = sys.stdout
-                sys.stdout = captured = io.StringIO()
-                try:
-                    start = time.perf_counter()
-                    exec(test_code, test_ns)
-                    exec_time_ms = (time.perf_counter() - start) * 1000
-                    output = captured.getvalue() or None
-                    results.append(TestResult(name=test["name"], passed=True, execTimeMs=exec_time_ms, output=output))
-                    passed += 1
-                except AssertionError as e:
-                    exec_time_ms = (time.perf_counter() - start) * 1000
-                    output = captured.getvalue() or None
-                    results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=str(e), output=output))
-                except Exception as e:
-                    exec_time_ms = (time.perf_counter() - start) * 1000
-                    output = captured.getvalue() or None
-                    results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=f"{type(e).__name__}: {e}", output=output))
-                finally:
-                    sys.stdout = old_stdout
-        else:
-            start = time.perf_counter()
-            try:
-                exec(test_code, test_ns)
-                exec_time_ms = (time.perf_counter() - start) * 1000
-                results.append(TestResult(name=test["name"], passed=True, execTimeMs=exec_time_ms))
-                passed += 1
-            except AssertionError as e:
-                exec_time_ms = (time.perf_counter() - start) * 1000
-                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=str(e)))
-            except Exception as e:
-                exec_time_ms = (time.perf_counter() - start) * 1000
-                results.append(TestResult(name=test["name"], passed=False, execTimeMs=exec_time_ms, error=f"{type(e).__name__}: {e}"))
-        total_time_ms += exec_time_ms
-
-    return GradeResponse(passed=passed, total=len(results), allPassed=passed == len(results), results=results, totalTimeMs=total_time_ms)
+    results = [
+        TestResult(name=o["name"], passed=o["passed"], execTimeMs=o["execTimeMs"], error=o.get("error"), output=o.get("output"))
+        for o in outcomes if "name" in o
+    ]
+    passed = sum(1 for r in results if r.passed)
+    return GradeResponse(
+        passed=passed, total=len(results), allPassed=passed == len(results), results=results,
+        totalTimeMs=sum(r.execTimeMs for r in results),
+    )
 
 
 def _grade(task_id: str, code: str, mode: str, test_indices: list[int] | None = None) -> GradeResponse:
