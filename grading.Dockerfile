@@ -13,7 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY torch_judge/ /app/torch_judge/
 COPY grading_service/ /app/grading_service/
-COPY solutions/ /app/solutions/
 COPY pyproject.toml /app/pyproject.toml
 
 RUN mkdir -p /app/data
