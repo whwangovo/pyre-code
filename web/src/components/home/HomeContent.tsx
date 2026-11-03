@@ -9,10 +9,10 @@ import { useLocale } from '@/context/LocaleContext';
 import type { LearningPath } from '@/lib/types';
 
 interface HomeContentProps {
-  stats: { total: number; easy: number; medium: number; hard: number };
+  stats: { total: number; easy: number; medium: number; hard: number; topics: number };
 }
 
-type PathWithProgress = LearningPath & { solved: number; total: number };
+type PathWithProgress = LearningPath & { solved: number; total: number; easy: number; medium: number; hard: number };
 
 interface CategoryInfo {
   name: string;
@@ -130,9 +130,9 @@ export function HomeContent({ stats }: HomeContentProps) {
           name: locale === 'zh' ? p.titleZh : p.titleEn,
           description: locale === 'zh' ? p.descriptionZh : p.descriptionEn,
           total: p.total,
-          easy: Math.round(p.total * 0.25),
-          medium: Math.round(p.total * 0.45),
-          hard: p.total - Math.round(p.total * 0.25) - Math.round(p.total * 0.45),
+          easy: p.easy,
+          medium: p.medium,
+          hard: p.hard,
         }));
         setCategories(cats);
       });
@@ -185,7 +185,7 @@ export function HomeContent({ stats }: HomeContentProps) {
             <div className="flex gap-6 mt-8 pt-5" style={{ borderTop: '1px dashed var(--line)' }}>
               {[
                 { k: t('metaTotal'), v: t('metaTotalVal', { n: stats.total }) },
-                { k: t('metaCoverage'), v: t('metaCoverageVal', { n: 13 }) },
+                { k: t('metaCoverage'), v: t('metaCoverageVal', { n: stats.topics }) },
                 { k: t('metaRuntime'), v: t('metaRuntimeVal') },
                 { k: t('metaJudge'), v: 'torch_judge' },
               ].map((m) => (

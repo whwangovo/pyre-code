@@ -37,6 +37,8 @@ function FlameGlyph() {
   );
 }
 
+type LeftTab = 'description' | 'knowledge' | 'solution' | 'aiHelp' | 'submissionsTab';
+
 export default function WorkspacePage() {
   return <WorkspacePageNew />;
 }
@@ -66,6 +68,8 @@ function WorkspacePageNew() {
   const [feedbackResult, setFeedbackResult] = useState<SubmissionResult | null>(null);
   // Set when the problem can't be shown: an unknown id (old link, typo) or a backend error
   const [loadError, setLoadError] = useState<'notFound' | 'failed' | null>(null);
+  // Controlled so the feedback modal's "View Hint" can open the AI Help tab
+  const [leftTab, setLeftTab] = useState<LeftTab>('description');
   const codeReadyRef = useRef(false);
   // The code last loaded or saved, so only real edits get saved
   const savedCodeRef = useRef<string | null>(null);
@@ -91,6 +95,8 @@ function WorkspacePageNew() {
         const cachedCode = await resolveCodeDraft(id, mode);
         if (isStale()) return;
         setProblem(data);
+        // Hot 100 has no concept notes; don't leave the hidden knowledge tab selected
+        if (data.track === 'hot100') setLeftTab((tab) => (tab === 'knowledge' ? 'description' : tab));
         setCodeMode(mode);
         const code = cachedCode ?? data.starters?.[mode] ?? data.starterCode ?? '';
         savedCodeRef.current = code;
@@ -300,7 +306,7 @@ function WorkspacePageNew() {
 
   const leftPanel = (
     <div className="h-full flex flex-col bg-bg">
-      <Tabs.Root defaultValue="description" className="flex flex-col h-full">
+      <Tabs.Root value={leftTab} onValueChange={(v) => setLeftTab(v as LeftTab)} className="flex flex-col h-full">
         <div
           className="flex items-center px-3.5 h-10 gap-1 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--line)', background: 'var(--bg)' }}
@@ -511,6 +517,10 @@ function WorkspacePageNew() {
         <FeedbackModal
           result={feedbackResult}
           onClose={() => setFeedbackResult(null)}
+          onViewHint={() => {
+            setFeedbackResult(null);
+            setLeftTab('aiHelp');
+          }}
           attemptNumber={submissionHistory.length}
           pathProgress={pathData ? {
             solved: pathData.problems.filter(p => p.status === 'solved').length,

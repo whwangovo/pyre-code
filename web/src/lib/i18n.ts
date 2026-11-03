@@ -151,7 +151,7 @@ const en = {
   metaRuntime: 'Runtime',
   metaJudge: 'Judge',
   metaTotalVal: '{n} problems',
-  metaCoverageVal: '{n} categories',
+  metaCoverageVal: '{n} topics',
   metaRuntimeVal: 'CPU · local',
   // footer
   footerBrand: 'PYRE_CODE · MIT · Built on torch_judge',
@@ -316,7 +316,7 @@ const zh: Translations = {
   metaRuntime: '运行环境',
   metaJudge: '评测器',
   metaTotalVal: '{n} 道题',
-  metaCoverageVal: '{n} 个分类',
+  metaCoverageVal: '{n} 个专题',
   metaRuntimeVal: 'CPU · 本地',
   footerBrand: 'PYRE_CODE · MIT · 基于 torch_judge',
   problemsSubtitle: '逐个函数实现现代 AI 的内核。',

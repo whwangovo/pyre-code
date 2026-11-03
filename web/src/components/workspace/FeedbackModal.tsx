@@ -12,23 +12,28 @@ interface FeedbackModalProps {
   onClose: () => void;
   attemptNumber?: number;
   pathProgress?: { solved: number; total: number; name: string } | null;
+  /** Opens the AI Help tab; the "View Hint" offer is shown only when provided */
+  onViewHint?: () => void;
+}
+
+// Messages produced before any test runs: Python's SyntaxError / IndentationError and the
+// grading service's static check ("Syntax error: ...", "... allowed at the top level")
+const COMPILE_MARKERS = ['syntaxerror', 'syntax error', 'indentationerror', 'indentation', 'allowed at the top level'];
+// Exceptions arrive as "SomeError: ..." or "SomeException: ..."; the judge itself reports
+// "Runtime Error" and "Time Limit Exceeded". A failed assertion carries only its own message.
+const RUNTIME_MARKER = /^(\w*(Error|Exception)\b|Runtime Error|Time Limit Exceeded)/;
+
+function isCompileError(message: string): boolean {
+  const text = message.toLowerCase();
+  return COMPILE_MARKERS.some((marker) => text.includes(marker));
 }
 
 function classifyResult(result: SubmissionResult): FeedbackKind {
   if (result.allPassed) return 'accepted';
-  if (result.error) {
-    const err = result.error.toLowerCase();
-    if (err.includes('syntaxerror') || err.includes('ast') || err.includes('parse') || err.includes('indentation'))
-      return 'compile';
-    return 'runtime';
-  }
-  if (result.results.some(r => r.error)) {
-    const firstErr = result.results.find(r => r.error)?.error?.toLowerCase() ?? '';
-    if (firstErr.includes('syntaxerror') || firstErr.includes('indentation'))
-      return 'compile';
-    if (firstErr.includes('error'))
-      return 'runtime';
-  }
+  if (result.error) return isCompileError(result.error) ? 'compile' : 'runtime';
+  const firstErr = result.results.find((r) => r.error)?.error ?? '';
+  if (isCompileError(firstErr)) return 'compile';
+  if (RUNTIME_MARKER.test(firstErr)) return 'runtime';
   return 'wrong';
 }
 
@@ -87,19 +92,16 @@ const kindConfig: Record<FeedbackKind, {
 function AcceptedBody({ result, pathProgress }: { result: SubmissionResult; pathProgress?: { solved: number; total: number; name: string } | null }) {
   const { locale } = useLocale();
   const totalMs = result.totalTimeMs;
-  const bars = Array.from({ length: 20 }, (_, i) => {
-    const h = Math.random() * 0.8 + 0.2;
-    const isYou = i === 13;
-    return { h, isYou };
-  });
+  const slowestMs = result.results.reduce((max, r) => Math.max(max, r.execTimeMs), 0);
 
   return (
     <>
+      {/* Only what the judge measured: total and slowest test time, tests passed */}
       <div className="grid grid-cols-3 gap-2.5 mb-3.5">
         {[
           { k: locale === 'zh' ? '运行时间' : 'Runtime', v: `${totalMs.toFixed(0)}`, u: 'ms' },
-          { k: locale === 'zh' ? '内存' : 'Memory', v: `${(Math.random() * 20 + 5).toFixed(1)}`, u: 'MB' },
-          { k: locale === 'zh' ? '百分位' : 'Percentile', v: `p${Math.floor(Math.random() * 30 + 50)}`, u: '' },
+          { k: locale === 'zh' ? '最慢用例' : 'Slowest test', v: `${slowestMs.toFixed(0)}`, u: 'ms' },
+          { k: locale === 'zh' ? '通过用例' : 'Tests passed', v: `${result.passed}/${result.total}`, u: '' },
         ].map(({ k, v, u }) => (
           <div key={k} className="p-3 rounded-[9px] border border-[var(--line)]" style={{ background: 'var(--bg-sunken)' }}>
             <div className="font-mono text-[10px] tracking-[.12em] uppercase text-text-3">{k}</div>
@@ -108,26 +110,6 @@ function AcceptedBody({ result, pathProgress }: { result: SubmissionResult; path
             </div>
           </div>
         ))}
-      </div>
-
-      <h4 className="font-mono text-[10.5px] tracking-[.12em] uppercase text-text-3 font-medium mb-2">
-        {locale === 'zh' ? '运行时间分布' : 'Runtime Distribution'}
-      </h4>
-      <div
-        className="relative h-11 rounded-[9px] border border-[var(--line)] flex items-end gap-0.5 px-2.5 py-1.5 overflow-hidden"
-        style={{ background: 'var(--bg-sunken)' }}
-      >
-        {bars.map((b, i) => (
-          <div
-            key={i}
-            className={`flex-1 rounded-t-sm ${b.isYou ? 'bg-easy opacity-100' : 'bg-text-3 opacity-40'}`}
-            style={{ height: `${b.h * 100}%` }}
-          />
-        ))}
-      </div>
-      <div className="flex justify-between font-mono text-[10.5px] text-text-3 mt-1.5 tracking-wider">
-        <span>0ms</span>
-        <span>{(totalMs * 3).toFixed(0)}ms</span>
       </div>
 
       {pathProgress && pathProgress.total > 0 && (
@@ -168,7 +150,7 @@ function parseDiffFromError(error: string): { expected?: string; got?: string } 
   return null;
 }
 
-function WrongBody({ result }: { result: SubmissionResult }) {
+function WrongBody({ result, onViewHint }: { result: SubmissionResult; onViewHint?: () => void }) {
   const { locale } = useLocale();
   const firstFail = result.results.find(r => !r.passed);
   const diff = firstFail?.error ? parseDiffFromError(firstFail.error) : null;
@@ -219,22 +201,26 @@ function WrongBody({ result }: { result: SubmissionResult }) {
       ) : null}
 
       {/* Hint offer */}
-      <div
-        className="flex items-center gap-3 p-3 rounded-[10px] border border-dashed border-[var(--line)] mt-2.5"
-        style={{ background: 'var(--bg-sunken)' }}
-      >
-        <Sparkles className="w-[18px] h-[18px] text-accent flex-shrink-0" />
-        <div className="flex-1 text-[13px] text-text-2">
-          <span className="font-medium text-text">{locale === 'zh' ? '需要提示？' : 'Need a nudge?'}</span>{' '}
-          {locale === 'zh' ? '切换到 AI Help 标签获取针对性提示。' : 'Switch to the AI Help tab for a targeted hint.'}
-        </div>
-        <button
-          className="h-7 px-3 text-xs rounded-[7px] cursor-pointer text-accent flex-shrink-0"
-          style={{ border: '1px solid var(--accent-line)', background: 'var(--accent-wash)' }}
+      {onViewHint && (
+        <div
+          className="flex items-center gap-3 p-3 rounded-[10px] border border-dashed border-[var(--line)] mt-2.5"
+          style={{ background: 'var(--bg-sunken)' }}
         >
-          {locale === 'zh' ? '查看提示' : 'View Hint'}
-        </button>
-      </div>
+          <Sparkles className="w-[18px] h-[18px] text-accent flex-shrink-0" />
+          <div className="flex-1 text-[13px] text-text-2">
+            <span className="font-medium text-text">{locale === 'zh' ? '需要提示？' : 'Need a nudge?'}</span>{' '}
+            {locale === 'zh' ? '切换到 AI Help 标签获取针对性提示。' : 'Switch to the AI Help tab for a targeted hint.'}
+          </div>
+          <button
+            type="button"
+            onClick={onViewHint}
+            className="h-7 px-3 text-xs rounded-[7px] cursor-pointer text-accent flex-shrink-0"
+            style={{ border: '1px solid var(--accent-line)', background: 'var(--accent-wash)' }}
+          >
+            {locale === 'zh' ? '查看提示' : 'View Hint'}
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -452,19 +438,19 @@ function getCompileHints(error: string, locale: string): string[] {
   const e = error.toLowerCase();
   if (locale === 'zh') {
     if (e.includes('indent'))
-      return ['检查缩进是否一致（使用空格而非 Tab）。', 'Pyre 使用 ast.parse() 进行静态检查，未运行任何测试。'];
-    if (e.includes('import'))
-      return ['不允许在顶层使用 import 语句。', 'torch、nn、F、np、math 已预注入，无需导入。'];
-    return ['检查语法错误（括号、逗号、冒号）。', 'Pyre 使用 ast.parse() 进行静态检查，未运行任何测试。'];
+      return ['检查缩进是否一致（使用空格而非 Tab）。', '这是 ast.parse() 阶段的静态检查，还没有运行任何测试。'];
+    if (e.includes('top level'))
+      return ['顶层只允许 import、def、class 和赋值语句。', '把 if / for / while / with / try 这类语句移到函数内部。'];
+    return ['检查语法错误（括号、逗号、冒号）。', '这是 ast.parse() 阶段的静态检查，还没有运行任何测试。'];
   }
   if (e.includes('indent'))
-    return ['Check indentation consistency (spaces, not tabs).', 'Pyre caught this with ast.parse() — no test cases ran.'];
-  if (e.includes('import'))
-    return ['Top-level import statements are not allowed.', 'torch, nn, F, np, math are pre-injected — no imports needed.'];
-  return ['Check for syntax errors (brackets, commas, colons).', 'Pyre caught this with ast.parse() — no test cases ran.'];
+    return ['Check indentation consistency (spaces, not tabs).', 'This is the ast.parse() static check; no test case ran.'];
+  if (e.includes('top level'))
+    return ['Only import, def, class and assignments are allowed at the top level.', 'Move if / for / while / with / try statements inside a function.'];
+  return ['Check for syntax errors (brackets, commas, colons).', 'This is the ast.parse() static check; no test case ran.'];
 }
 
-export function FeedbackModal({ result, onClose, attemptNumber, pathProgress }: FeedbackModalProps) {
+export function FeedbackModal({ result, onClose, attemptNumber, pathProgress, onViewHint }: FeedbackModalProps) {
   const { locale } = useLocale();
   const modalRef = useRef<HTMLDivElement>(null);
   const kind = classifyResult(result);
@@ -541,7 +527,7 @@ export function FeedbackModal({ result, onClose, attemptNumber, pathProgress }: 
         {/* Body */}
         <div className="px-6 py-5 overflow-auto flex-1 min-h-0">
           {kind === 'accepted' && <AcceptedBody result={result} pathProgress={pathProgress} />}
-          {kind === 'wrong' && <WrongBody result={result} />}
+          {kind === 'wrong' && <WrongBody result={result} onViewHint={onViewHint} />}
           {kind === 'runtime' && <RuntimeBody result={result} />}
           {kind === 'compile' && <CompileBody result={result} />}
         </div>
