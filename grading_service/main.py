@@ -16,14 +16,14 @@ import threading
 from collections import deque
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
 from grading_service import runner
 from torch_judge.algo import judge as algo_judge
 from torch_judge.tasks import get_task
-
-app = FastAPI(title="Grading Service")
 
 # ---------------------------------------------------------------------------
 # SQLite DB (user sessions + progress)
@@ -32,76 +32,116 @@ app = FastAPI(title="Grading Service")
 _DB_PATH = os.environ.get("DB_PATH", str(Path(__file__).parent.parent / "data" / "pyre.db"))
 
 
-def _get_db() -> sqlite3.Connection:
+def _init_db() -> None:
+    """Create the schema and run migrations once, at startup (see lifespan)."""
     Path(_DB_PATH).parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(_DB_PATH) as conn:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_token TEXT UNIQUE NOT NULL,
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                task_id TEXT NOT NULL,
+                status TEXT NOT NULL CHECK (status IN ('todo', 'attempted', 'solved')),
+                best_time_ms REAL,
+                attempts INTEGER DEFAULT 0,
+                solved_at TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                UNIQUE(user_id, task_id)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS submissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                task_id TEXT NOT NULL,
+                code TEXT NOT NULL,
+                passed INTEGER NOT NULL,
+                exec_time_ms REAL,
+                submitted_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        # Additive migrations; guarded because `uvicorn --workers 2` runs this twice
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(submissions)")}
+        for name, ddl in (
+            # Answer mode ('core' or 'acm') of Hot 100 submissions; older rows default to core
+            ("mode", "ALTER TABLE submissions ADD COLUMN mode TEXT NOT NULL DEFAULT 'core'"),
+            # Free-text note the learner attaches to a submission
+            ("note", "ALTER TABLE submissions ADD COLUMN note TEXT NOT NULL DEFAULT ''"),
+        ):
+            if name not in columns:
+                try:
+                    conn.execute(ddl)
+                except sqlite3.OperationalError:
+                    pass  # the other worker won the race
+        # Unsubmitted editor code, so a draft follows the learner across devices.
+        # updated_at is the client's edit time in epoch ms; the newest edit wins.
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS drafts (
+                user_id INTEGER NOT NULL,
+                task_id TEXT NOT NULL,
+                mode TEXT NOT NULL,
+                code TEXT NOT NULL,
+                updated_at INTEGER NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                PRIMARY KEY (user_id, task_id, mode)
+            )
+        """)
+        # The AI help conversation for each problem, as a JSON array of chat messages
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS ai_chats (
+                user_id INTEGER NOT NULL,
+                task_id TEXT NOT NULL,
+                messages TEXT NOT NULL,
+                updated_at TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                PRIMARY KEY (user_id, task_id)
+            )
+        """)
+        # History reads filter by (user_id, task_id)
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_submissions_user_task ON submissions(user_id, task_id)"
+        )
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    _init_db()
+    yield
+
+
+app = FastAPI(title="Grading Service", lifespan=lifespan)
+
+
+def _get_db() -> sqlite3.Connection:
+    """A fresh connection with its pragmas; the schema is set up once in lifespan."""
     conn = sqlite3.connect(_DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_token TEXT UNIQUE NOT NULL,
-            created_at TEXT DEFAULT (datetime('now'))
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS progress (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            task_id TEXT NOT NULL,
-            status TEXT NOT NULL CHECK (status IN ('todo', 'attempted', 'solved')),
-            best_time_ms REAL,
-            attempts INTEGER DEFAULT 0,
-            solved_at TEXT,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            UNIQUE(user_id, task_id)
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS submissions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            task_id TEXT NOT NULL,
-            code TEXT NOT NULL,
-            passed INTEGER NOT NULL,
-            exec_time_ms REAL,
-            submitted_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    """)
-    # Answer mode ('core' or 'acm') of Hot 100 submissions; older rows default to core
-    columns = {row[1] for row in conn.execute("PRAGMA table_info(submissions)")}
-    if "mode" not in columns:
-        conn.execute("ALTER TABLE submissions ADD COLUMN mode TEXT NOT NULL DEFAULT 'core'")
-    # Free-text note the learner attaches to a submission
-    if "note" not in columns:
-        conn.execute("ALTER TABLE submissions ADD COLUMN note TEXT NOT NULL DEFAULT ''")
-    # Unsubmitted editor code, so a draft follows the learner across devices.
-    # updated_at is the client's edit time in epoch ms; the newest edit wins.
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS drafts (
-            user_id INTEGER NOT NULL,
-            task_id TEXT NOT NULL,
-            mode TEXT NOT NULL,
-            code TEXT NOT NULL,
-            updated_at INTEGER NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            PRIMARY KEY (user_id, task_id, mode)
-        )
-    """)
-    # The AI help conversation for each problem, as a JSON array of chat messages
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS ai_chats (
-            user_id INTEGER NOT NULL,
-            task_id TEXT NOT NULL,
-            messages TEXT NOT NULL,
-            updated_at TEXT DEFAULT (datetime('now')),
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            PRIMARY KEY (user_id, task_id)
-        )
-    """)
-    conn.commit()
     return conn
+
+
+def _user_id_for_token(conn: sqlite3.Connection, session_token: str) -> int | None:
+    row = conn.execute("SELECT id FROM users WHERE session_token = ?", (session_token,)).fetchone()
+    return row[0] if row else None
+
+
+def _get_or_create_user(conn: sqlite3.Connection, session_token: str) -> int:
+    """Write paths may be a learner's first action; the token then mints the user."""
+    user_id = _user_id_for_token(conn, session_token)
+    if user_id is not None:
+        return user_id
+    cur = conn.execute("INSERT INTO users (session_token) VALUES (?)", (session_token,))
+    return cur.lastrowid
 
 
 class SubmitRequest(BaseModel):
@@ -375,10 +415,6 @@ def get_solution(task_id: str) -> dict[str, str]:
     return {"solution": task["solution"]}
 
 
-class UserRequest(BaseModel):
-    sessionToken: str
-
-
 class ProgressEntry(BaseModel):
     status: str
     bestTimeMs: float | None = None
@@ -386,29 +422,89 @@ class ProgressEntry(BaseModel):
     solvedAt: str | None = None
 
 
-class SaveProgressRequest(BaseModel):
+class SubmitAndSaveRequest(BaseModel):
     sessionToken: str
     taskId: str
-    status: str
-    execTimeMs: float | None = None
-    code: str | None = None
-    allPassed: bool | None = None
+    code: str
     mode: str = "core"
 
 
-@app.post("/users")
-def get_or_create_user(request: UserRequest) -> dict[str, int]:
-    with _get_db() as conn:
-        row = conn.execute("SELECT id FROM users WHERE session_token = ?", (request.sessionToken,)).fetchone()
-        if row:
-            return {"userId": row[0]}
-        cur = conn.execute("INSERT INTO users (session_token) VALUES (?)", (request.sessionToken,))
-        return {"userId": cur.lastrowid}
+def _record_submission(
+    conn: sqlite3.Connection,
+    user_id: int,
+    task_id: str,
+    status: str,
+    exec_time_ms: float | None,
+    code: str,
+    all_passed: bool,
+    mode: str,
+) -> None:
+    """Update progress and append to the submission history; the caller owns the transaction."""
+    existing = conn.execute(
+        "SELECT status, best_time_ms FROM progress WHERE user_id = ? AND task_id = ?",
+        (user_id, task_id),
+    ).fetchone()
+    if existing:
+        existing_status, existing_best_time = existing
+        if status == "solved":
+            if existing_best_time is not None and exec_time_ms is not None:
+                best = min(existing_best_time, exec_time_ms)
+            else:
+                best = existing_best_time if existing_best_time is not None else exec_time_ms
+            conn.execute(
+                "UPDATE progress SET status = ?, best_time_ms = ?, attempts = attempts + 1, solved_at = COALESCE(solved_at, datetime('now')) WHERE user_id = ? AND task_id = ?",
+                ("solved", best, user_id, task_id),
+            )
+        else:
+            next_status = existing_status if existing_status == "solved" and status in ("todo", "attempted") else status
+            conn.execute(
+                "UPDATE progress SET status = ?, attempts = attempts + 1 WHERE user_id = ? AND task_id = ?",
+                (next_status, user_id, task_id),
+            )
+    elif status == "solved":
+        conn.execute(
+            "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, datetime('now'))",
+            (user_id, task_id, status, exec_time_ms),
+        )
+    else:
+        conn.execute(
+            "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, NULL)",
+            (user_id, task_id, status, None),
+        )
+    conn.execute(
+        "INSERT INTO submissions (user_id, task_id, code, passed, exec_time_ms, mode) VALUES (?, ?, ?, ?, ?, ?)",
+        (user_id, task_id, code, 1 if all_passed else 0, exec_time_ms, mode),
+    )
 
 
-@app.get("/progress/{user_id}")
-def get_progress(user_id: int) -> dict[str, ProgressEntry]:
+@app.post("/submit", response_model=GradeResponse)
+def submit_and_save(request: SubmitAndSaveRequest) -> GradeResponse:
+    """Grade a submission and persist everything it implies in one transaction.
+
+    Replaces the web layer's old /grade + /users + /progress chain, which could
+    grade a submission and then fail to save it, or the reverse.
+    """
+    result = _grade(request.taskId, request.code, request.mode)
+    status = "solved" if result.allPassed else "attempted"
     with _get_db() as conn:
+        user_id = _get_or_create_user(conn, request.sessionToken)
+        _record_submission(
+            conn, user_id, request.taskId, status, result.totalTimeMs,
+            request.code, result.allPassed, request.mode,
+        )
+    return result
+
+
+@app.get("/progress")
+def get_progress(session_token: str | None = Header(default=None, alias="X-Session-Token")) -> dict[str, ProgressEntry]:
+    """The learner's progress by task id. A GET never creates a user: an unknown
+    or missing token reads as empty."""
+    if not session_token:
+        return {}
+    with _get_db() as conn:
+        user_id = _user_id_for_token(conn, session_token)
+        if user_id is None:
+            return {}
         rows = conn.execute(
             "SELECT task_id, status, best_time_ms, attempts, solved_at FROM progress WHERE user_id = ?",
             (user_id,)
@@ -419,59 +515,18 @@ def get_progress(user_id: int) -> dict[str, ProgressEntry]:
     }
 
 
-@app.post("/progress")
-def save_progress(request: SaveProgressRequest) -> dict[str, str]:
+@app.get("/submissions/{task_id}")
+def get_submissions(task_id: str, session_token: str | None = Header(default=None, alias="X-Session-Token")) -> list[dict]:
+    if not session_token:
+        return []
     with _get_db() as conn:
-        row = conn.execute("SELECT id FROM users WHERE session_token = ?", (request.sessionToken,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="User not found")
-        user_id = row[0]
-        existing = conn.execute(
-            "SELECT status, best_time_ms FROM progress WHERE user_id = ? AND task_id = ?",
-            (user_id, request.taskId)
-        ).fetchone()
-        if existing:
-            existing_status, existing_best_time = existing
-            if request.status == "solved":
-                if existing_best_time is not None and request.execTimeMs is not None:
-                    best = min(existing_best_time, request.execTimeMs)
-                else:
-                    best = existing_best_time if existing_best_time is not None else request.execTimeMs
-                conn.execute(
-                    "UPDATE progress SET status = ?, best_time_ms = ?, attempts = attempts + 1, solved_at = COALESCE(solved_at, datetime('now')) WHERE user_id = ? AND task_id = ?",
-                    ("solved", best, user_id, request.taskId)
-                )
-            else:
-                next_status = existing_status if existing_status == "solved" and request.status in ("todo", "attempted") else request.status
-                conn.execute(
-                    "UPDATE progress SET status = ?, attempts = attempts + 1 WHERE user_id = ? AND task_id = ?",
-                    (next_status, user_id, request.taskId)
-                )
-        else:
-            if request.status == "solved":
-                conn.execute(
-                    "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, datetime('now'))",
-                    (user_id, request.taskId, request.status, request.execTimeMs)
-                )
-            else:
-                conn.execute(
-                    "INSERT INTO progress (user_id, task_id, status, best_time_ms, attempts, solved_at) VALUES (?, ?, ?, ?, 1, NULL)",
-                    (user_id, request.taskId, request.status, None)
-                )
-        if request.code is not None:
-            conn.execute(
-                "INSERT INTO submissions (user_id, task_id, code, passed, exec_time_ms, mode) VALUES (?, ?, ?, ?, ?, ?)",
-                (user_id, request.taskId, request.code, 1 if request.allPassed else 0, request.execTimeMs, request.mode)
-            )
-    return {"ok": "true"}
-
-
-@app.get("/submissions/{user_id}/{task_id}")
-def get_submissions(user_id: int, task_id: str) -> list[dict]:
-    with _get_db() as conn:
+        user_id = _user_id_for_token(conn, session_token)
+        if user_id is None:
+            return []
+        # Newest first; id (not the second-resolution submitted_at) breaks same-second ties
         rows = conn.execute(
             "SELECT id, passed, exec_time_ms, submitted_at, code, mode, note FROM submissions "
-            "WHERE user_id = ? AND task_id = ? ORDER BY submitted_at DESC LIMIT 50",
+            "WHERE user_id = ? AND task_id = ? ORDER BY id DESC LIMIT 50",
             (user_id, task_id)
         ).fetchall()
     return [
@@ -516,9 +571,14 @@ class SaveDraftRequest(BaseModel):
     updatedAt: int
 
 
-@app.get("/drafts/{user_id}/{task_id}")
-def get_draft(user_id: int, task_id: str, mode: str = "core") -> dict | None:
+@app.get("/drafts/{task_id}")
+def get_draft(task_id: str, mode: str = "core", session_token: str | None = Header(default=None, alias="X-Session-Token")) -> dict | None:
+    if not session_token:
+        return None
     with _get_db() as conn:
+        user_id = _user_id_for_token(conn, session_token)
+        if user_id is None:
+            return None
         row = conn.execute(
             "SELECT code, updated_at FROM drafts WHERE user_id = ? AND task_id = ? AND mode = ?",
             (user_id, task_id, mode),
@@ -531,15 +591,14 @@ def save_draft(request: SaveDraftRequest) -> dict[str, str]:
     if len(request.code) > MAX_DRAFT_CHARS:
         raise HTTPException(status_code=400, detail=f"Draft is longer than {MAX_DRAFT_CHARS} characters")
     with _get_db() as conn:
-        row = conn.execute("SELECT id FROM users WHERE session_token = ?", (request.sessionToken,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="User not found")
+        # A draft is sometimes a learner's first write, so it may create the user
+        user_id = _get_or_create_user(conn, request.sessionToken)
         # A late-arriving older edit (e.g. from another device) never overwrites a newer one
         conn.execute(
             "INSERT INTO drafts (user_id, task_id, mode, code, updated_at) VALUES (?, ?, ?, ?, ?) "
             "ON CONFLICT (user_id, task_id, mode) DO UPDATE SET code = excluded.code, updated_at = excluded.updated_at "
             "WHERE excluded.updated_at > drafts.updated_at",
-            (row[0], request.taskId, request.mode, request.code, request.updatedAt),
+            (user_id, request.taskId, request.mode, request.code, request.updatedAt),
         )
     return {"ok": "true"}
 
@@ -559,9 +618,14 @@ class SaveAiChatRequest(BaseModel):
     messages: list[AiChatMessage]
 
 
-@app.get("/ai-chats/{user_id}/{task_id}")
-def get_ai_chat(user_id: int, task_id: str) -> list[dict]:
+@app.get("/ai-chats/{task_id}")
+def get_ai_chat(task_id: str, session_token: str | None = Header(default=None, alias="X-Session-Token")) -> list[dict]:
+    if not session_token:
+        return []
     with _get_db() as conn:
+        user_id = _user_id_for_token(conn, session_token)
+        if user_id is None:
+            return []
         row = conn.execute(
             "SELECT messages FROM ai_chats WHERE user_id = ? AND task_id = ?", (user_id, task_id)
         ).fetchone()
@@ -574,17 +638,16 @@ def save_ai_chat(request: SaveAiChatRequest) -> dict[str, str]:
     if len(messages) > MAX_AI_CHAT_CHARS:
         raise HTTPException(status_code=400, detail=f"Chat is longer than {MAX_AI_CHAT_CHARS} characters")
     with _get_db() as conn:
-        row = conn.execute("SELECT id FROM users WHERE session_token = ?", (request.sessionToken,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="User not found")
+        # Chatting is sometimes a learner's first write, so it may create the user
+        user_id = _get_or_create_user(conn, request.sessionToken)
         # Clearing the chat deletes it rather than storing an empty one
         if not request.messages:
-            conn.execute("DELETE FROM ai_chats WHERE user_id = ? AND task_id = ?", (row[0], request.taskId))
+            conn.execute("DELETE FROM ai_chats WHERE user_id = ? AND task_id = ?", (user_id, request.taskId))
         else:
             conn.execute(
                 "INSERT INTO ai_chats (user_id, task_id, messages) VALUES (?, ?, ?) "
                 "ON CONFLICT (user_id, task_id) DO UPDATE SET messages = excluded.messages, updated_at = datetime('now')",
-                (row[0], request.taskId, messages),
+                (user_id, request.taskId, messages),
             )
     return {"ok": "true"}
 
