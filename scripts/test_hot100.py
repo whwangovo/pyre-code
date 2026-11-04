@@ -1,5 +1,5 @@
 """Tests for the Hot 100 judge: every reference solution passes in both modes, and the
-grader rejects wrong, slow and malformed answers."""
+grader rejects wrong, slow, oversized and malformed answers."""
 
 from __future__ import annotations
 
@@ -49,6 +49,27 @@ def test_brute_force_times_out_on_large_input():
     verdicts = {r["name"]: r for r in result["results"]}
     assert all(r["passed"] for name, r in verdicts.items() if name != "Large input")
     assert "Time Limit Exceeded" in verdicts["Large input"]["error"]
+
+
+def test_core_memory_bomb_becomes_a_memory_error():
+    # ~2 GiB of pointers: the runner's 1 GiB RLIMIT_AS makes the allocation fail at once.
+    # Deliberately not larger, so a regression fails this test before it can hurt the machine.
+    code = (
+        "class Solution:\n"
+        "    def twoSum(self, nums, target):\n"
+        "        x = [0] * (2**28)\n"
+        "        return [0, 1]\n"
+    )
+    result = _grade("two_sum", code)
+    assert result["total"] > 0 and not result["allPassed"]
+    assert all("MemoryError" in (r["error"] or "") for r in result["results"])
+
+
+def test_acm_memory_bomb_is_contained():
+    code = "data = bytearray(2**31)\nprint('0')\n"
+    result = _grade("two_sum", code, mode="acm")
+    assert result["total"] > 0 and not result["allPassed"]
+    assert all("Runtime Error" in (r["error"] or "") for r in result["results"])
 
 
 # Classic wrong solutions, one file per task (named like the task); each must fail somewhere

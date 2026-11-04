@@ -24,6 +24,27 @@ from typing import Any, List, Optional
 
 MAX_DISPLAY_CHARS = 2000
 
+# Limits for the sandbox subprocess (applied in ``_apply_limits``). Hot 100 answers never
+# need more than a fraction of this; the caps turn a runaway program into a per-case error.
+MEMORY_LIMIT_BYTES = 1 << 30  # 1 GiB
+CPU_LIMIT_S = 4  # CPU seconds; the 3 s wall-clock timeout in judge.py normally fires first
+CPU_LIMIT_HARD_S = 5
+
+
+def _apply_limits() -> None:
+    """Cap this subprocess's memory and CPU from inside it.
+
+    Set here rather than via ``preexec_fn``, because forking a threaded FastAPI process
+    with callbacks is unsafe. Only this runner applies RLIMIT_AS: it is stdlib-only,
+    unlike the torch-based grading-service runner whose CUDA reservation would trip it.
+    """
+    try:
+        import resource
+    except ImportError:  # Windows has no rlimits; there the container limit is the guard
+        return
+    resource.setrlimit(resource.RLIMIT_AS, (MEMORY_LIMIT_BYTES, MEMORY_LIMIT_BYTES))
+    resource.setrlimit(resource.RLIMIT_CPU, (CPU_LIMIT_S, CPU_LIMIT_HARD_S))
+
 
 class ListNode:
     def __init__(self, val=0, next=None):
@@ -449,5 +470,6 @@ def _run_design(ns: dict, design: dict, case: dict) -> list:
 
 
 if __name__ == "__main__":
+    _apply_limits()
     results = run_core(json.loads(sys.stdin.read()))
     sys.stdout.write("\n" + json.dumps(results) + "\n")

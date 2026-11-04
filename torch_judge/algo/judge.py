@@ -17,9 +17,18 @@ from pathlib import Path
 from torch_judge.algo import runner, spec
 
 TIME_LIMIT_S = 3.0
-# Like core mode (and LeetCode), ACM programs may recurse over 10^4-deep trees and lists
+# Like core mode (and LeetCode), ACM programs may recurse over 10^4-deep trees and lists.
+# The rlimits match the core runner's (see runner._apply_limits): a runaway program dies
+# as its own per-case error instead of eating the host's memory.
 ACM_BOOTSTRAP = (
-    "import runpy, sys; sys.setrecursionlimit(20000); "
+    "import runpy, sys\n"
+    "sys.setrecursionlimit(20000)\n"
+    "try:\n"
+    "    import resource\n"
+    f"    resource.setrlimit(resource.RLIMIT_AS, ({runner.MEMORY_LIMIT_BYTES}, {runner.MEMORY_LIMIT_BYTES}))\n"
+    f"    resource.setrlimit(resource.RLIMIT_CPU, ({runner.CPU_LIMIT_S}, {runner.CPU_LIMIT_HARD_S}))\n"
+    "except ImportError:\n"
+    "    pass\n"
     "runpy.run_path(sys.argv[1], run_name='__main__')"
 )
 PARALLEL_CASES = 4
