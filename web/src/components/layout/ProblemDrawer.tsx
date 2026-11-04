@@ -5,12 +5,12 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { useLocale } from '@/context/LocaleContext';
-import type { Problem, ProgressMap } from '@/lib/types';
+import type { ProblemSummary, ProgressMap } from '@/lib/types';
 
 interface ProblemDrawerProps {
   open: boolean;
   onClose: () => void;
-  problems: Problem[];
+  problems: ProblemSummary[];
   progress: ProgressMap;
   currentId?: string;
 }

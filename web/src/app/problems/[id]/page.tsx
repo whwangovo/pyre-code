@@ -19,9 +19,10 @@ import { ActionBar } from '@/components/workspace/ActionBar';
 import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
-import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory, CodeMode } from '@/lib/types';
+import type { Problem, ProblemSummary, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory, CodeMode } from '@/lib/types';
 import { flushCodeDraft, loadCodeMode, resolveCodeDraft, saveCodeDraft, saveCodeMode } from '@/lib/codeDraft';
 import { loadAiChat } from '@/lib/aiChatHistory';
+import { loadProblemList } from '@/lib/problemList';
 import { cn } from '@/lib/utils';
 
 function FlameGlyph() {
@@ -79,7 +80,7 @@ function WorkspacePageNew() {
   const setCodeMode = useProblemStore((s) => s.setCodeMode);
 
   const [problem, setProblem] = useState<(Problem & { starterCode?: string }) | null>(null);
-  const [allProblems, setAllProblems] = useState<Problem[]>([]);
+  const [allProblems, setAllProblems] = useState<ProblemSummary[]>([]);
   const [progress, setProgress] = useState<ProgressMap>({});
   const [pathData, setPathData] = useState<(Omit<LearningPath, 'problems'> & { problems: LearningPathProblemSummary[] }) | null>(null);
   const [feedbackResult, setFeedbackResult] = useState<SubmissionResult | null>(null);
@@ -123,9 +124,8 @@ function WorkspacePageNew() {
         resetTestPanel();
       })
       .catch(() => { if (!isStale()) setLoadError('failed'); });
-    fetch('/api/problems')
-      .then((r) => r.json())
-      .then((d) => setAllProblems(d.problems))
+    loadProblemList()
+      .then((list) => setAllProblems(list))
       .catch(() => {});
     fetch('/api/progress')
       .then((r) => r.json())

@@ -8,12 +8,13 @@ import { StatusIcon } from '@/components/problem/StatusIcon';
 import { Badge } from '@/components/ui/Badge';
 import { useLocale } from '@/context/LocaleContext';
 import { cn } from '@/lib/utils';
-import type { Problem, ProgressMap } from '@/lib/types';
+import { loadProblemList } from '@/lib/problemList';
+import type { ProblemSummary, ProgressMap } from '@/lib/types';
 
 /** Problem list page. `track` picks the section: the AI problems or the Hot 100 set. */
 export function ProblemCatalog({ track }: { track: 'ai' | 'hot100' }) {
   const { locale, t } = useLocale();
-  const [allProblems, setAllProblems] = useState<Problem[]>([]);
+  const [allProblems, setAllProblems] = useState<ProblemSummary[]>([]);
   const [progress, setProgress] = useState<ProgressMap>({});
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('');
@@ -21,9 +22,9 @@ export function ProblemCatalog({ track }: { track: 'ai' | 'hot100' }) {
   const isHot100 = track === 'hot100';
 
   useEffect(() => {
-    fetch('/api/problems')
-      .then((r) => r.json())
-      .then((d) => setAllProblems(d.problems));
+    loadProblemList()
+      .then(setAllProblems)
+      .catch(() => {});
     fetch('/api/progress')
       .then((r) => r.json())
       .then((d) => setProgress(d.progress || {}));
@@ -35,7 +36,7 @@ export function ProblemCatalog({ track }: { track: 'ai' | 'hot100' }) {
   }, [allProblems, isHot100]);
 
   const solvedCount = problems.filter((p) => progress[p.id]?.status === 'solved').length;
-  const categoryOf = (p: Problem) => (locale === 'zh' ? p.categoryZh : p.category) || p.category || 'Other';
+  const categoryOf = (p: ProblemSummary) => (locale === 'zh' ? p.categoryZh : p.category) || p.category || 'Other';
 
   const categories = useMemo(() => {
     const map = new Map<string, number>();
