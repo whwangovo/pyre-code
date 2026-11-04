@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { GRADING_SERVICE_URL } from '@/lib/constants';
-import { SubmissionResult } from '@/lib/types';
+import type { SubmissionResult } from '@/lib/types';
 
 export async function POST(request: Request) {
-  const { taskId, code, testIndices, mode } = await request.json();
+  const body = (await request.json().catch(() => null)) as { taskId?: unknown; code?: unknown; testIndices?: unknown; mode?: unknown } | null;
+  const { taskId, code, testIndices, mode } = body ?? {};
+  if (typeof taskId !== 'string' || typeof code !== 'string') {
+    return NextResponse.json({ error: 'Missing taskId or code' }, { status: 400 });
+  }
 
   try {
     const res = await fetch(`${GRADING_SERVICE_URL}/run`, {

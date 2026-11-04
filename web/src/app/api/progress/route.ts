@@ -1,25 +1,17 @@
 import { NextResponse } from 'next/server';
-import { GRADING_SERVICE_URL } from '@/lib/constants';
 import { getSessionToken } from '@/lib/session';
+import { gradingFetch } from '@/lib/grading';
 
 export async function GET() {
   const sessionToken = await getSessionToken();
+  if (!sessionToken) return NextResponse.json({ progress: {} });
 
-  if (!sessionToken) {
+  try {
+    // The grading service resolves the user from the token; unknown tokens read as empty
+    const res = await gradingFetch(sessionToken, '/progress');
+    if (!res.ok) return NextResponse.json({ progress: {} });
+    return NextResponse.json({ progress: await res.json() });
+  } catch {
     return NextResponse.json({ progress: {} });
   }
-
-  const userRes = await fetch(`${GRADING_SERVICE_URL}/users`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionToken }),
-  });
-  if (!userRes.ok) return NextResponse.json({ progress: {} });
-
-  const { userId } = await userRes.json();
-  const progressRes = await fetch(`${GRADING_SERVICE_URL}/progress/${userId}`);
-  if (!progressRes.ok) return NextResponse.json({ progress: {} });
-
-  const progress = await progressRes.json();
-  return NextResponse.json({ progress });
 }
