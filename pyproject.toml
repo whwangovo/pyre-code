@@ -12,7 +12,7 @@ requires-python = ">=3.10"
 authors = [
     { name = "kiren" }
 ]
-keywords = ["pytorch", "jupyter", "notebook", "judge", "pyre-code", "ml", "deep-learning", "transformer", "diffusion", "rlhf", "interview", "practice"]
+keywords = ["pytorch", "judge", "pyre-code", "ml", "deep-learning", "transformer", "diffusion", "rlhf", "interview", "practice"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Education",
@@ -40,7 +40,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["torch_judge*"]
-exclude = ["labextension*", "scripts*", "templates*", "solutions*", "jupyter_config*"]
+exclude = ["scripts*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "torch_judge._version.__version__"}
