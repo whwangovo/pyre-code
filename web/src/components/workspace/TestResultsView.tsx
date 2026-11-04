@@ -59,7 +59,8 @@ function AlgoResultDetail({ result, mode }: { result: TestResult; mode: CodeMode
 
 export function TestResultsView({ result, tests, functionName, algoMode }: TestResultsViewProps) {
   const { t } = useLocale();
-  const { selectedCaseIndex, setSelectedCaseIndex } = useProblemStore();
+  const selectedCaseIndex = useProblemStore((s) => s.selectedCaseIndex);
+  const setSelectedCaseIndex = useProblemStore((s) => s.setSelectedCaseIndex);
 
   if (!result) {
     return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -37,6 +37,13 @@ function FlameGlyph() {
   );
 }
 
+/** The editor subscribes to the draft code itself, so typing re-renders it alone, not the page. */
+function ProblemCodeEditor({ onRunShortcut, onSubmitShortcut }: { onRunShortcut: () => void; onSubmitShortcut: () => void }) {
+  const value = useProblemStore((s) => s.currentCode);
+  const setCurrentCode = useProblemStore((s) => s.setCurrentCode);
+  return <CodeEditor value={value} onChange={setCurrentCode} onRunShortcut={onRunShortcut} onSubmitShortcut={onSubmitShortcut} />;
+}
+
 type LeftTab = 'description' | 'knowledge' | 'solution' | 'aiHelp' | 'submissionsTab';
 
 export default function WorkspacePage() {
@@ -50,16 +57,26 @@ function WorkspacePageNew() {
   const pathId = searchParams.get('path');
   const { locale, setLocale, t } = useLocale();
   const { theme, toggleTheme } = useTheme();
-  const {
-    currentCode, setCurrentCode,
-    submissionResult, setSubmissionResult,
-    isSubmitting, setIsSubmitting,
-    drawerOpen, setDrawerOpen,
-    isRunning, setIsRunning,
-    setRunResult, setBottomTab, resetTestPanel, resetAiHelp, setAiHelpMessages,
-    submissionHistory, setSubmissionHistory,
-    codeMode, setCodeMode,
-  } = useProblemStore();
+  // Subscribe per field: typing in the editor (currentCode) or an AI reply streaming in then
+  // re-renders only the components selecting those fields, not this whole page.
+  const isSubmitting = useProblemStore((s) => s.isSubmitting);
+  const isRunning = useProblemStore((s) => s.isRunning);
+  const drawerOpen = useProblemStore((s) => s.drawerOpen);
+  const codeMode = useProblemStore((s) => s.codeMode);
+  const submissionHistory = useProblemStore((s) => s.submissionHistory);
+  // Actions are stable references, so selecting them never triggers a re-render
+  const setCurrentCode = useProblemStore((s) => s.setCurrentCode);
+  const setSubmissionResult = useProblemStore((s) => s.setSubmissionResult);
+  const setIsSubmitting = useProblemStore((s) => s.setIsSubmitting);
+  const setIsRunning = useProblemStore((s) => s.setIsRunning);
+  const setDrawerOpen = useProblemStore((s) => s.setDrawerOpen);
+  const setRunResult = useProblemStore((s) => s.setRunResult);
+  const setBottomTab = useProblemStore((s) => s.setBottomTab);
+  const resetTestPanel = useProblemStore((s) => s.resetTestPanel);
+  const resetAiHelp = useProblemStore((s) => s.resetAiHelp);
+  const setAiHelpMessages = useProblemStore((s) => s.setAiHelpMessages);
+  const setSubmissionHistory = useProblemStore((s) => s.setSubmissionHistory);
+  const setCodeMode = useProblemStore((s) => s.setCodeMode);
 
   const [problem, setProblem] = useState<(Problem & { starterCode?: string }) | null>(null);
   const [allProblems, setAllProblems] = useState<Problem[]>([]);
@@ -177,14 +194,18 @@ function WorkspacePageNew() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [pathData, id, pathId, router, drawerOpen, setDrawerOpen]);
 
-  // Also follows mode changes, so restoring an ACM submission saves into the ACM draft.
+  // Subscribes to the store rather than watching currentCode in an effect: the page no longer
+  // re-renders per keystroke, so an effect would never see the change. Reading codeMode from
+  // the store also follows mode switches, so restoring an ACM submission saves into the ACM draft.
   // Freshly loaded code isn't saved back: that would stamp it as the newest edit and
   // could overwrite a newer draft written on another device.
   useEffect(() => {
-    if (!codeReadyRef.current || currentCode === savedCodeRef.current) return;
-    savedCodeRef.current = currentCode;
-    saveCodeDraft(id, currentCode, codeMode);
-  }, [id, currentCode, codeMode]);
+    return useProblemStore.subscribe((state) => {
+      if (!codeReadyRef.current || state.currentCode === savedCodeRef.current) return;
+      savedCodeRef.current = state.currentCode;
+      saveCodeDraft(id, state.currentCode, state.codeMode);
+    });
+  }, [id]);
 
   // Push the last edit to the server when leaving the problem or hiding/closing the tab
   useEffect(() => {
@@ -218,8 +239,11 @@ function WorkspacePageNew() {
     codeReadyRef.current = true;
   };
 
-  const handleRun = async () => {
-    if (!problem || isRunning) return;
+  const handleRun = useCallback(async () => {
+    if (!problem) return;
+    // Guard and code come from the store so this callback stays stable between renders
+    const { currentCode, isRunning: running } = useProblemStore.getState();
+    if (running) return;
     setIsRunning(true);
     setRunResult(null);
     try {
@@ -237,10 +261,12 @@ function WorkspacePageNew() {
     } finally {
       setIsRunning(false);
     }
-  };
+  }, [problem, id, mode, t, setIsRunning, setRunResult, setBottomTab]);
 
-  const handleSubmit = async () => {
-    if (!problem || isSubmitting) return;
+  const handleSubmit = useCallback(async () => {
+    if (!problem) return;
+    const { currentCode, isSubmitting: submitting } = useProblemStore.getState();
+    if (submitting) return;
     setIsSubmitting(true);
     setSubmissionResult(null);
     try {
@@ -263,7 +289,7 @@ function WorkspacePageNew() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [problem, id, mode, t, setIsSubmitting, setSubmissionResult, setRunResult, setBottomTab, setSubmissionHistory]);
 
   // Keyboard shortcuts: Cmd/Ctrl+Enter runs, Cmd/Ctrl+Shift+Enter submits.
   useEffect(() => {
@@ -387,7 +413,7 @@ function WorkspacePageNew() {
               <span className={cn(!isHot100 && 'ml-auto', 'mono text-[11.5px] text-text-3 px-1.5 py-0.5 rounded')} style={{ background: 'var(--bg-sunken)', border: '1px solid var(--line)' }}>Python</span>
             </div>
             <div className="flex-1 overflow-hidden">
-              <CodeEditor value={currentCode} onChange={setCurrentCode} onRunShortcut={handleRun} onSubmitShortcut={handleSubmit} />
+              <ProblemCodeEditor onRunShortcut={handleRun} onSubmitShortcut={handleSubmit} />
             </div>
           </div>
         }

@@ -14,7 +14,12 @@ interface TestCasesViewProps {
 
 export function TestCasesView({ tests, functionName }: TestCasesViewProps) {
   const { t } = useLocale();
-  const { selectedCaseIndex, setSelectedCaseIndex, customTests, addCustomTest, removeCustomTest, updateCustomTest } = useProblemStore();
+  const selectedCaseIndex = useProblemStore((s) => s.selectedCaseIndex);
+  const setSelectedCaseIndex = useProblemStore((s) => s.setSelectedCaseIndex);
+  const customTests = useProblemStore((s) => s.customTests);
+  const addCustomTest = useProblemStore((s) => s.addCustomTest);
+  const removeCustomTest = useProblemStore((s) => s.removeCustomTest);
+  const updateCustomTest = useProblemStore((s) => s.updateCustomTest);
 
   const sampleTests = tests.slice(0, 2);
   const allCases = [

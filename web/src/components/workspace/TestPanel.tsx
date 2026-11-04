@@ -18,7 +18,9 @@ interface TestPanelProps {
 
 export function TestPanel({ tests, functionName, cases, codeMode = 'core' }: TestPanelProps) {
   const { t } = useLocale();
-  const { bottomTab, setBottomTab, runResult } = useProblemStore();
+  const bottomTab = useProblemStore((s) => s.bottomTab);
+  const setBottomTab = useProblemStore((s) => s.setBottomTab);
+  const runResult = useProblemStore((s) => s.runResult);
 
   return (
     <div className="flex flex-col overflow-hidden flex-[2] min-h-0" style={{ borderTop: '1px solid var(--line)', background: 'var(--bg)' }}>
@@ -56,7 +58,8 @@ export function TestPanel({ tests, functionName, cases, codeMode = 'core' }: Tes
 /** Hot 100 samples: the two visible cases that Run executes */
 function AlgoCasesView({ cases, codeMode }: { cases: AlgoCase[]; codeMode: CodeMode }) {
   const { t } = useLocale();
-  const { selectedCaseIndex, setSelectedCaseIndex } = useProblemStore();
+  const selectedCaseIndex = useProblemStore((s) => s.selectedCaseIndex);
+  const setSelectedCaseIndex = useProblemStore((s) => s.setSelectedCaseIndex);
   const samples = cases.slice(0, 2);
   const active = samples[Math.min(selectedCaseIndex, samples.length - 1)];
 
