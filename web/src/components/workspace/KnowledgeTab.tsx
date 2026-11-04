@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MarkdownContent } from './MarkdownContent';
 import { useLocale } from '@/context/LocaleContext';
-import { cn } from '@/lib/utils';
 import type { KnowledgeEntry as Entry, KnowledgeTopic as Topic } from '@/lib/knowledge';
 
 // The tab unmounts when hidden; keep each note so switching back doesn't refetch

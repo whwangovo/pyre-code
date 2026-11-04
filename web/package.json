@@ -9,7 +9,7 @@
     "dev:all": "concurrently -n grading,web -c cyan,green \"node ../scripts/run-python.js -m uvicorn grading_service.main:app --reload\" \"next dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

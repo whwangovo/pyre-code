@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { TopNav } from '@/components/layout/TopNav';
 import { Footer } from '@/components/layout/Footer';
@@ -36,7 +36,10 @@ export function ProblemCatalog({ track }: { track: 'ai' | 'hot100' }) {
   }, [allProblems, isHot100]);
 
   const solvedCount = problems.filter((p) => progress[p.id]?.status === 'solved').length;
-  const categoryOf = (p: ProblemSummary) => (locale === 'zh' ? p.categoryZh : p.category) || p.category || 'Other';
+  const categoryOf = useCallback(
+    (p: ProblemSummary) => (locale === 'zh' ? p.categoryZh : p.category) || p.category || 'Other',
+    [locale],
+  );
 
   const categories = useMemo(() => {
     const map = new Map<string, number>();
@@ -47,7 +50,7 @@ export function ProblemCatalog({ track }: { track: 'ai' | 'hot100' }) {
     const entries = Array.from(map.entries());
     // Hot 100 keeps the study-plan order (problems are already sorted by it)
     return isHot100 ? entries : entries.sort((a, b) => b[1] - a[1]);
-  }, [problems, locale, isHot100]);
+  }, [problems, categoryOf, isHot100]);
 
   const diffCounts = useMemo(() => ({
     Easy: problems.filter((p) => p.difficulty === 'Easy').length,

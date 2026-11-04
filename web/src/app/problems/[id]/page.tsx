@@ -152,6 +152,9 @@ function WorkspacePageNew() {
     } else {
       setPathData(null);
     }
+    // Bumping the shared counter on cleanup is the point: any load still in flight for
+    // the previous id must count as stale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { loadSeqRef.current++; };
   }, [id, pathId, setCurrentCode, setCodeMode, setSubmissionResult, resetTestPanel, resetAiHelp, setAiHelpMessages, setSubmissionHistory]);
 
