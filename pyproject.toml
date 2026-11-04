@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyre-code"
 dynamic = ["version"]
-description = "ML coding judge — validate PyTorch implementations against test cases (Pyre)."
+description = "Hands-on AI systems coding challenges — implement PyTorch internals from scratch, no GPU required."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

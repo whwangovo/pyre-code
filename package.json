@@ -6,7 +6,7 @@
   "author": "kiren",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kiren/pyre"
+    "url": "https://github.com/whwangovo/pyre-code"
   },
   "scripts": {
     "postinstall": "cd web && npm ci",
