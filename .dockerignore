@@ -1,20 +1,19 @@
+# Keep the build context small and free of local state. Both Dockerfiles use the repo
+# root as context (see docker-compose.yml), so without this file the multi-GB .venv,
+# node_modules, the dev .next build and the local SQLite database would all be sent to
+# the daemon, and `COPY web/ ./` would carry web/.env.local into the image.
 .git
 .venv
-node_modules
-web/node_modules
+**/node_modules
+**/__pycache__
+*.egg-info
 web/.next
-data/
-*.db
-*.db-shm
-*.db-wal
-.DS_Store
-.env
-.env.local
-web/.env
-web/.env.local
-.playwright-cli/
-*.png
-*.jpg
-notebooks/
-docs/
-.worktrees/
+web/out
+*.tsbuildinfo
+data
+docs
+.worktrees
+.playwright-cli
+**/.env
+**/.env.*
+!**/.env.example

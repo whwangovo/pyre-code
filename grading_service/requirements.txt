@@ -1,5 +1,6 @@
-fastapi
-uvicorn
-torch
-pydantic
-graphviz
+# Bounded major versions: a torch or pydantic major bump silently changes grading behavior
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+torch>=2.4,<3
+pydantic>=2,<3
+graphviz>=0.20,<1

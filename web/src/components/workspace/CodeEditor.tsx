@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import type { OnMount } from '@monaco-editor/react';
+import type { Monaco, OnMount } from '@monaco-editor/react';
 import { appleLight, appleDark } from '@/lib/monacoTheme';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -26,7 +26,7 @@ const sharedOptions = {
   hideCursorInOverviewRuler: true,
 };
 
-function applyTheme(monaco: any, theme: string) {
+function applyTheme(monaco: Monaco, theme: string) {
   monaco.editor.defineTheme('apple-light', appleLight);
   monaco.editor.defineTheme('apple-dark', appleDark);
   monaco.editor.setTheme(theme === 'dark' ? 'apple-dark' : 'apple-light');
@@ -34,7 +34,7 @@ function applyTheme(monaco: any, theme: string) {
 
 /** Read-only diff: `original` on the left, `modified` on the right (inline when narrow). */
 export function CodeDiffViewer({ original, modified }: { original: string; modified: string }) {
-  const monacoRef = useRef<any>(null);
+  const monacoRef = useRef<Monaco | null>(null);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -83,8 +83,7 @@ export function CodeEditor({
   onRunShortcut,
   onSubmitShortcut,
 }: CodeEditorProps) {
-  const editorRef = useRef<any>(null);
-  const monacoRef = useRef<any>(null);
+  const monacoRef = useRef<Monaco | null>(null);
   const runRef = useRef(onRunShortcut);
   const submitRef = useRef(onSubmitShortcut);
   const { theme } = useTheme();
@@ -95,7 +94,6 @@ export function CodeEditor({
   });
 
   const handleMount: OnMount = (editor, monaco) => {
-    editorRef.current = editor;
     monacoRef.current = monaco;
     applyTheme(monaco, theme);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current?.());

@@ -60,15 +60,18 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
     saveUnsentInput(problem.id, value);
   };
   const [serverConfigured, setServerConfigured] = useState(false);
-  const {
-    aiHelpConfig, setAiHelpConfig,
-    aiHelpConfigOpen, setAiHelpConfigOpen,
-    aiHelpMessages, setAiHelpMessages,
-    aiHelpError, setAiHelpError,
-    aiHelpLoading, setAiHelpLoading,
-    setAiHelpAbortController,
-    resetAiHelp,
-  } = useProblemStore();
+  const aiHelpConfig = useProblemStore((s) => s.aiHelpConfig);
+  const setAiHelpConfig = useProblemStore((s) => s.setAiHelpConfig);
+  const aiHelpConfigOpen = useProblemStore((s) => s.aiHelpConfigOpen);
+  const setAiHelpConfigOpen = useProblemStore((s) => s.setAiHelpConfigOpen);
+  const aiHelpMessages = useProblemStore((s) => s.aiHelpMessages);
+  const setAiHelpMessages = useProblemStore((s) => s.setAiHelpMessages);
+  const aiHelpError = useProblemStore((s) => s.aiHelpError);
+  const setAiHelpError = useProblemStore((s) => s.setAiHelpError);
+  const aiHelpLoading = useProblemStore((s) => s.aiHelpLoading);
+  const setAiHelpLoading = useProblemStore((s) => s.setAiHelpLoading);
+  const setAiHelpAbortController = useProblemStore((s) => s.setAiHelpAbortController);
+  const resetAiHelp = useProblemStore((s) => s.resetAiHelp);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -403,7 +406,8 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
 /** Model name input with a "fetch models" button that opens a filterable dropdown. */
 function ModelField() {
   const { t } = useLocale();
-  const { aiHelpConfig, setAiHelpConfig } = useProblemStore();
+  const aiHelpConfig = useProblemStore((s) => s.aiHelpConfig);
+  const setAiHelpConfig = useProblemStore((s) => s.setAiHelpConfig);
   const boxRef = useRef<HTMLDivElement>(null);
   const [models, setModels] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);

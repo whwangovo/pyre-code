@@ -14,6 +14,12 @@ const hits = new Map<string, number[]>();
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
+  // Opportunistic sweep: without it, every address that ever posted would keep a key forever
+  if (hits.size > 512) {
+    for (const [key, times] of hits) {
+      if (times.every((at) => now - at >= RATE_WINDOW_MS)) hits.delete(key);
+    }
+  }
   const timestamps = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
   if (timestamps.length >= RATE_MAX) {
     hits.set(ip, timestamps);

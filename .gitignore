@@ -2,10 +2,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 .ipynb_checkpoints/
-data/progress.json
-data/*.db
 .DS_Store
-notebooks/
 
 # Environment files
 .env
@@ -25,12 +22,6 @@ dist/
 build/
 .venv/
 
-# JupyterLab extension build artifacts
-labextension/lib/
-labextension/node_modules/
-labextension/torchcode_labext/labextension/
-labextension/tsconfig.tsbuildinfo
-labextension/yarn.lock
 .worktrees/
 .omc/
 CLAUDE.md

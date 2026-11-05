@@ -9,10 +9,10 @@ import { useLocale } from '@/context/LocaleContext';
 import type { LearningPath } from '@/lib/types';
 
 interface HomeContentProps {
-  stats: { total: number; easy: number; medium: number; hard: number };
+  stats: { total: number; easy: number; medium: number; hard: number; topics: number };
 }
 
-type PathWithProgress = LearningPath & { solved: number; total: number };
+type PathWithProgress = LearningPath & { solved: number; total: number; easy: number; medium: number; hard: number };
 
 interface CategoryInfo {
   name: string;
@@ -130,9 +130,9 @@ export function HomeContent({ stats }: HomeContentProps) {
           name: locale === 'zh' ? p.titleZh : p.titleEn,
           description: locale === 'zh' ? p.descriptionZh : p.descriptionEn,
           total: p.total,
-          easy: Math.round(p.total * 0.25),
-          medium: Math.round(p.total * 0.45),
-          hard: p.total - Math.round(p.total * 0.25) - Math.round(p.total * 0.45),
+          easy: p.easy,
+          medium: p.medium,
+          hard: p.hard,
         }));
         setCategories(cats);
       });
@@ -151,7 +151,7 @@ export function HomeContent({ stats }: HomeContentProps) {
               <span className="font-semibold text-text">{stats.total}</span>
               <span>{t('heroPill', { count: stats.total }).replace(`${stats.total} `, '')}</span>
               <span className="text-text-3">·</span>
-              <span className="text-text-3">no GPU required</span>
+              <span className="text-text-3">{t('homeNoGpu')}</span>
             </span>
 
             <h1 className="text-[clamp(36px,5vw,56px)] font-semibold tracking-[-0.035em] leading-[1.05] mb-5">
@@ -185,7 +185,7 @@ export function HomeContent({ stats }: HomeContentProps) {
             <div className="flex gap-6 mt-8 pt-5" style={{ borderTop: '1px dashed var(--line)' }}>
               {[
                 { k: t('metaTotal'), v: t('metaTotalVal', { n: stats.total }) },
-                { k: t('metaCoverage'), v: t('metaCoverageVal', { n: 13 }) },
+                { k: t('metaCoverage'), v: t('metaCoverageVal', { n: stats.topics }) },
                 { k: t('metaRuntime'), v: t('metaRuntimeVal') },
                 { k: t('metaJudge'), v: 'torch_judge' },
               ].map((m) => (
@@ -337,9 +337,9 @@ export function HomeContent({ stats }: HomeContentProps) {
       {categories.length > 0 && (
         <section className="py-20" style={{ borderTop: '1px solid var(--line)' }}>
           <SectionHeader
-            eyebrow={locale === 'zh' ? '§ 01 — 题目集' : '§ 01 — Problem set'}
-            title={locale === 'zh' ? `${paths.length} 条路径覆盖全部核心领域。` : `${paths.length} paths. Every core domain covered.`}
-            linkText={locale === 'zh' ? `全部 ${stats.total} 题` : `All ${stats.total} problems`}
+            eyebrow={t('homeSection1Eyebrow')}
+            title={t('homeSection1Title', { n: paths.length })}
+            linkText={t('homeSection1Link', { n: stats.total })}
             linkHref="/problems"
           />
           <div
@@ -365,7 +365,7 @@ export function HomeContent({ stats }: HomeContentProps) {
                 >
                   <DifficultyBars easy={cat.easy} medium={cat.medium} hard={cat.hard} />
                   <span className="mono text-xs text-text-2 tabular-nums">
-                    {cat.total} {locale === 'zh' ? '题' : 'problems'}
+                    {t('homeCategoryCount', { n: cat.total })}
                   </span>
                   <span className="ml-auto text-text-3 transition-[color,transform] duration-[180ms] group-hover:text-accent group-hover:translate-x-[2px]">
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -381,9 +381,9 @@ export function HomeContent({ stats }: HomeContentProps) {
       {paths.length > 0 && (
         <section className="py-20" style={{ borderTop: '1px solid var(--line)' }}>
           <SectionHeader
-            eyebrow={locale === 'zh' ? '§ 02 — 学习路径' : '§ 02 — Learning paths'}
-            title={locale === 'zh' ? '选一个方向。' : 'Pick a destination.'}
-            linkText={locale === 'zh' ? `全部 ${paths.length} 条路径` : `All ${paths.length} paths`}
+            eyebrow={t('homeSection2Eyebrow')}
+            title={t('homeSection2Title')}
+            linkText={t('homeSection2Link', { n: paths.length })}
             linkHref="/paths"
           />
           <div className="grid grid-cols-3 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 gap-3.5">
@@ -428,8 +428,8 @@ export function HomeContent({ stats }: HomeContentProps) {
       {/* Features */}
       <section className="py-20" style={{ borderTop: '1px solid var(--line)' }}>
         <SectionHeader
-          eyebrow={locale === 'zh' ? '§ 03 — 工作方式' : '§ 03 — How it works'}
-          title={locale === 'zh' ? '读论文，然后写代码。' : 'Read the paper, then write the code.'}
+          eyebrow={t('homeSection3Eyebrow')}
+          title={t('homeSection3Title')}
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[

@@ -28,6 +28,12 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('locale', l);
   };
 
+  // Keep the document language in sync with the locale (SSR renders the default; the
+  // saved locale applies on mount)
+  useEffect(() => {
+    document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en';
+  }, [locale]);
+
   const t = (key: TranslationKey, params?: Record<string, string | number>) =>
     translate(locale, key, params);
 

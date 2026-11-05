@@ -32,6 +32,21 @@ export interface Problem {
 /** Hot 100 answer format: LeetCode-style class method, or a full stdin/stdout program */
 export type CodeMode = 'core' | 'acm';
 
+/** The list payload from /api/problems: metadata only, no descriptions, hints or tests. */
+export interface ProblemSummary {
+  id: string;
+  title: string;
+  titleZh: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  track?: 'hot100';
+  category?: string;
+  categoryZh?: string;
+  /** Position in the Hot 100 study order */
+  order?: number;
+  leetcodeId?: number;
+  leetcodeSlug?: string;
+}
+
 export interface AlgoCase {
   name: string;
   /** Large generated inputs are graded but not shown */

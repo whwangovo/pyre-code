@@ -25,7 +25,7 @@ const notoSC = Noto_Sans_SC({
 
 export const metadata: Metadata = {
   title: "Pyre Code",
-  description: "68 hands-on AI systems challenges — implement the internals of attention, RLHF, diffusion, and distributed training",
+  description: "Hands-on AI systems challenges — implement the internals of attention, RLHF, diffusion, and distributed training",
 };
 
 export default function RootLayout({
@@ -35,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="zh-CN"
+      lang="en"
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable} ${notoSC.variable}`}
     >

@@ -2,7 +2,7 @@
 
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -108,7 +108,9 @@ const components: Components = {
   },
 };
 
-export function MarkdownContent({ content }: MarkdownContentProps) {
+// Memoized: parsing Markdown + KaTeX is expensive, and callers re-render often while
+// streaming AI replies. `content` is a string, so unchanged messages always skip the parse.
+export const MarkdownContent = memo(function MarkdownContent({ content }: MarkdownContentProps) {
   return (
     <div className="space-y-3 break-words">
       <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]} components={components}>
@@ -116,4 +118,4 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
       </ReactMarkdown>
     </div>
   );
-}
+});

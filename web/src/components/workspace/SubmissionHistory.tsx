@@ -44,7 +44,7 @@ function StatusLabel({ passed }: { passed: boolean }) {
 /** `showMode`: tag each submission with its Hot 100 answer mode */
 export function SubmissionHistory({ showMode = false }: { showMode?: boolean }) {
   const { t, locale } = useLocale();
-  const { submissionHistory } = useProblemStore();
+  const submissionHistory = useProblemStore((s) => s.submissionHistory);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const formatTime = (value: string) =>
@@ -216,7 +216,10 @@ interface SubmissionDetailProps {
 
 function SubmissionDetail({ submission, attempt, time, onBack, showMode }: SubmissionDetailProps) {
   const { t } = useLocale();
-  const { currentCode, setCurrentCode, codeMode, setCodeMode } = useProblemStore();
+  const currentCode = useProblemStore((s) => s.currentCode);
+  const setCurrentCode = useProblemStore((s) => s.setCurrentCode);
+  const codeMode = useProblemStore((s) => s.codeMode);
+  const setCodeMode = useProblemStore((s) => s.setCodeMode);
   const [mode, setMode] = useState<'code' | 'diff'>('code');
   const [copied, setCopied] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState(false);

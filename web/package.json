@@ -6,10 +6,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:all": "concurrently -n grading,web -c cyan,green \"node ../scripts/run-python.js -m uvicorn grading_service.main:app --reload\" \"next dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -41,7 +40,6 @@
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",
-    "concurrently": "^9.2.1",
     "eslint": "^9.1.0",
     "eslint-config-next": "^15.2.2",
     "postcss": "^8.4.38",

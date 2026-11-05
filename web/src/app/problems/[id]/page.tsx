@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -19,9 +19,10 @@ import { ActionBar } from '@/components/workspace/ActionBar';
 import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
-import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory, CodeMode } from '@/lib/types';
+import type { Problem, ProblemSummary, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory, CodeMode } from '@/lib/types';
 import { flushCodeDraft, loadCodeMode, resolveCodeDraft, saveCodeDraft, saveCodeMode } from '@/lib/codeDraft';
 import { loadAiChat } from '@/lib/aiChatHistory';
+import { loadProblemList } from '@/lib/problemList';
 import { cn } from '@/lib/utils';
 
 function FlameGlyph() {
@@ -37,6 +38,15 @@ function FlameGlyph() {
   );
 }
 
+/** The editor subscribes to the draft code itself, so typing re-renders it alone, not the page. */
+function ProblemCodeEditor({ onRunShortcut, onSubmitShortcut }: { onRunShortcut: () => void; onSubmitShortcut: () => void }) {
+  const value = useProblemStore((s) => s.currentCode);
+  const setCurrentCode = useProblemStore((s) => s.setCurrentCode);
+  return <CodeEditor value={value} onChange={setCurrentCode} onRunShortcut={onRunShortcut} onSubmitShortcut={onSubmitShortcut} />;
+}
+
+type LeftTab = 'description' | 'knowledge' | 'solution' | 'aiHelp' | 'submissionsTab';
+
 export default function WorkspacePage() {
   return <WorkspacePageNew />;
 }
@@ -48,22 +58,36 @@ function WorkspacePageNew() {
   const pathId = searchParams.get('path');
   const { locale, setLocale, t } = useLocale();
   const { theme, toggleTheme } = useTheme();
-  const {
-    currentCode, setCurrentCode,
-    submissionResult, setSubmissionResult,
-    isSubmitting, setIsSubmitting,
-    drawerOpen, setDrawerOpen,
-    isRunning, setIsRunning,
-    setRunResult, setBottomTab, resetTestPanel, resetAiHelp, setAiHelpMessages,
-    submissionHistory, setSubmissionHistory,
-    codeMode, setCodeMode,
-  } = useProblemStore();
+  // Subscribe per field: typing in the editor (currentCode) or an AI reply streaming in then
+  // re-renders only the components selecting those fields, not this whole page.
+  const isSubmitting = useProblemStore((s) => s.isSubmitting);
+  const isRunning = useProblemStore((s) => s.isRunning);
+  const drawerOpen = useProblemStore((s) => s.drawerOpen);
+  const codeMode = useProblemStore((s) => s.codeMode);
+  const submissionHistory = useProblemStore((s) => s.submissionHistory);
+  // Actions are stable references, so selecting them never triggers a re-render
+  const setCurrentCode = useProblemStore((s) => s.setCurrentCode);
+  const setSubmissionResult = useProblemStore((s) => s.setSubmissionResult);
+  const setIsSubmitting = useProblemStore((s) => s.setIsSubmitting);
+  const setIsRunning = useProblemStore((s) => s.setIsRunning);
+  const setDrawerOpen = useProblemStore((s) => s.setDrawerOpen);
+  const setRunResult = useProblemStore((s) => s.setRunResult);
+  const setBottomTab = useProblemStore((s) => s.setBottomTab);
+  const resetTestPanel = useProblemStore((s) => s.resetTestPanel);
+  const resetAiHelp = useProblemStore((s) => s.resetAiHelp);
+  const setAiHelpMessages = useProblemStore((s) => s.setAiHelpMessages);
+  const setSubmissionHistory = useProblemStore((s) => s.setSubmissionHistory);
+  const setCodeMode = useProblemStore((s) => s.setCodeMode);
 
   const [problem, setProblem] = useState<(Problem & { starterCode?: string }) | null>(null);
-  const [allProblems, setAllProblems] = useState<Problem[]>([]);
+  const [allProblems, setAllProblems] = useState<ProblemSummary[]>([]);
   const [progress, setProgress] = useState<ProgressMap>({});
   const [pathData, setPathData] = useState<(Omit<LearningPath, 'problems'> & { problems: LearningPathProblemSummary[] }) | null>(null);
   const [feedbackResult, setFeedbackResult] = useState<SubmissionResult | null>(null);
+  // Set when the problem can't be shown: an unknown id (old link, typo) or a backend error
+  const [loadError, setLoadError] = useState<'notFound' | 'failed' | null>(null);
+  // Controlled so the feedback modal's "View Hint" can open the AI Help tab
+  const [leftTab, setLeftTab] = useState<LeftTab>('description');
   const codeReadyRef = useRef(false);
   // The code last loaded or saved, so only real edits get saved
   const savedCodeRef = useRef<string | null>(null);
@@ -75,15 +99,22 @@ function WorkspacePageNew() {
     const seq = ++loadSeqRef.current;
     const isStale = () => seq !== loadSeqRef.current;
     codeReadyRef.current = false;
+    setLoadError(null);
     fetch(`/api/problems/${id}`)
-      .then((r) => r.json())
-      .then(async (data: Problem & { starterCode?: string }) => {
+      .then(async (r) => {
+        if (!r.ok) {
+          if (!isStale()) setLoadError(r.status === 404 ? 'notFound' : 'failed');
+          return;
+        }
+        const data: Problem & { starterCode?: string } = await r.json();
         if (isStale()) return;
         // Hot 100 remembers the learner's answer mode; AI problems are always core
         const mode: CodeMode = data.starters ? loadCodeMode() : 'core';
         const cachedCode = await resolveCodeDraft(id, mode);
         if (isStale()) return;
         setProblem(data);
+        // Hot 100 has no concept notes; don't leave the hidden knowledge tab selected
+        if (data.track === 'hot100') setLeftTab((tab) => (tab === 'knowledge' ? 'description' : tab));
         setCodeMode(mode);
         const code = cachedCode ?? data.starters?.[mode] ?? data.starterCode ?? '';
         savedCodeRef.current = code;
@@ -91,13 +122,15 @@ function WorkspacePageNew() {
         codeReadyRef.current = true;
         setSubmissionResult(null);
         resetTestPanel();
-      });
-    fetch('/api/problems')
-      .then((r) => r.json())
-      .then((d) => setAllProblems(d.problems));
+      })
+      .catch(() => { if (!isStale()) setLoadError('failed'); });
+    loadProblemList()
+      .then((list) => setAllProblems(list))
+      .catch(() => {});
     fetch('/api/progress')
       .then((r) => r.json())
-      .then((d) => setProgress(d.progress || {}));
+      .then((d) => setProgress(d.progress || {}))
+      .catch(() => {});
     // Cleared up front (not in resetTestPanel after the problem loads), so a history
     // response that beats the problem response isn't wiped
     setSubmissionHistory([]);
@@ -119,6 +152,9 @@ function WorkspacePageNew() {
     } else {
       setPathData(null);
     }
+    // Bumping the shared counter on cleanup is the point: any load still in flight for
+    // the previous id must count as stale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { loadSeqRef.current++; };
   }, [id, pathId, setCurrentCode, setCodeMode, setSubmissionResult, resetTestPanel, resetAiHelp, setAiHelpMessages, setSubmissionHistory]);
 
@@ -161,14 +197,18 @@ function WorkspacePageNew() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [pathData, id, pathId, router, drawerOpen, setDrawerOpen]);
 
-  // Also follows mode changes, so restoring an ACM submission saves into the ACM draft.
+  // Subscribes to the store rather than watching currentCode in an effect: the page no longer
+  // re-renders per keystroke, so an effect would never see the change. Reading codeMode from
+  // the store also follows mode switches, so restoring an ACM submission saves into the ACM draft.
   // Freshly loaded code isn't saved back: that would stamp it as the newest edit and
   // could overwrite a newer draft written on another device.
   useEffect(() => {
-    if (!codeReadyRef.current || currentCode === savedCodeRef.current) return;
-    savedCodeRef.current = currentCode;
-    saveCodeDraft(id, currentCode, codeMode);
-  }, [id, currentCode, codeMode]);
+    return useProblemStore.subscribe((state) => {
+      if (!codeReadyRef.current || state.currentCode === savedCodeRef.current) return;
+      savedCodeRef.current = state.currentCode;
+      saveCodeDraft(id, state.currentCode, state.codeMode);
+    });
+  }, [id]);
 
   // Push the last edit to the server when leaving the problem or hiding/closing the tab
   useEffect(() => {
@@ -202,8 +242,11 @@ function WorkspacePageNew() {
     codeReadyRef.current = true;
   };
 
-  const handleRun = async () => {
-    if (!problem || isRunning) return;
+  const handleRun = useCallback(async () => {
+    if (!problem) return;
+    // Guard and code come from the store so this callback stays stable between renders
+    const { currentCode, isRunning: running } = useProblemStore.getState();
+    if (running) return;
     setIsRunning(true);
     setRunResult(null);
     try {
@@ -221,10 +264,12 @@ function WorkspacePageNew() {
     } finally {
       setIsRunning(false);
     }
-  };
+  }, [problem, id, mode, t, setIsRunning, setRunResult, setBottomTab]);
 
-  const handleSubmit = async () => {
-    if (!problem || isSubmitting) return;
+  const handleSubmit = useCallback(async () => {
+    if (!problem) return;
+    const { currentCode, isSubmitting: submitting } = useProblemStore.getState();
+    if (submitting) return;
     setIsSubmitting(true);
     setSubmissionResult(null);
     try {
@@ -247,7 +292,7 @@ function WorkspacePageNew() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [problem, id, mode, t, setIsSubmitting, setSubmissionResult, setRunResult, setBottomTab, setSubmissionHistory]);
 
   // Keyboard shortcuts: Cmd/Ctrl+Enter runs, Cmd/Ctrl+Shift+Enter submits.
   useEffect(() => {
@@ -265,6 +310,15 @@ function WorkspacePageNew() {
     return () => window.removeEventListener('keydown', handler);
   }, [handleRun, handleSubmit, isRunning, isSubmitting]);
 
+  if (loadError) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-3 bg-bg">
+        <p className="text-sm text-text-2">{t(loadError === 'notFound' ? 'problemNotFound' : 'problemLoadFailed')}</p>
+        <Link href="/problems" className="text-sm text-accent hover:underline">{t('backToProblems')}</Link>
+      </div>
+    );
+  }
+
   if (!problem) {
     return (
       <div className="h-screen flex items-center justify-center bg-bg">
@@ -281,7 +335,7 @@ function WorkspacePageNew() {
 
   const leftPanel = (
     <div className="h-full flex flex-col bg-bg">
-      <Tabs.Root defaultValue="description" className="flex flex-col h-full">
+      <Tabs.Root value={leftTab} onValueChange={(v) => setLeftTab(v as LeftTab)} className="flex flex-col h-full">
         <div
           className="flex items-center px-3.5 h-10 gap-1 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--line)', background: 'var(--bg)' }}
@@ -362,7 +416,7 @@ function WorkspacePageNew() {
               <span className={cn(!isHot100 && 'ml-auto', 'mono text-[11.5px] text-text-3 px-1.5 py-0.5 rounded')} style={{ background: 'var(--bg-sunken)', border: '1px solid var(--line)' }}>Python</span>
             </div>
             <div className="flex-1 overflow-hidden">
-              <CodeEditor value={currentCode} onChange={setCurrentCode} onRunShortcut={handleRun} onSubmitShortcut={handleSubmit} />
+              <ProblemCodeEditor onRunShortcut={handleRun} onSubmitShortcut={handleSubmit} />
             </div>
           </div>
         }
@@ -492,6 +546,10 @@ function WorkspacePageNew() {
         <FeedbackModal
           result={feedbackResult}
           onClose={() => setFeedbackResult(null)}
+          onViewHint={() => {
+            setFeedbackResult(null);
+            setLeftTab('aiHelp');
+          }}
           attemptNumber={submissionHistory.length}
           pathProgress={pathData ? {
             solved: pathData.problems.filter(p => p.status === 'solved').length,
